@@ -1,0 +1,60 @@
+; ============================================================================
+; exp_maclaurin.pfasm — the first instruction list of PTSG-CPU-Formation
+; Computes  C = exp(x)  by Horner evaluation of the Maclaurin series,
+; entirely as a BG-compute / Q-commit window program.
+;
+; License: MIT (Layer 3). Illustrative, not normative.
+;
+; Numeric contract (this reference implementation's documented Arena choices):
+;   Word     : 32-bit signed, Q4.28  (LSB = 2^-28 ~ 3.7e-9)
+;   Domain   : |x| <= 0.5
+;   Terms    : c9..c0 = 1/9! .. 1/0!   (truncation error x^10/10! <= 2.7e-10 < LSB)
+;   MAC      : Accm <- realign(Accm * Temp) + src ; product realigned >>28
+;              internally (documented Q-discipline; see trace, proposed Tie F-T7)
+;
+; Parameter-page input contract (PPM active page, this window):
+;   addr 0        : x            (Q4.28)
+;   addr 1..10    : c9, c8, ... c0   (Q4.28, descending Horner order)
+;   addr 11       : (result slot C — written on the SHADOW page)
+;
+; Idioms demonstrated: LDM parameter fetch; SWP Horner setup; MAC chain;
+; STM shadow staging; CMT boundary commit (the full window lifecycle).
+; ============================================================================
+
+.window exp_maclaurin
+
+.bg                     ; ---- compute band: everything below runs at full clock
+        SAD     0
+        LDM             ; Accm <- x                     (active page)
+        SWP             ; Temp <- x   (Horner multiplicand parked)
+
+        SAD     1
+        LDA     @PPM    ; Accm <- c9 = 1/9!
+        SAD     2
+        MAC     @PPM    ; Accm <- Accm*x + c8
+        SAD     3
+        MAC     @PPM    ; Accm <- Accm*x + c7
+        SAD     4
+        MAC     @PPM    ; Accm <- Accm*x + c6
+        SAD     5
+        MAC     @PPM    ; Accm <- Accm*x + c5
+        SAD     6
+        MAC     @PPM    ; Accm <- Accm*x + c4
+        SAD     7
+        MAC     @PPM    ; Accm <- Accm*x + c3
+        SAD     8
+        MAC     @PPM    ; Accm <- Accm*x + c2
+        SAD     9
+        MAC     @PPM    ; Accm <- Accm*x + c1
+        SAD     10
+        MAC     @PPM    ; Accm <- Accm*x + c0  = exp(x)
+
+        SAD     11
+        STM             ; shadow[11] <- exp(x)          (staged, invisible)
+
+.q                      ; ---- commit band: the sole reservation-band citizen
+        CMT             ; at Stay-timeup, trailing edge: pages swap, C goes live
+
+; end of window — 26 instructions: 25 BG + 1 Q.
+; The Stay-length mystery applies: this program is the "housekeeping" whose
+; clock cost helps set the minimum packet length for its profile.

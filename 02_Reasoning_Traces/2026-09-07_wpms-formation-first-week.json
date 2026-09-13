@@ -1,0 +1,150 @@
+{
+ "metadata": {
+  "title": "PTSG-WPMS-Formation — The First Week: a Profile Learns Where It Stands",
+  "title_ja": "PTSG-WPMS-Formation — 最初の一週間: プロファイルは自分の席を知る",
+  "date_range": [
+   "2026-09-01",
+   "2026-09-07"
+  ],
+  "session_type": "Founding trace of a subtraction profile: reading order, first rulings, ISA-shaping discoveries, deliverable 1, three-way amanuensis correspondence",
+  "participants": [
+   {
+    "name": "Tsuneo Ohnaka",
+    "name_ja": "大中庸生",
+    "role": "architect — all rulings"
+   },
+   {
+    "name": "Claude (amanuensis, PTSG-WPMS-Formation)",
+    "role": "drafting, verification, record"
+   },
+   {
+    "name": "Claude (amanuensis, PTSG-CPU-Formation)",
+    "role": "master side — correspondent"
+   },
+   {
+    "name": "Claude (amanuensis, FPGA Spectrum Engine)",
+    "role": "customer side — correspondent"
+   }
+  ],
+  "deliverables": [
+   "01_Architecture/PTSG_WPMS_Formation_Decision_Register_W_v0_5.md",
+   "01_Architecture/L2_Formation_Register_Map_v0_2.md",
+   "03_Sample_Implementations/tools/isa_fold_w.py",
+   "03_Sample_Implementations/tools/isa_table_w.json",
+   "03_Sample_Implementations/tools/pfasm_tools_w.py",
+   "03_Sample_Implementations/instruction_lists/exp_maclaurin_w.pfasm"
+  ],
+  "license": "CC0 1.0 Universal",
+  "format_version": "1.0"
+ },
+ "rulings": [
+  {
+   "id": "W-R0/W-R7",
+   "ruling": "Master pinned to PTSG-CPU-Formation 2026-09-03 revision; subtraction judged on the resulting form, not the path"
+  },
+  {
+   "id": "quantity doctrine",
+   "ruling": "2,083 clocks vs 2,048 bins per sample period per module; the 35-clock margin is the meaningful quantity; quotients are not; N per module is a design variable"
+  },
+  {
+   "id": "W-R1",
+   "ruling": "ISA speaks integers (16- and 32-bit external formats); Q-conventions are program-tier, owned by WPMS Ch.3"
+  },
+  {
+   "id": "W-F1",
+   "ruling": "RESTRICT F-F13 (ADRS as STA destination) — first Fixed"
+  },
+  {
+   "id": "W-T1",
+   "ruling": "OMIT data stack"
+  },
+  {
+   "id": "W-T3",
+   "ruling": "RESTRICT F-T5 (FG register-source branch)"
+  },
+  {
+   "id": "W-T5",
+   "ruling": "EXTEND-at-need (post-increment on mode-1 PPM sources)"
+  },
+  {
+   "id": "W-R4",
+   "ruling": "Layer vocabulary: L1 pipeline / L2 Formation (this profile) / L4 Formation (external, verification tool first)"
+  },
+  {
+   "id": "W-R5",
+   "ruling": "exp() placement: both options presented with deliverable 3"
+  },
+  {
+   "id": "W-R6",
+   "ruling": "Ownership split: ISA-visible register map = profile; Q-interpretation, wiring, L1 internals = WPMS Ch.3"
+  },
+  {
+   "id": "W-F22",
+   "ruling": "Two-stage Stay-value register (StayVal.s by WSV; StayVal.p loaded at Stay Set, presented to the Core); 12-bit; packet length = Stay value"
+  },
+  {
+   "id": "W-F23",
+   "ruling": "Program-owned MAC shift: SHV register written by WSH (mode 3 sub-op 3); MAC/MUL realign by >> SHV"
+  },
+  {
+   "id": "W-R8",
+   "ruling": "Post-commit shadow inheritance (F-F14) adopted profile-side now"
+  },
+  {
+   "id": "W-R9",
+   "ruling": "EW2: WSV value 0 or > NMAX (2048) -> Error HALT; EW3: STM into inbox -> Error HALT"
+  }
+ ],
+ "discoveries": [
+  {
+   "title": "The Stay is the packet",
+   "content": "k of the difference engine is the Stay counter output at clock rate; packet length = Stay value. The Core's external Stay-value input is live until the trailing edge (decrease below counter -> extra lap), so the freeze promised by F-F4 is realized Formation-side by a two-stage register. The Core's convention (internal operand 0 selects the external value) is INT-R1's register-source bit already in silicon."
+  },
+  {
+   "title": "An integer ISA must let programs own the shift",
+   "content": "Raised by the master's amanuensis on F-T7. Resolved by SHV/WSH. The master's first program re-issued with 'LDA #28; WSH' validates CLEAN on the profile contract with identical numerics; without those lines it overflows on every MAC."
+  }
+ ],
+ "deliverable_1": {
+  "address_space": "256 words: 0x00-0x7F PPM (8 blocks x 16 words, active/shadow), 0x80-0xFF inbox (external writers only, read-only to the datapath)",
+  "block": "N, TAG, A0, AR1, AR2, E0, PH0, PHD1, PHD2, OM0, OMD1, OMD2, CUR (+3 reserved)",
+  "sample_advance": "PH0+=OM0; PHD1+=OMD1; PHD2+=OMD2; A0=(A0*E0)>>SHV",
+  "customer_answers_2026-09-07": {
+   "accepted": true,
+   "Q": {
+    "PH*,OM*": "Q0.32 modular",
+    "A0": "Q1.31",
+    "AR1,AR2,E0": "Q4.28 (SHV=28); Q8.24 in Arena"
+   },
+   "RT.OUT": "bit0 L, bit1 R, 2-7 surround reserved, 8-15 aux/feedback reserved",
+   "mode": "T (table-direct), N_min ~ 32 bins",
+   "C3-D1": "WPMS boundary carries phase-domain integers only; Hz never crosses it"
+  }
+ },
+ "evidence": {
+  "positive": "exp_maclaurin_w.pfasm: 28 instructions CLEAN; max |err| 7.39e-09 at x=+0.40 (Q4.28 LSB 3.73e-09); identical to the master's run",
+  "negative": [
+   "N1 master program without WSH -> E8 overflow on every MAC",
+   "N2 STA ADRS -> E4 (W-F1)",
+   "N3 PSH -> E4 (W-T1)",
+   "N4 CMT in BG -> E3",
+   "N5 WSV 0 / 2049 -> EW2; STM at 0x82 -> EW3"
+  ]
+ },
+ "upstream_filings": {
+  "filed": [
+   "W-D7 K=k overclaim",
+   "W-D8 ADRS read/write vs no source ID",
+   "W-D9 register lacking F-T7/F-T8",
+   "W-D12 contract from worksheet not canon"
+  ],
+  "outcome": "all four accepted and fixed 2026-09-03; canon-derived contract generator introduced upstream"
+ },
+ "resumption": [
+  "Deliverable 2: L1 consumer interface (six-word latch at packet start; bin tick = K; sample-boundary flush; 3-bit CUR lane)",
+  "Deliverable 3: choreography L1/L2/L3 with W-R5 both options",
+  "R7 scenario on the profile toolchain",
+  "Layer 4 evidence on DE10-nano"
+ ],
+ "closing_note": "The profile's first program computed e again tonight — the same digits as the master's, with two more instructions in front that say whose Q it is."
+}

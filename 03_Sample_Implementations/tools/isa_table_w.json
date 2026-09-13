@@ -1,0 +1,221 @@
+{
+ "provenance": {
+  "profile": "PTSG-WPMS-Formation (L2 Formation)",
+  "derived_from": "isa_table_master_2026-09-03.json",
+  "master_provenance": {
+   "canon": "Layer 1 Chapter 3 — The Formation Command × Phase Table (DRAFT)",
+   "derived_by": "isa_from_chapter3.py",
+   "derived_on": "2026-09-03",
+   "common_law_applied": [
+    "CL-1 FG=HALT",
+    "CL-3 Q=HALT except CMT",
+    "CMT: Q-only (BG=HALT)"
+   ],
+   "cross_check": "agrees with worksheet-derived isa_table_v0_3.json (18/18 instructions)"
+  },
+  "folded": "2026-09-07",
+  "register": "Decision Register W v0.5",
+  "fold_log": [
+   "W-T1 OMIT: PSH removed (E4 in this profile)",
+   "W-T1 OMIT: POP removed (E4 in this profile)",
+   "W-F23 EXTEND: WSH (mode 3, sub-op 3) added; SHV <- Accm[4:0]",
+   "W-F1 RESTRICT F-F13: dest ID 6 (ADRS) removed (E4 in this profile)"
+  ]
+ },
+ "instructions": {
+  "LDA": {
+   "mode": 1,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "STA": {
+   "mode": 1,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "ADD": {
+   "mode": 1,
+   "subop": 2,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SUB": {
+   "mode": 1,
+   "subop": 3,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "MUL": {
+   "mode": 1,
+   "subop": 4,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "MAC": {
+   "mode": 1,
+   "subop": 5,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SWP": {
+   "mode": 1,
+   "subop": 6,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SFT": {
+   "mode": 1,
+   "subop": 7,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SAD": {
+   "mode": 2,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "LDM": {
+   "mode": 2,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "STM": {
+   "mode": 2,
+   "subop": 2,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "RTW": {
+   "mode": 2,
+   "subop": 3,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "CMT": {
+   "mode": 2,
+   "subop": 4,
+   "legality": {
+    "FG": "HALT",
+    "BG": "HALT",
+    "Q": "Legal"
+   }
+  },
+  "WSV": {
+   "mode": 3,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "WLV": {
+   "mode": 3,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "WJV": {
+   "mode": 3,
+   "subop": 2,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "WSH": {
+   "mode": 3,
+   "subop": 3,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   },
+   "added_by": "W-F23"
+  }
+ },
+ "source_ids": {
+  "0": "IMM",
+  "1": "TEMP",
+  "2": "PPM",
+  "3": "K",
+  "4": "I",
+  "5": "SN",
+  "6": "SSS"
+ },
+ "dest_ids": {
+  "0": "TEMP",
+  "1": "PPM_SHADOW"
+ },
+ "profile_registers": {
+  "StayVal.s": {
+   "width": 12,
+   "written_by": "WSV",
+   "W": "W-F22"
+  },
+  "StayVal.p": {
+   "width": 12,
+   "loaded_at": "Stay Set",
+   "to": "Core external Stay-value input",
+   "W": "W-F22"
+  },
+  "SHV": {
+   "width": 5,
+   "written_by": "WSH",
+   "W": "W-F23"
+  },
+  "ADRS": {
+   "width": 8,
+   "space": "0x00-0x7F PPM (active/shadow), 0x80-0xFF inbox (read-only to datapath)"
+  }
+ },
+ "profile_errors": {
+  "EW2": "WSV with value 0 or > NMAX (2048) -> Error HALT (W-R9)",
+  "EW3": "STM with ADRS in 0x80-0xFF (inbox) -> Error HALT (W-R9)"
+ },
+ "NMAX": 2048
+}

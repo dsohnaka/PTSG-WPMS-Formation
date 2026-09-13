@@ -1,0 +1,46 @@
+; ============================================================================
+; exp_maclaurin_w.pfasm — the master's first program, re-issued on the
+; PTSG-WPMS-Formation contract (isa_table_w.json).
+;
+; Differences from exp_maclaurin.pfasm (master Layer 3):
+;   * the profile's MAC realigns by >> SHV (W-F23); the program therefore
+;     OWNS its Q-convention by writing SHV = 28 first (Q4.28 for this sheet).
+;     The ISA speaks integers; this program chooses Q4.28.
+;   * nothing else changes: same page layout (addr 0 = x, 1..10 = c9..c0,
+;     result staged at 11), same BG-compute / Q-commit window lifecycle.
+;
+; Behaviour description (unchanged): C = exp(x), |x| <= 0.5, result goes
+; live exactly at the packet boundary. In WPMS, x = -2*gamma and C = AR2.
+; License: MIT (Layer 3). Illustrative.
+; ============================================================================
+.window exp_maclaurin_w
+.bg                     ; ---- compute band
+        LDA     #28     ; program-tier Q choice: Q4.28  -> shift 28
+        WSH             ; SHV <- Accm[4:0]              (W-F23)
+        SAD     0
+        LDM             ; Accm <- x                     (active page)
+        SWP             ; Temp <- x
+        SAD     1
+        LDA     @PPM    ; Accm <- c9 = 1/9!
+        SAD     2
+        MAC     @PPM    ; Accm <- (Accm*x >> SHV) + c8
+        SAD     3
+        MAC     @PPM
+        SAD     4
+        MAC     @PPM
+        SAD     5
+        MAC     @PPM
+        SAD     6
+        MAC     @PPM
+        SAD     7
+        MAC     @PPM
+        SAD     8
+        MAC     @PPM
+        SAD     9
+        MAC     @PPM
+        SAD     10
+        MAC     @PPM    ; Accm <- ... + c0 = exp(x)
+        SAD     11
+        STM             ; shadow[11] <- exp(x)
+.q                      ; ---- commit band
+        CMT             ; trailing edge: pages swap, C goes live

@@ -1,0 +1,191 @@
+{
+ "provenance": {
+  "canon": "Layer 1 Chapter 3 \u2014 The Formation Command \u00d7 Phase Table (DRAFT)",
+  "derived_by": "isa_from_chapter3.py",
+  "derived_on": "2026-09-03",
+  "common_law_applied": [
+   "CL-1 FG=HALT",
+   "CL-3 Q=HALT except CMT",
+   "CMT: Q-only (BG=HALT)"
+  ],
+  "cross_check": "agrees with worksheet-derived isa_table_v0_3.json (18/18 instructions)"
+ },
+ "instructions": {
+  "LDA": {
+   "mode": 1,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "STA": {
+   "mode": 1,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "ADD": {
+   "mode": 1,
+   "subop": 2,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SUB": {
+   "mode": 1,
+   "subop": 3,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "MUL": {
+   "mode": 1,
+   "subop": 4,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "MAC": {
+   "mode": 1,
+   "subop": 5,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SWP": {
+   "mode": 1,
+   "subop": 6,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SFT": {
+   "mode": 1,
+   "subop": 7,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "SAD": {
+   "mode": 2,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "LDM": {
+   "mode": 2,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "STM": {
+   "mode": 2,
+   "subop": 2,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "RTW": {
+   "mode": 2,
+   "subop": 3,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "CMT": {
+   "mode": 2,
+   "subop": 4,
+   "legality": {
+    "FG": "HALT",
+    "BG": "HALT",
+    "Q": "Legal"
+   }
+  },
+  "PSH": {
+   "mode": 2,
+   "subop": 5,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "POP": {
+   "mode": 2,
+   "subop": 6,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "WSV": {
+   "mode": 3,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "WLV": {
+   "mode": 3,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  },
+  "WJV": {
+   "mode": 3,
+   "subop": 2,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   }
+  }
+ },
+ "source_ids": {
+  "0": "IMM",
+  "1": "TEMP",
+  "2": "PPM",
+  "3": "K",
+  "4": "I",
+  "5": "SN",
+  "6": "SSS"
+ },
+ "dest_ids": {
+  "0": "TEMP",
+  "1": "PPM_SHADOW",
+  "6": "ADRS"
+ }
+}
