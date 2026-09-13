@@ -1,0 +1,7 @@
+# PROJECT ABSTRACT — canonical / 要旨(正典)
+
+*Single source. Edit here first; README, Hackaday.io, and docs radiate from this text.*
+
+**EN.** PTSG-WPMS-Formation is the first *subtraction profile* of the PTSG ecosystem: the L2 Formation of Wave-Packet Modulation Synthesis inside FPGA Spectrum Engine, produced from the master data ISA (PTSG-CPU-Formation) by subtraction and minimal addition on the frozen PTSG-Core. It keeps a decision register in which every choice is keyed to a master ID — inherit, restrict, omit, extend — and adds only what the master left to its first customer: a 256-word register map (16-word packet blocks, an inbox for external writers, routing entries), a two-stage Stay-value register so that one Stay is one packet and the Stay counter is the difference engine's *k*, and a program-owned MAC shift so that the ISA speaks integers while programs own their fixed-point meaning. Commits land on the trailing edge; zipper noise is impossible by construction. Numbers bind to DE10-nano and are measured, not promised.
+
+**JA.** PTSG-WPMS-Formation は PTSG エコシステム最初の*引き算プロファイル*——FPGA Spectrum Engine 内の波束変調合成の L2 Formation——であり、凍結された PTSG-Core の上でマスターデータ ISA(PTSG-CPU-Formation)から引き算と最小限の足し算で作られる。全決定をマスター ID に紐づける決定台帳(INHERIT / RESTRICT / OMIT / EXTEND)を持ち、マスターが最初の顧客に残したものだけを加える: 256 語のレジスタマップ(16 語のパケットブロック、外部書き手のための inbox、ルーティング項)、一 Stay = 一パケットを成立させステイカウンタを差分エンジンの *k* にする二段構えの Stay 値レジスタ、そして ISA が整数だけを語りプログラムが固定小数点の意味を所有するための、プログラム所有の MAC シフト。コミットは後縁に着地し、ジッパーノイズは構造的に不可能。数値は DE10-nano に束縛され、約束ではなく計測される。
