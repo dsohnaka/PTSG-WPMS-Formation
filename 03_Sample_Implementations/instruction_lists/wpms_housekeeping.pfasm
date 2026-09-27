@@ -1,0 +1,14 @@
+; ============================================================================
+; wpms_housekeeping.pfasm — the BG window of the housekeeping (HK) Stay that
+; closes every sweep. Deliverable 3 §6.2.
+; Every block is inside its write window here (its latch this sweep is past,
+; its next latch is in the next sweep), so the GO's items land whole.
+; BCP copies the take-set latched at this sweep's strobe: masked slots and
+; RT.OUT into the block store, the sweep item into SWEEP.a (EW5-checked),
+; then raises inbox-taken (CR5-I3). After HK the sequencer prefetches the
+; next sweep's first bundle and Stay value.
+; License: MIT (Layer 3). Illustrative.
+; ============================================================================
+.window wpms_housekeeping
+.bg
+        BCP

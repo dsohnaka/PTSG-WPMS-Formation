@@ -1,0 +1,43 @@
+; ============================================================================
+; wpms_packet.pfasm — the BG window of every packet Stay (L2 Formation)
+; Deliverable 3 §6.1. Immediate band (Stay Set -> Prog End); runs while L1
+; plays the packet whose bundle it latched on this Stay Set.
+;
+; CUR alias 0x100-0x10F = block order[q] of the packet now playing (W-F28).
+; Writing CUR is legal only here; the block's next latch is one sweep away,
+; so the write lands whole on the next sample (W-F24, write windows).
+;
+; Laws (WPMS Ch.3 §3.4.3, Ch.5 §5.3.2):
+;   PH0 += OM0 ; PHD1 += OMD1 ; PHD2 += OMD2          (mod 2^32, W-F30)
+;   LP  <- LP + clamp(LPT - LP, -LE0, +LE0)            (STP, W-F26)
+; Slots: +2 LP, +5 LE0, +6..8 PH0/PHD1/PHD2, +9 LPT, +A..C OM0/OMD1/OMD2.
+; 25 instructions -> N_MIN = 25 + 4 = 29 -> profile constant N_MIN = 32.
+; License: MIT (Layer 3). Illustrative.
+; ============================================================================
+.window wpms_packet
+.bg
+        SAD     0x105
+        LDM                     ; A = LE0 (rate >= 0)
+        SWP                     ; T = LE0
+        SAD     0x102
+        LDM                     ; A = LP
+        SAD     0x109
+        STP     @PPM            ; A = LP + clamp(LPT - LP, -LE0, +LE0)
+        SAD     0x102
+        STM                     ; LP <- glided
+        SAD     0x106
+        LDM                     ; A = PH0            (ADRS -> 0x107)
+        SAD     0x10A
+        ADD     @PPM            ; A = PH0 + OM0
+        SAD     0x106
+        STM                     ; PH0                (ADRS -> 0x107)
+        LDM                     ; A = PHD1           (ADRS -> 0x108)
+        SAD     0x10B
+        ADD     @PPM            ; + OMD1
+        SAD     0x107
+        STM                     ; PHD1               (ADRS -> 0x108)
+        LDM                     ; A = PHD2
+        SAD     0x10C
+        ADD     @PPM            ; + OMD2
+        SAD     0x108
+        STM                     ; PHD2

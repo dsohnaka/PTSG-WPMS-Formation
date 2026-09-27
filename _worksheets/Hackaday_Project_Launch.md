@@ -34,7 +34,7 @@ What the first week of the profile produced:
 
 - **One Stay is one packet.** The Core's Stay counter *is* the difference engine's *k*. Packet length is the Stay value, supplied by the formation through a two-stage register so the Core always sees a frozen number — no packet can be stretched mid-flight.
 - **The ISA speaks integers.** Every register and page slot has an integer width (16 or 32 bits). Fixed-point meaning belongs to programs: a program writes its shift register (`WSH`) before its first multiply-accumulate. The master's very first program, re-run on the profile with two extra instructions in front, computes *e* to the same digits; without them it overflows — the ISA does not know your Q.
-- **A 256-word register map**: eight 16-word packet blocks (shadow written, active read, swapped on the trailing edge — zipper noise is impossible by construction) plus an *inbox* that external writers use so the shadow keeps a single writer. Accepted by the WPMS side as customer.
+- **A register map of eight 16-word packet blocks** plus an *inbox* for external writers. The pipeline takes each packet's parameters as one **bundle** at packet start, and every write to a block lands between two of its latches — zipper noise is impossible by construction. (Register map v0.3; an earlier page-swap design was retracted with its evidence, Register W v0.6.)
 - **Nothing hand-edited.** The profile's translation contract is generated from the master's (itself generated from the master's normative chapter) by folding the register mechanically; a validator rejects what the register removed.
 
 Everything is Open Prompt: the specification, the reasoning traces (including the correspondence between the three AI amanuenses — master, profile, customer — each a separate session), and the reference tools. Numbers bind to DE10-nano and are measured, not promised.
@@ -64,3 +64,7 @@ The repository is open in the Open Prompt shape — specification, reasoning tra
 Next: the consumer interface (what the hardwired pipeline latches at packet start — six words, it turns out), the choreography of packet, sample and control periods, and the first multi-packet program. Then silicon.
 
 *(JA 要旨: 制約を先に読み、十八件の食い違いを保持、四件を上流へ提出し全件修正。Stay = パケットと二段構えの Stay 値レジスタ、整数 ISA とプログラム所有シフト、256 語のマップと inbox、手編集なしの契約生成鎖。次は消費者インターフェース、振付、マルチパケットプログラム、そしてシリコン。)*
+
+---
+
+*Note for the architect (2026-09-26):* Build Log #1 above describes the first week as it happened, including the page swap. If it is already published, it stands as a dated record; a Log #2 can tell the retraction — the oracle model that lost phase advances at two packets per sweep, and the bundle that replaced it — as an Evidence-Driven Retraction, the same pattern the customer recorded for its amplitude proposal. / Log #1 は第一週の記録として残し、撤回は Log #2 で語る案。

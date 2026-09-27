@@ -2,6 +2,11 @@
 ; exp_maclaurin_w.pfasm — the master's first program, re-issued on the
 ; PTSG-WPMS-Formation contract (isa_table_w.json).
 ;
+; v0.2 (2026-09-26): the profile has no page pair and no CMT (W-F24, W-F25).
+; The program runs in a non-packet (housekeeping-class) window and writes its
+; result straight into the block store (legal only there — EW4). Arithmetic and
+; numerics are unchanged.
+;
 ; Differences from exp_maclaurin.pfasm (master Layer 3):
 ;   * the profile's MAC realigns by >> SHV (W-F23); the program therefore
 ;     OWNS its Q-convention by writing SHV = 28 first (Q4.28 for this sheet).
@@ -41,6 +46,4 @@
         SAD     10
         MAC     @PPM    ; Accm <- ... + c0 = exp(x)
         SAD     11
-        STM             ; shadow[11] <- exp(x)
-.q                      ; ---- commit band
-        CMT             ; trailing edge: pages swap, C goes live
+        STM             ; store[11] <- exp(x)   (non-packet window only)

@@ -18,43 +18,39 @@ Nothing in the chain is hand-edited. Re-run both steps whenever the master's Ch.
 
 | Path | What it is | Origin |
 |---|---|---|
-| `tools/isa_from_chapter3.py` | Master's canon-derived contract generator | inherited (PTSG-CPU-Formation Layer 3, 2026-09-03) |
-| `tools/isa_table_master_2026-09-03.json` | Master contract at the pinned revision (18 instructions) | inherited |
-| `tools/isa_fold_w.py` | **Profile fold**: W-T1 (PSH/POP out), W-F23 (WSH in), W-F1 (dest ID 6 out); records profile registers, NMAX, EW2/EW3 | this profile |
-| `tools/isa_table_w.json` | **Profile contract** (17 instructions) with a fold log | generated |
+| `tools/isa_from_chapter3.py` | Master's canon-derived contract generator | inherited (2026-09-03) |
+| `tools/isa_table_master_2026-09-03.json` | Master contract at the pinned revision (18 instructions; identical to master `ad43cc2`) | inherited |
+| `tools/isa_fold_w.py` v0.2 | **Profile fold**: PSH/POP out (W-T1), CMT/RTW out (W-F25), WSV out (W-F28), dest ADRS out (W-F1); WSH (W-F23), **STP 4·0** (W-F26), **BCP 4·1** (W-F27) in; records the 9-bit map, profile registers, EW2–EW6 | this profile |
+| `tools/isa_table_w.json` | **Profile contract** (16 instructions) with a fold log | generated |
 | `tools/pfasm_tools_master.py` | Master's validator + Q4.28 oracle (kept verbatim for diffing) | inherited |
-| `tools/pfasm_tools_w.py` | **Profile validator + oracle**: SHV/WSH realignment; StayVal.s with EW2; 256-word space with inbox (EW3); quartet sources modelled; STA destination checked | this profile |
+| `tools/pfasm_tools_w.py` v0.2 | **Profile validator + machine**: single block store, inbox view, CUR alias, COMMIT view, write windows (EW3/EW4), STP, BCP with take-set and EW5, modular ADD/SUB (W-F30) | this profile |
+| `tools/sweep_sim.py` | **Sweep oracle**: runs the window programs under a model of the sweep sequencer with random GO traffic; compares every bundle L1 latches with a reference built from WPMS Ch.3/Ch.5 (glide law imported from the customer's oracle) | this profile |
+| `tools/negative_tests.py` | Every profile rule rejects what it should; a mutant window is caught | this profile |
+| `instruction_lists/wpms_packet.pfasm` | Packet window (25 instructions): level glide by STP, three phase advances, through the CUR alias | this profile |
+| `instruction_lists/wpms_housekeeping.pfasm` | Housekeeping window: `BCP` | this profile |
 | `instruction_lists/exp_maclaurin_master.pfasm` | The master's first program (26 instructions) | inherited |
-| `instruction_lists/exp_maclaurin_w.pfasm` | **The same program re-issued on the profile contract**, owning its Q: `LDA #28 ; WSH` precede the Horner chain (28 instructions) | this profile |
+| `instruction_lists/exp_maclaurin_w.pfasm` v0.2 | The same program on the profile, owning its Q (`WSH`), without CMT, in a non-packet window (27 instructions) | this profile |
 
-## Evidence (2026-09-07, oracle runs — not silicon) / 証拠
-
-Positive:
+## Evidence (2026-09-26, oracle runs — not silicon) / 証拠
 
 ```
+$ python3 isa_fold_w.py                         # 16 instructions; fold log cites every W-ID
+$ python3 sweep_sim.py <path/to/wpms_layer1_oracle.py> 20000 <seed>     # seeds 2026, 7, 42
+sweep_sim: 20000 samples, 71341 packet plays, 1403 GOs (...; 416 full-load GOs); glide law from customer oracle
+  L1 bundle mismatches vs reference: 0   machine/sequencer errors: none
+  per-packet window: 25 instructions -> N_MIN = 25 + 4 = 29 (profile constant 32)
+  BCP worst case: 10 clocks;  worst sweep (Core nominals included): 2064 of 2083 clocks
+$ python3 negative_tests.py                     # 13/13 negative tests behave as specified
 $ python3 pfasm_tools_w.py ../instruction_lists/exp_maclaurin_w.pfasm isa_table_w.json
-validate: 28 instructions; CLEAN
-sweep x in [-0.5, +0.5], program-owned Q4.28 (SHV=28), 10-term Horner:
-  x=-0.50  exp=0.606530660  got=0.606530659  |err|=8.12e-10
-  x=+0.00  exp=1.000000000  got=1.000000000  |err|=0.00e+00
-  x=+0.50  exp=1.648721271  got=1.648721270  |err|=4.37e-10
-max |err| over sweep = 7.39e-09 at x=+0.40 (Q4.28 LSB = 3.73e-09); SHV=28
+validate: 27 instructions; CLEAN ... max |err| over sweep = 7.39e-09 at x=+0.40
 ```
 
-Identical to the master's published run — the profile changed *who owns the shift*, not the arithmetic.
+Totals over the three seeds: 60,000 samples, 215,627 packet plays, 4,174 GOs (1,175 at full load), **0 mismatches**.
 
-Negative (each keyed to a register row):
-
-| Test | Change | Result |
-|---|---|---|
-| N1 | master program (no `WSH`) on the profile contract | validates CLEAN; **oracle: E8 overflow on every MAC** — the ISA speaks integers; a program that does not own its Q gets integers |
-| N2 | `STA ADRS` | `E4` — destination ADRS not in contract (**W-F1**) |
-| N3 | `PSH` | `E4` — not in the profile contract (**W-T1**) |
-| N4 | `CMT` moved to `.bg` | `E3` (inherited) |
-| N5 | `WSV` with 0 and with 2049; `STM` at 0x82 | `EW2`, `EW2`, `EW3` (**W-R9**) |
+The sweep oracle's Core timings (wake 2, 4 control clocks per packet, 3 in housekeeping) are nominal stand-ins for the Core's commitments; Layer 4 replaces them with measurements.
 
 ## Next / 次
 
-- R7 scenario (multi-packet loop + base + stay + back-execution) on this toolchain.
-- Per-packet preparation program (register map §7) validated and costed.
-- Offer `pfasm_tools_w.py`'s quartet/SHV modelling upstream once stable — inherit, not fork.
+- Layer 4 on DE10-nano: g, T_wake, N_MIN, BCP duration.
+- The Core score in Core syntax once the Core chooses R1 or R2 (Deliverable 3 §3).
+- Offer `pfasm_tools_w.py`'s machine and the sweep oracle upstream once stable — inherit, not fork.

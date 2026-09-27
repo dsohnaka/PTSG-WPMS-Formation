@@ -52,8 +52,9 @@ PTSG ecosystem / PTSG エコシステム
 
 - **The subtraction is judged on the result, not the path.** Additions made here may be absorbed by the master later; the profile need not wait. / **引き算は経路ではなく結果で判定される。** ここでの足し算は後日マスターに吸収されうる。
 - **The ISA speaks integers.** Every register and page slot has an integer width; fixed-point meaning belongs to programs and to WPMS Ch.3. A program owns its Q by writing the shift register (`WSH`) before its first MAC. / **ISA は整数を語る。** Q 規約はプログラムと第3章のもの。
-- **One Stay is one packet.** Packet length is the Stay value; the Formation supplies it through a two-stage register (`StayVal.s` → `StayVal.p` at Stay Set), so the Core sees a frozen value and no packet can be stretched mid-flight. / **一 Stay が一パケット。**
-- **Zero zipper noise by construction** — inherited (F-F7) and elevated: shadow written, active read, swapped on the trailing edge. / **ゼロ・ジッパーノイズは構造的。**
+- **One Stay is one packet.** Packet length is the Stay value; a sweep sequencer supplies it to the Core's `stay_value` pin through a two-stage register (`StayVal.s` → `StayVal.p` at Stay Set). / **一 Stay が一パケット。**
+- **Zero zipper noise by construction** — inherited (F-F7) and elevated: L1 latches each packet's parameters as one **bundle** at packet start, and every write to a block falls inside that block's **write window**, between two of its latches. Nothing is ever seen half-done. / **ゼロ・ジッパーノイズは構造的。** バンドル提示と書込み窓による。
+- **A retraction with its evidence.** The first design swapped pages per packet; an oracle model showed it losing phase advances once a sweep held two packets, and it was withdrawn in favour of the bundle (Register W v0.6). / **根拠を添えた撤回。**
 - **What the register removes, the validator rejects.** The profile contract is generated from the master's by folding the register mechanically; it is never hand-edited. / **台帳が除いたものは検証器が拒否する。**
 
 ---
@@ -79,10 +80,12 @@ PTSG-WPMS-Formation/
 
 **Launch phase, 2026-09.** / **ローンチ段階。**
 
-- ✅ Decision Register W v0.5 — first Fixed rulings (RESTRICT F-F13; OMIT data stack; RESTRICT FG register-source branch; two-stage Stay-value register; program-owned MAC shift) / 決定台帳 W v0.5
-- ✅ L2 Formation register map v0.2 — 256-word space, 16-word packet blocks, inbox, RT entries; accepted by the WPMS side as customer / レジスタマップ v0.2
-- ✅ Layer 3: contract chain Ch.3 → master → profile; validator/oracle; the master's first program re-issued owning its Q — CLEAN, identical numerics / 第3層
-- 🔄 Deliverable 2 (L1 consumer interface), deliverable 3 (choreography) — in preparation
+- ✅ Decision Register W v0.6 — rulings through 2026-09-26: log-domain amplitude; bundle presentation; STP and masked block copy; sweep sequencer / 決定台帳 W v0.6
+- ✅ Deliverable 1: L2 Formation register map v0.3 — single block store, 9-bit address space, CUR alias, slots per the customer's Appendix 5.A.2 / レジスタマップ v0.3
+- ✅ Deliverable 2: L1 consumer interface v0.1 — eight-value bundle, `packet_start` / `bin_valid` / `K` / 成果物 2
+- ✅ Deliverable 3: choreography v0.1 — sweep, packet and housekeeping windows; Condition lanes; answers to PTSG-Core / 成果物 3
+- ✅ Layer 3 v0.2: contract fold (16 instructions); oracle; **sweep oracle: 60,000 samples, 0 mismatches against the customer's semantics**; 13/13 negative tests / 第3層
+- 🔄 Rulings W-R12 … W-R17 open; the Core chooses how to repeat packets (R1/R2)
 - ⏳ Layer 4 evidence on DE10-nano — to come (*measured, not promised*)
 
 ---

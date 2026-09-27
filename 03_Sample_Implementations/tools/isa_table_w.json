@@ -13,13 +13,19 @@
    ],
    "cross_check": "agrees with worksheet-derived isa_table_v0_3.json (18/18 instructions)"
   },
-  "folded": "2026-09-07",
-  "register": "Decision Register W v0.5",
+  "folded": "2026-09-26",
+  "register": "Decision Register W v0.6",
   "fold_log": [
-   "W-T1 OMIT: PSH removed (E4 in this profile)",
-   "W-T1 OMIT: POP removed (E4 in this profile)",
+   "W-F25 OMIT (routing merged into the block store at +0xE): RTW removed -> E4 in this profile",
+   "W-F25 OMIT (no page pair under W-F24: bundle presentation replaces the page swap): CMT removed -> E4 in this profile",
+   "W-T1 OMIT (no data stack): PSH removed -> E4 in this profile",
+   "W-T1 OMIT (no data stack): POP removed -> E4 in this profile",
+   "W-F28 RESTRICT (the sweep sequencer is the sole writer of the Stay-value path): WSV removed -> E4 in this profile",
    "W-F23 EXTEND: WSH (mode 3, sub-op 3) added; SHV <- Accm[4:0]",
-   "W-F1 RESTRICT F-F13: dest ID 6 (ADRS) removed (E4 in this profile)"
+   "W-F26 EXTEND: STP (mode 4, sub-op 0) added; Accm <- Accm + clamp(src - Accm, -Temp, +Temp); Temp < 0 -> EW6",
+   "W-F27 EXTEND: BCP (mode 4, sub-op 1) added; masked copy of the GO's take-set: inbox -> block store, sweep item -> SWEEP.a; HK only (EW4)",
+   "W-F1 RESTRICT F-F13: dest ID 6 (ADRS) removed -> E4",
+   "W-F24 RESTRICT PPM-1/PPM-2: dest ID 1 renamed PPM_SHADOW -> STORE (single block store, write windows)"
   ]
  },
  "instructions": {
@@ -122,33 +128,6 @@
     "Q": "HALT"
    }
   },
-  "RTW": {
-   "mode": 2,
-   "subop": 3,
-   "legality": {
-    "FG": "HALT",
-    "BG": "Legal",
-    "Q": "HALT"
-   }
-  },
-  "CMT": {
-   "mode": 2,
-   "subop": 4,
-   "legality": {
-    "FG": "HALT",
-    "BG": "HALT",
-    "Q": "Legal"
-   }
-  },
-  "WSV": {
-   "mode": 3,
-   "subop": 0,
-   "legality": {
-    "FG": "HALT",
-    "BG": "Legal",
-    "Q": "HALT"
-   }
-  },
   "WLV": {
    "mode": 3,
    "subop": 1,
@@ -175,7 +154,30 @@
     "BG": "Legal",
     "Q": "HALT"
    },
-   "added_by": "W-F23"
+   "added_by": "W-F23",
+   "semantics": "SHV <- Accm[4:0]"
+  },
+  "STP": {
+   "mode": 4,
+   "subop": 0,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   },
+   "added_by": "W-F26",
+   "semantics": "Accm <- Accm + clamp(src - Accm, -Temp, +Temp); Temp < 0 -> EW6"
+  },
+  "BCP": {
+   "mode": 4,
+   "subop": 1,
+   "legality": {
+    "FG": "HALT",
+    "BG": "Legal",
+    "Q": "HALT"
+   },
+   "added_by": "W-F27",
+   "semantics": "masked copy of the GO's take-set: inbox -> block store, sweep item -> SWEEP.a; HK only (EW4)"
   }
  },
  "source_ids": {
@@ -189,18 +191,29 @@
  },
  "dest_ids": {
   "0": "TEMP",
-  "1": "PPM_SHADOW"
+  "1": "STORE"
+ },
+ "address_map": {
+  "ADRS_width": 9,
+  "0x000-0x07F": "block store, 8 blocks x 16 slots; datapath write only in HK (else EW4)",
+  "0x080-0x0FF": "inbox view (+0xE = staged RT.OUT, +0xD reads 0); read-only (STM -> EW3)",
+  "0x100-0x10F": "CUR alias = block order[q] of the packet now playing; write only inside a packet window (else EW4)",
+  "0x110-0x117": "COMMIT[b] view: [15:0] mask, [16] RT.OUT bit, [29] copied, [30] armed-in-take-set; read-only",
+  "0x118": "staged sweep word (inbox), read-only",
+  "0x119": "SWEEP.a (sweep word in effect), read-only",
+  "0x11A": "sequencer status [3:0] q, [7:4] P, [8] HK phase; read-only",
+  "other": "E5"
  },
  "profile_registers": {
   "StayVal.s": {
    "width": 12,
-   "written_by": "WSV",
-   "W": "W-F22"
+   "written_by": "sweep sequencer (prefetch of N of the next packet's block)",
+   "W": "W-F22 (amended), W-F28"
   },
   "StayVal.p": {
    "width": 12,
-   "loaded_at": "Stay Set",
-   "to": "Core external Stay-value input",
+   "loaded_at": "Stay Set (N for a packet Stay, 0 otherwise)",
+   "to": "PTSG-Core stay_value pin (C4-F15)",
    "W": "W-F22"
   },
   "SHV": {
@@ -208,14 +221,22 @@
    "written_by": "WSH",
    "W": "W-F23"
   },
-  "ADRS": {
-   "width": 8,
-   "space": "0x00-0x7F PPM (active/shadow), 0x80-0xFF inbox (read-only to datapath)"
+  "SWEEP.a": {
+   "width": 28,
+   "written_by": "BCP (sweep item), reset to P = 0",
+   "W": "W-F28"
   }
  },
  "profile_errors": {
-  "EW2": "WSV with value 0 or > NMAX (2048) -> Error HALT (W-R9)",
-  "EW3": "STM with ADRS in 0x80-0xFF (inbox) -> Error HALT (W-R9)"
+  "EW2": "block N outside [N_MIN, NMAX] at prefetch -> Error HALT (W-R9, extended by W-R13)",
+  "EW3": "STM into a read-only region (inbox, COMMIT view, status) -> Error HALT",
+  "EW4": "write-window violation: store write outside HK not via CUR; CUR write outside a packet window; BCP outside HK -> Error HALT",
+  "EW5": "invalid sweep word at BCP: P > 8, repeated block among the first P, or sum N > NMAX -> Error HALT",
+  "EW6": "STP with Temp < 0 -> Error HALT"
  },
- "NMAX": 2048
+ "constants": {
+  "NMAX": 2048,
+  "N_MIN": 32,
+  "BLOCKS": 8
+ }
 }
