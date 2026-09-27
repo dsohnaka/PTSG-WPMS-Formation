@@ -1,0 +1,4 @@
+# build products of the run scripts (regenerable)
+build/
+*/build/
+__pycache__/

@@ -1,0 +1,6 @@
+ptsg_core_sv_tb — stay_value regression, PRESCALE=1, build: FORM B (the RTL as written)
+VCD info: dumpfile sv4_formB.vcd opened for output.
+PASS SV-4: pin 0 -> 37 in the execute clock: that Stay lasted 37 clocks (expected 37; the anti-pattern gives 8192)
+
+SV SUMMARY: 1 passed, 0 failed (build: FORM B (the RTL as written))
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/core/ptsg_core_sv_tb.v:397: $finish called at 406000 (1ps)

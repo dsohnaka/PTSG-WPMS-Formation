@@ -1,0 +1,39 @@
+VCD info: dumpfile dump.vcd opened for output.
+PASS T1: idiom D duty 25:25 (= written Stay, jitter-free)
+PASS T2: BG-Jump tick counted, period exact 30:30
+PASS T3: FG Branch+Jump loop period = 10 clocks (2 prescale units)
+PASS T4: BG Branch held the timing signals (0x0020 never driven)
+PASS T5a: insertion deferred to Stay-timeup (ack on the timeup clock)
+PASS T5b: handler ran and Return resumed the post-Stay address
+PASS T6: 16-bit Loop iterated 6145 times (12-bit would stop at 2049)
+PASS T7: Q-band NOP scanned past; queued Jump fired at timeup
+PASS T8: FG Reset fired immediately, drove its own tsig (0x00BB), no s3 escape
+PASS T9: Q-band Reset fired at Stay-timeup (SN=0, own tsig 0x0CCC)
+PASS T10: BG Reset panicked SN to 0, left the Stay window open (documented interpretation)
+PASS T11: queued Reset overrode a simultaneously-queued Jump (Reset always wins)
+PASS T12: Q-band Jump(0) queued as literal (no S_IND hijack), fired at timeup
+PASS T13: FG indirect Jump tick-gated, loop period=10 (2 prescale units)
+PASS T14: BG indirect Jump landed correctly, stayed immediate, tsig held
+PASS T15: Q Branch taken -> auto-save + jump (hr_state=4, own address)
+PASS T16: Q Branch not-taken resumed at save_state+1 (no auto-save)
+PASS T17: Q Branch self-loop (operand 0) resumed at own address, no auto-save
+PASS T18: Q Call auto-saved + jumped (hr_state=4, own address)
+PASS T19: Q Return restored context at Stay-timeup, resumed at hr_state+1
+PASS T20: Q Return with a deeper stacked context fell through to S_POP correctly
+PASS T21: second Q-band SN reservation while one is pending -> HALT (C3-F26/C8)
+PASS T22: FG Base Set is illegal (C3-F23) -> HALT (error_flag raised, state frozen at s1)
+PASS T23: insertion rescued S_HALT (error_flag cleared, handler ran, halted addr auto-saved)
+PASS T24: stray 2nd Prog End in the Q band -> HALT (state frozen at s4)
+PASS T25: FG Prog End is illegal (C3-F23) -> HALT (state frozen at s1)
+PASS T26: paired BG Base Set/Loop reached Prog End without HALT
+PASS T27: unpaired BG Base Set<->Loop across the BG->Q boundary -> HALT (C3-F24)
+PASS T28: Q Base Set loaded Stay Start State; self-loop re-executed the window (2 laps)
+PASS T29: unpaired Q Base Set<->Loop -> HALT at Stay-timeup (C3-F24)
+PASS T30: BG Stay Set re-kick tick-gated (period=5), tsig held
+PASS T31: Q Stay Set re-kick did not reset stay_cnt (1 -> 1)
+PASS T32: scaled 2^28 self-loop — 4 laps, jitter-free 40-clock spacing, clean exit
+PASS T33: S_HALT rescue with occupied hr spilled via S_PUSH (depth=1), handler ran
+PASS T34: over-constrained window fired timeup at the earliest S_WAIT tick (no runaway)
+
+ALL CONFORMANCE TESTS PASSED
+/home/user/PTSG-Core/03_Sample_Implementations/ptsg_core_verilog/ptsg_core_conformance_tb.v:1192: $finish called at 234246000 (1ps)

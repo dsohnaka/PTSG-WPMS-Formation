@@ -1,0 +1,30 @@
+ptsg_core_sv_tb — stay_value regression, PRESCALE=1, build: FORM B (the RTL as written)
+  SV-1 pin=2: Stay lasted 2 clocks (expected 2); loop period 4 (expected 4)
+  SV-1 pin=3: Stay lasted 3 clocks (expected 3); loop period 5 (expected 5)
+  SV-1 pin=7: Stay lasted 7 clocks (expected 7); loop period 9 (expected 9)
+  SV-1 pin=100: Stay lasted 100 clocks (expected 100); loop period 102 (expected 102)
+  SV-1 pin=2048: Stay lasted 2048 clocks (expected 2048); loop period 2050 (expected 2050)
+  SV-1 pin=4095: Stay lasted 4095 clocks (expected 4095); loop period 4097 (expected 4097)
+PASS SV-1: bare Stay with pin = N lasts N clocks (operand 5 superseded)
+PASS SV-2: pin = 1 -> Stay lasted 1 clock (expected 1); loop period 3 (expected 3, as ptsg_core_tb F1)
+PASS SV-3: pin 20 -> 9 at clock 5 of a Stay: that Stay lasted 20 (expected 20), the next 9 (expected 9)
+PASS SV-4: pin 0 -> 37 in the execute clock: that Stay lasted 37 clocks (expected 37; the anti-pattern gives 8192)
+  SV-5 pin=3 (< elapsed 7): Stay visible 2 clocks, 1 S_WAIT clock (expected 2 and 1); Stay Set -> resume 8 clocks
+  SV-5 contrast, pin silent: operand 100 -> Stay Set -> resume 100 clocks (expected 100), Stay visible 94 (expected 94)
+PASS SV-5: windowed Stay, pin below the elapsed count -> timeup on the first S_WAIT tick
+  SV-5b pin=29: packet period 30 clocks (expected 30); K = 0..29 with 0 errors
+  SV-5b pin=30: packet period 30 clocks (expected 30); K = 0..29 with 0 errors
+  SV-5b pin=31: packet period 31 clocks (expected 31); K = 0..30 with 0 errors
+  SV-5b pin=32: packet period 32 clocks (expected 32); K = 0..31 with 0 errors
+  SV-5b pin=33: packet period 33 clocks (expected 33); K = 0..32 with 0 errors
+  SV-5b pin=64: packet period 64 clocks (expected 64); K = 0..63 with 0 errors
+  SV-5b pin=2048: packet period 2048 clocks (expected 2048); K = 0..2047 with 0 errors
+  SV-5b pin=4095: packet period 4095 clocks (expected 4095); K = 0..4094 with 0 errors
+PASS SV-5b (supplementary): packet Stay = N exactly for N >= 30 (25 window + 5 Core clocks), K = 0..N-1, g = 0
+PASS SV-6: Stay(0), pin silent -> 4096 clocks (expected 4096, C2-F3)
+  SV-7a lut{2:7, 4:11}: on 7, off 11 (expected 7, 11)
+  SV-7b lut{2:7, 4:0} : on 7, off 5 (expected 7, 5 = operand)
+PASS SV-7: len_lut[state_number] gives per-state lengths; a 0 entry keeps the operand
+
+SV SUMMARY: 8 passed, 0 failed (build: FORM B (the RTL as written))
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/core/ptsg_core_sv_tb.v:397: $finish called at 359686000 (1ps)

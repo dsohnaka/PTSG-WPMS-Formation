@@ -1,0 +1,8 @@
+vcd_compare: RH030 = conf.rh030/dump.vcd
+             RH031p = conf.rh031p/dump.vcd
+  end time: RH030 #234246000, RH031p #234246000
+  signals in both: 192; value changes compared: 579164
+  only in RH030: 0 []
+  only in RH031p: 2 ['ptsg_core_conformance_tb.dut.stay_dur_lit[12:0]', 'ptsg_core_conformance_tb.dut.stay_value[11:0]']
+  mismatching common signals: 0
+  RESULT: IDENTICAL on the common set
