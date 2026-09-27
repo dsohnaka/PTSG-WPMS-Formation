@@ -1,0 +1,15 @@
+score_rt: score_as.py images through the Core copy (ptsg_core_rh031p.v, IMEM_DEPTH 4096, PRESCALE 1,
+          stay_value 0, stack_ack 0) — evidence class RTL-SIM
+  fixture: 03_Sample_Implementations/hw/l2/scores/d3_sketch_r1_fixture.score -> 240 words + trap at 0xFFF; SLEEP 0x001, PKT0 0x003, HK 0x0EB
+  RT-1 P=0: 1 issue(s), each the image's word: yes (BCP 0x00000140 at 0x0EC); HK Stay Set -> Jump SLEEP 13 clocks (T_HK 13)
+       expected (SD-05 a, by reading): the NONEMPTY Branch is taken on an empty sweep and auto-saves;
+       the second taken Branch finds the holding register occupied and waits for stack_ack in S_PUSH.
+       observed: HK entered at clock(s) [152]; stack push request at [(302, '0x002')]; at the end state 0x002, fsm 3 (stalled)
+  RT-2 P=2: 1 issue(s), each the image's word: yes
+       expected (D3 §3-§4): P > 0 -> NONEMPTY true -> PKT0 (0x003).
+       observed: clock 301 state 0x002 timing_signals 0x0000, clock 302 state 0x0EB timing_signals 0x0002, clock 601 state 0x002 timing_signals 0x0000 — the Branch at 0x002 is evaluated while timing_signals still hold the word before it (SLEEP, CSEL = STROBE, registered bus): SD-14
+  RT-3 P=2 (variant, NOP CSEL=NONEMPTY before the Branch): 101 issue(s), each the image's word: yes; window 0 issued in order: yes
+       expected (SD-05 b, by reading): MORE true at PKT0's timeup -> queued Branch not taken -> resume at
+       Branch + 1 = PKT0's own Stay, which runs again as a bare Stay N_MIN: PKT0 -> PKT1 = 2 x 32 = 64.
+       observed: PKT0 Stay Set at clock [303], PKT1 at [367], HK at [399]: PKT0 -> PKT1 64 clocks, PKT1 -> HK 32 clocks (MORE false: taken, auto-save)
+score_rt: PASS — the Core decodes the assembled words as encoded (observations above are discrepancies, filed, not failures)

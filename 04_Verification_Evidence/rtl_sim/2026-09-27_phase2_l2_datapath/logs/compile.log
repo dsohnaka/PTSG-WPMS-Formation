@@ -1,0 +1,11 @@
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:272: warning: @* is sensitive to all 16 words in array 'ib_rd_a'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:274: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:352: warning: @* is sensitive to all 8 words in array 'pmask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:352: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:353: warning: @* is sensitive to all 8 words in array 'ib_n'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:353: warning: @* is sensitive to all 8 words in array 'st_n'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:442: warning: @* is sensitive to all 8 words in array 'pmask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:457: warning: @* is sensitive to all 8 words in array 'rtout'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:457: warning: @* is sensitive to all 16 words in array 'ib_rd_c'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:469: warning: @* is sensitive to all 8 words in array 'pmask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:473: warning: @* is sensitive to all 8 words in array 'cm_mask'.

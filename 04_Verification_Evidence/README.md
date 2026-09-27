@@ -11,6 +11,7 @@
 | 2026-09-27 | `SILICON_BRIEF_2026-09-27.md` — the plan for the silicon phase (Layer 4 plan, not evidence) | — | — |
 | 2026-09-27 | `reports/phase0_baseline.md` (+ `reports/logs/phase0/`) — golden models and the frozen Core re-run unchanged | ORACLE, RTL-SIM | green |
 | 2026-09-27 | `reports/phase1_core.md` + `rtl_sim/2026-09-27_phase1_core_rh031p/` (`observation.md`, VCDs) — PTSG-Core RH031 (provisional) on a copy: bit-identical with the pin silent; SV-0 … SV-7 pass; the anti-pattern caught (8192-clock Stay); packet floor 30 for a 25-instruction window | RTL-SIM | PASS |
+| 2026-09-27 | `reports/phase2_datapath.md` + `rtl_sim/2026-09-27_phase2_l2_datapath/` (`observation.md`, logs) — the L2 Formation datapath bit-identical to `pfasm_tools_w.Machine` on 3,914 cases (105,519 instructions); `exp_maclaurin_w` 7.39e-09; 13 negatives; 20/20 mutants caught; the score round trip on the Core copy; SD-13, SD-14 filed; resources by Yosys (ESTIMATE) | RTL-SIM | PASS |
 | 2026-09-27 | `reports/discrepancies.md` — SD-01 … SD-12, filed, not fixed | — | open |
 
 ## Layout / 構成

@@ -1,0 +1,96 @@
+cosim_l2: hw/l2/wpms_formation.v vs pfasm_tools_w.Machine — evidence class RTL-SIM (Icarus Verilog)
+  seed 20260927; 3914 cases in 4 simulator runs (3914 played); generation 6.5 s, simulation 6.9 s
+  group      cases   pass   instr err-cases  first-error codes (expected = observed)
+  packet        60     60   13100         0  
+  hk           300    300     397        73  EW5 73
+  fwd          120    120    3645         0  
+  exp           21     21     567         0  
+  neg           15     15     151        12  E4 4, EW2 1, EW3 1, EW4 3, EW5 2, EW6 1
+  e4           377    377    2646       376  E4 376
+  prefetch      14     14      14         8  EW2 8
+  timing         7      7      45         1  EW3 1
+  random      3000   3000   84954       450  E5 125, E8 75, EW3 95, EW4 117, EW5 2, EW6 36
+  total       3914   3914  105519       920
+  instructions issued by mnemonic: ADD 9518, BCP 1647, CMT 1, LDA 10892, LDM 14074, MAC 4097, MUL 4232, PSH 1, SAD 24820, SFT 4051, STA 4671, STM 6190, STP 3445, SUB 5736, SWP 4457, WJV 2015, WLV 1943, WSH 3352, WSV 1
+  exp_maclaurin_w on the hardware: max |err| over 21 x = 7.39e-09 at x=+0.40 (model: 7.39e-09)
+  simulator warnings (switch/prefetch protocol) and invariant violations: 0
+  [trace] T1 packet window back to back
+      #0  SAD 0x105      issue clock  18869   X clock  18870   commit
+      #1  LDM            issue clock  18870   X clock  18871   commit
+      #2  SWP            issue clock  18871   X clock  18872   commit
+      #3  SAD 0x102      issue clock  18872   X clock  18873   commit
+      #4  LDM            issue clock  18873   X clock  18874   commit
+      #5  SAD 0x109      issue clock  18874   X clock  18875   commit
+      #6  STP @PPM       issue clock  18875   X clock  18876   commit
+      #7  SAD 0x102      issue clock  18876   X clock  18877   commit
+      #8  STM            issue clock  18877   X clock  18878   commit
+      #9  SAD 0x106      issue clock  18878   X clock  18879   commit
+      #10 LDM            issue clock  18879   X clock  18880   commit
+      #11 SAD 0x10A      issue clock  18880   X clock  18881   commit
+      #12 ADD @PPM       issue clock  18881   X clock  18882   commit
+      #13 SAD 0x106      issue clock  18882   X clock  18883   commit
+      #14 STM            issue clock  18883   X clock  18884   commit
+      #15 LDM            issue clock  18884   X clock  18885   commit
+      #16 SAD 0x10B      issue clock  18885   X clock  18886   commit
+      #17 ADD @PPM       issue clock  18886   X clock  18887   commit
+      #18 SAD 0x107      issue clock  18887   X clock  18888   commit
+      #19 STM            issue clock  18888   X clock  18889   commit
+      #20 LDM            issue clock  18889   X clock  18890   commit
+      #21 SAD 0x10C      issue clock  18890   X clock  18891   commit
+      #22 ADD @PPM       issue clock  18891   X clock  18892   commit
+      #23 SAD 0x108      issue clock  18892   X clock  18893   commit
+      #24 STM            issue clock  18893   X clock  18894   commit
+  [trace] T2 BCP with 0 taken block(s) and a sweep item
+      #0  BCP            issue clock  20055   X clock  20056   commit
+      inbox_taken first seen high in clock 20057
+  [trace] T2 BCP with 1 taken block(s) and a sweep item
+      #0  BCP            issue clock  19918   X clock  19919   commit
+      copy lands: block 0 @ 19920
+      inbox_taken first seen high in clock 19921
+      bcp_busy high in clocks 19920..19920 (1 clocks)
+  [trace] T2 BCP with 8 taken block(s) and a sweep item
+      #0  BCP            issue clock  20100   X clock  20101   commit
+      copy lands: block 0 @ 20102, block 1 @ 20103, block 2 @ 20104, block 3 @ 20105, block 4 @ 20106, block 5 @ 20107, block 6 @ 20108, block 7 @ 20109
+      inbox_taken first seen high in clock 20110
+      bcp_busy high in clocks 20102..20109 (8 clocks)
+  [trace] T3 BCP then store traffic at once (copy paused, forwarding)
+      #0  BCP            issue clock  19023   X clock  19024   commit
+      #1  SAD 0x7F       issue clock  19024   X clock  19025   commit
+      #2  LDM            issue clock  19025   X clock  19026   commit
+      #3  SAD 0x75       issue clock  19026   X clock  19027   commit
+      #4  STM            issue clock  19027   X clock  19028   commit
+      #5  STM            issue clock  19028   X clock  19029   commit
+      #6  SAD 0x3E       issue clock  19029   X clock  19030   commit
+      #7  LDA @PPM       issue clock  19030   X clock  19031   commit
+      #8  STA @PPM       issue clock  19031   X clock  19032   commit
+      #9  STA TEMP       issue clock  19032   X clock  19033   commit
+      copy lands: block 0 @ 19025, block 1 @ 19026, block 2 @ 19027, block 3 @ 19030, block 4 @ 19031, block 5 @ 19033, block 6 @ 19034, block 7 @ 19035
+      inbox_taken first seen high in clock 19036
+      bcp_busy high in clocks 19025..19035 (11 clocks)
+  [trace] T4 error halt: nothing after the violator executes
+      #0  LDA #12        issue clock  20179   X clock  20180   commit
+      #1  SAD 0x0FF      issue clock  20180   X clock  20181   commit
+      #2  STM            issue clock  20181   X clock  20182   ERROR EW3
+      #3  LDA #99        issue clock  20182   X clock  20183   not executed (halted)
+      #4  STA TEMP       issue clock  20183   X clock  20184   not executed (halted)
+      #5  WLV            issue clock  20184   X clock  20185   not executed (halted)
+  [trace] T5 strobe in the clock BCP executes
+      #0  BCP            issue clock  20046   X clock  20047   commit
+      copy lands: block 0 @ 20048, block 1 @ 20049, block 2 @ 20050, block 3 @ 20051, block 4 @ 20052, block 5 @ 20053, block 6 @ 20054, block 7 @ 20055
+      bcp_busy high in clocks 20048..20055 (8 clocks)
+  [PASS] N1 direct store write in a packet window             -> EW4 at instruction 5
+  [PASS] N2 BCP in a packet window                            -> EW4 at instruction 0
+  [PASS] N3 CUR write in HK                                   -> EW4 at instruction 1
+  [PASS] N4 STM into the inbox                                -> EW3 at instruction 1
+  [PASS] N5 STP with LE0 < 0                                  -> EW6 at instruction 6
+  [PASS] N6 sweep word repeats a block                        -> EW5 at instruction 0
+  [PASS] N7 sweep sum N > NMAX                                -> EW5 at instruction 0
+  [PASS] N8 CMT (no page pair)                                -> E4 at instruction 2
+  [PASS] N9 WSV (sequencer owns stay_value)                   -> E4 at instruction 2
+  [PASS] N10 PSH (no data stack)                              -> E4 at instruction 2
+  [PASS] N11 STA ADRS (W-F1)                                  -> E4 at instruction 2
+  [PASS] N12 mutant window (PH0 advanced twice) caught #0     -> no error; mutant differs from the correct window at slot 0x6 of block 3 (cur 3)
+  [PASS] N12 mutant window (PH0 advanced twice) caught #1     -> no error; mutant differs from the correct window at slot 0x6 of block 7 (cur 7)
+  [PASS] N12 mutant window (PH0 advanced twice) caught #2     -> no error; mutant differs from the correct window at slot 0x6 of block 4 (cur 4)
+  [PASS] N13 block N = 16 < N_MIN at prefetch                 -> EW2 at prefetch
+cosim_l2: PASS — 3914/3914 cases bit-identical to the model

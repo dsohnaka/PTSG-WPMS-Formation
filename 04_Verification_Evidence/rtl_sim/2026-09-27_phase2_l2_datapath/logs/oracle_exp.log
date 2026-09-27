@@ -1,0 +1,6 @@
+validate: 27 instructions; CLEAN
+sweep x in [-0.5, +0.5], program-owned Q4.28 (SHV=28), 10-term Horner, non-packet window:
+  x=-0.50  exp=0.606530660  got=0.606530659  |err|=8.12e-10
+  x=+0.00  exp=1.000000000  got=1.000000000  |err|=0.00e+00
+  x=+0.50  exp=1.648721271  got=1.648721270  |err|=4.37e-10
+max |err| over sweep = 7.39e-09 at x=+0.40 (Q4.28 LSB = 3.73e-09)

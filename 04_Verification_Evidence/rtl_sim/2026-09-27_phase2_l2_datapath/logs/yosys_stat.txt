@@ -1,0 +1,54 @@
+
+5. Printing statistics.
+
+=== wpms_formation ===
+
+        +----------Local Count, excluding submodules.
+        | 
+     3624 wires
+    10675 wire bits
+      200 public wires
+     4397 public wire bits
+       40 ports
+      512 port bits
+     5128 cells
+     4611   $lut
+        1   MISTRAL_CLKBUF
+      138   MISTRAL_IB
+        2   MISTRAL_MUL18X18
+        2   MISTRAL_MUL27X27
+      374   MISTRAL_OB
+     3702 submodules
+      931   MISTRAL_ALUT_ARITH
+     1203   MISTRAL_FF
+     1568   MISTRAL_MLAB
+
+=== design hierarchy ===
+
+        +----------Count including submodules.
+        | 
+     5128 wpms_formation
+
+        +----------Count including submodules.
+        | 
+     3624 wires
+    10675 wire bits
+      200 public wires
+     4397 public wire bits
+       40 ports
+      512 port bits
+        - memories
+        - memory bits
+        - processes
+     5128 cells
+     4611   $lut
+        1   MISTRAL_CLKBUF
+      138   MISTRAL_IB
+        2   MISTRAL_MUL18X18
+        2   MISTRAL_MUL27X27
+      374   MISTRAL_OB
+     3702 submodules
+      931   MISTRAL_ALUT_ARITH
+     1203   MISTRAL_FF
+     1568   MISTRAL_MLAB
+
