@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# negative_tests.py — each profile rule rejects what it should (Register W v0.6 §4).
+# negative_tests.py — each profile rule rejects what it should (Register W v0.7 §4).
 # License: MIT (Layer 3). Evidence class ORACLE.
 import json, os, subprocess, sys, tempfile
 import pfasm_tools_w as T

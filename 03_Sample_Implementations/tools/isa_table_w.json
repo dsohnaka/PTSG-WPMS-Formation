@@ -13,8 +13,8 @@
    ],
    "cross_check": "agrees with worksheet-derived isa_table_v0_3.json (18/18 instructions)"
   },
-  "folded": "2026-09-26",
-  "register": "Decision Register W v0.6",
+  "folded": "2026-09-27",
+  "register": "Decision Register W v0.7",
   "fold_log": [
    "W-F25 OMIT (routing merged into the block store at +0xE): RTW removed -> E4 in this profile",
    "W-F25 OMIT (no page pair under W-F24: bundle presentation replaces the page swap): CMT removed -> E4 in this profile",

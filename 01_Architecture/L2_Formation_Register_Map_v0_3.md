@@ -2,7 +2,7 @@
 # L2 Formation: ISA-Visible Register Map / L2 Formation の ISA 可視レジスタマップ
 
 *v0.3 DRAFT · WPMS-Formation amanuensis · 2026-09-26 · CC0 · rows first (F-F8).*
-*Anchored in Decision Register W v0.6 as W-F18 (block format), W-F21 (integer widths), W-F22 (Stay-value path), W-F23 (SHV), W-F24 (single block store, bundle presentation), W-F25 (CMT/RTW omitted), W-F26 (STP), W-F27 (BCP), W-F28 (sweep sequencer), W-F29 (log-domain slots), W-F30 (modular ADD/SUB, proposed).*
+*Anchored in Decision Register W v0.7 as W-F18 (block format), W-F21 (integer widths), W-F22 (Stay-value path), W-F23 (SHV), W-F24 (single block store, bundle presentation), W-F25 (CMT/RTW omitted), W-F26 (STP), W-F27 (BCP), W-F28 (sweep sequencer), W-F29 (log-domain slots), W-F30 (modular ADD/SUB). Rulings through 2026-09-27 applied.*
 *Master: PTSG-CPU-Formation @ `ad43cc2` (contains the 2026-09-03 fixes). Core: PTSG-Core @ `1b58ebc`, `stay_value` per CHANGES_Layer1_stay-value_2026-09-26 (PROVISIONAL). Customer: FPGA_Spectrum_Engine_OpenPrompt @ `891fce6` (Layer 1 Ch.1–5, Appendix 5.A).*
 
 *成果物 1 v0.3。ISA が語るのは整数・番地・幅・書き手・書込み窓だけであり、Q の解釈と L1 への配線は WPMS 第3章の所有(W-R6)。本版は付録 5.A.2 のスロット表を正本とし、2026-09-26 の裁定(Mode T 撤回・バンドル提示・拡張二命令・シーケンサ別名)を反映する。*
@@ -12,7 +12,7 @@
 ## Changes from v0.2 / v0.2 からの変更
 
 - **Mode T and Mode W retracted** (W-R-09-26). They relied on "rewrite only what changed" under pointer-flip commits, which holds only for two-window differences; an oracle model showed Mode T losing advances for P ≥ 2. Replaced by **bundle presentation** (§4).
-- **No page pair.** One block store; L1 never reads it except through bundles latched at packet start; the datapath writes each block only inside its **write window** (§5). PPM-1/PPM-2 RESTRICTED for packet blocks (ruled 2026-09-26). CMT and RTW omitted (§3, proposed as the ruling's consequence).
+- **No page pair.** One block store; L1 never reads it except through bundles latched at packet start; the datapath writes each block only inside its **write window** (§5). PPM-1/PPM-2 RESTRICTED for packet blocks (ruled 2026-09-26). CMT and RTW omitted (§3; W-R12, ruled 2026-09-27).
 - **Slots per the customer's Appendix 5.A.2** (log-domain amplitude, LPT, LS0), with one change: **+0xE holds RT.OUT** (CUR retired with Mode T).
 - **Two instructions added** (approved): **STP** step-toward, **BCP** masked block copy. **One region added**: the CUR alias, driven by the sweep sequencer (approved).
 - **ADRS widened to 9 bits** for the alias and status regions.
@@ -65,21 +65,21 @@ All Formation instructions of this profile are **BG-only** (FG → E1 at the Cor
 
 | Mode·sub | Mnemonic | Semantics | Status |
 |---|---|---|---|
-| 1·0–1·7 | LDA STA ADD SUB MUL MAC SWP SFT | master semantics, except: **ADD/SUB wrap modulo 2³²** (W-F30, proposed); MUL `Accm ← (Accm × src) >> SHV`; MAC `Accm ← ((Accm × Temp) >> SHV) + src`; MUL/MAC overflow → E8 | INHERIT (+W-F23, W-F30) |
+| 1·0–1·7 | LDA STA ADD SUB MUL MAC SWP SFT | master semantics, except: **ADD/SUB wrap modulo 2³²** (W-F30); MUL `Accm ← (Accm × src) >> SHV`; MAC `Accm ← ((Accm × Temp) >> SHV) + src`; MUL/MAC overflow → E8 | INHERIT (+W-F23, W-F30) |
 | 2·0 | SAD | ADRS ← literal (9 bits) | INHERIT |
 | 2·1 | LDM | Accm ← [ADRS]; ADRS += 1 (reads the L2 space of §4) | INHERIT, space per W-F24 |
 | 2·2 | STM | [ADRS] ← Accm; ADRS += 1 (subject to write windows, §5) | INHERIT, rule per W-F24 |
 | 2·3 | RTW | — | **OMIT** (W-F25): routing lives at +0xE of each block |
 | 2·4 | CMT | — | **OMIT** (W-F25): no page pair |
 | 2·5, 2·6 | PSH, POP | — | OMIT (W-T1) |
-| 3·0 | WSV | — | **RESTRICT** (W-F28): the sequencer is the sole writer of the Stay-value path |
+| 3·0 | WSV | — | **RESTRICT** (W-F28, W-R12): the sequencer is the sole writer of the Stay-value path |
 | 3·1 | WLV | LoopVal.s ← Accm[11:0] | INHERIT (unconnected) |
 | 3·2 | WJV | JumpVal ← Accm[11:0] | INHERIT |
 | 3·3 | WSH | SHV ← Accm[4:0] | W-F23 |
 | **4·0** | **STP** src | `Accm ← Accm + clamp(src − Accm, −Temp, +Temp)`; the difference is taken in 33 bits; **Temp < 0 → EW6**. The result lies between the old Accm and src, so it can never overflow. | **W-F26** |
 | **4·1** | **BCP** | Masked copy of the GO's **take-set** (§7): for every taken, not-yet-copied block b, slots i with mask bit i set (bits 13, 14 ignored) ← inbox; mask bit 16 → +0xE ← staged RT.OUT; the taken sweep item → SWEEP.a (EW5-checked); then Σ N of the sweep in effect is re-checked (EW5); finally **inbox-taken** is raised. **Legal only in the housekeeping window** (else EW4). Duration: 1 + one clock per copied item in the reference realization (≤ 10). | **W-F27** |
 
-Mode 4 is used for the profile's own extensions so that no master code is re-used; if the master absorbs STP/BCP, their encoding is the master's to choose (path independence).
+Mode 4 is the profile's extension mode (W-R14), used so that no master code is re-used; if the master absorbs STP/BCP, their encoding is the master's to choose (path independence).
 
 ---
 

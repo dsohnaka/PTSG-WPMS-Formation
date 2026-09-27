@@ -5,5 +5,6 @@
 | File | What it is |
 |---|---|
 | `Hackaday_Project_Launch.md` | Text for the Hackaday.io project (summary, description, first log). |
+| `Hackaday_Log2_draft.md` | Build Log #2 draft: the retraction of the page swap and the bundle that replaced it (2026-09-27). |
 | `Reply_to_Spectrum_Engine_2026-09-07.md` | Draft reply to the customer's review of deliverable 1 (via the architect). |
 | `Reply_to_CPU_Formation_2026-09-07.md` | Courtesy notice to the master's amanuensis (contract chain, W-F22/W-F23 realized, tools to offer upstream). |

@@ -26,7 +26,7 @@ fpga · synthesizer · additive-synthesis · isa · open-prompt · cyclone-v · 
 
 ## Description
 
-FPGA Spectrum Engine has 10,240 oscillators and, until recently, no humane way to tell them what to do: five years ago the architect worked out that a drawbar per oscillator would run 300 metres. Wave-Packet Modulation Synthesis (WPMS) is the answer to that: oscillators are addressed in *packets* — runs of adjacent bins described by a dozen numbers (an initial amplitude, two ratios, a phase, its first and second differences across the packet, and their per-sample increments) — and a hardwired difference engine unfolds those numbers into 2,048 bins per sample period, one bin per clock.
+FPGA Spectrum Engine has 10,240 oscillators and, until recently, no humane way to tell them what to do: five years ago the architect worked out that a drawbar per oscillator would run 300 metres. Wave-Packet Modulation Synthesis (WPMS) is the answer to that: oscillators are addressed in *packets* — runs of adjacent bins described by a dozen numbers (a level and the target it glides toward, a spectral shape in log₂, a phase with its first and second differences across the packet, and their per-sample increments) — and a hardwired difference engine unfolds those numbers into 2,048 bins per sample period, one bin per clock.
 
 Something has to write those dozen numbers, per packet, per sample, and switch them without a click. That something is a tiny instruction-driven timing core (PTSG-Core) wearing a data-processing "formation" (PTSG-CPU-Formation, the master ISA). **PTSG-WPMS-Formation is the first *subtraction profile* of that master**: it keeps a decision register in which every choice is keyed to a master decision — inherit, restrict, omit, extend — and adds only what the master deliberately left to its first customer.
 
@@ -67,4 +67,4 @@ Next: the consumer interface (what the hardwired pipeline latches at packet star
 
 ---
 
-*Note for the architect (2026-09-26):* Build Log #1 above describes the first week as it happened, including the page swap. If it is already published, it stands as a dated record; a Log #2 can tell the retraction — the oracle model that lost phase advances at two packets per sweep, and the bundle that replaced it — as an Evidence-Driven Retraction, the same pattern the customer recorded for its amplitude proposal. / Log #1 は第一週の記録として残し、撤回は Log #2 で語る案。
+*(Log #1 is kept as the dated record of the first week; its page swap is retracted in Log #2.)*

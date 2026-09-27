@@ -80,12 +80,13 @@ PTSG-WPMS-Formation/
 
 **Launch phase, 2026-09.** / **ローンチ段階。**
 
-- ✅ Decision Register W v0.6 — rulings through 2026-09-26: log-domain amplitude; bundle presentation; STP and masked block copy; sweep sequencer / 決定台帳 W v0.6
+- ✅ Decision Register W v0.7 — rulings through 2026-09-27: log-domain amplitude; bundle presentation; STP and masked block copy; sweep sequencer; every open ruling closed / 決定台帳 W v0.7
 - ✅ Deliverable 1: L2 Formation register map v0.3 — single block store, 9-bit address space, CUR alias, slots per the customer's Appendix 5.A.2 / レジスタマップ v0.3
 - ✅ Deliverable 2: L1 consumer interface v0.1 — eight-value bundle, `packet_start` / `bin_valid` / `K` / 成果物 2
 - ✅ Deliverable 3: choreography v0.1 — sweep, packet and housekeeping windows; Condition lanes; answers to PTSG-Core / 成果物 3
 - ✅ Layer 3 v0.2: contract fold (16 instructions); oracle; **sweep oracle: 60,000 samples, 0 mismatches against the customer's semantics**; 13/13 negative tests / 第3層
-- 🔄 Rulings W-R12 … W-R17 open; the Core chooses how to repeat packets (R1/R2)
+- ✅ Layer 2: the retraction of Mode T, with its evidence (trace 2026-09-27) / 第2層
+- 🔄 The Core score in Core syntax: R2 (preferred) and R1 (bring-up)
 - ⏳ Layer 4 evidence on DE10-nano — to come (*measured, not promised*)
 
 ---

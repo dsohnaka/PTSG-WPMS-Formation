@@ -2,7 +2,7 @@
 # The Choreography: Sweep, Packets, Housekeeping / 振付——掃引・パケット・ハウスキーピング
 
 *v0.1 DRAFT · WPMS-Formation amanuensis · 2026-09-26 · CC0.*
-*Anchored in Decision Register W v0.6 as **W-F20** (choreography), **W-F19** (Condition lanes, ruled to live here), W-F22/W-F28 (Stay-value path, sequencer). Answers WPMS Ch.3 §3.7–3.8 (CR3-T1, T2, C1, M1) and Ch.5 §5.10 (CR5-I1…I3, S1, L1, R1), and PTSG-Core's trace 2026-09-26 Hook A. Register map: v0.3; consumer interface: Deliverable 2.*
+*Anchored in Decision Register W v0.7 as **W-F20** (choreography), **W-F19** (Condition lanes, ruled to live here), W-F22/W-F28 (Stay-value path, sequencer). Answers WPMS Ch.3 §3.7–3.8 (CR3-T1, T2, C1, M1) and Ch.5 §5.10 (CR5-I1…I3, S1, L1, R1), and PTSG-Core's trace 2026-09-26 Hook A. Register map: v0.3; consumer interface: Deliverable 2.*
 
 *成果物 3。一サンプル周期の中で、Core・L2 Formation・シーケンサ・L1 が誰がいつ何をするかを定める。Core の符号化は Core の所有であり、本書は必要な振る舞いと、それを満たす素描を示す。*
 
@@ -35,7 +35,7 @@ Only two kinds of Stay exist: **packet Stays** (Formation-timed, N clocks) and o
 
 ## 3. The Core score — a sketch / Core の楽譜——素描
 
-Encodings belong to PTSG-Core. The sketch states the behaviour the profile needs; two realizations of the packet repetition are given, and the Core chooses (its g = 0 commitment of 2026-09-26 applies to either).
+Encodings belong to PTSG-Core. The sketch states the behaviour the profile needs. Two realizations of the packet repetition are kept, both selectable (W-R17, 2026-09-27): **R2 is preferred**; R1 serves bring-up and quick packet checks. The Core's g = 0 commitment of 2026-09-26 applies to either.
 
 ```
 ; header: packet Stays in this score are Formation-timed — stay_value supersedes their operands (C5-V8)
@@ -53,8 +53,8 @@ HK:    Global  Stay Set         ; TS_PKT = 0
        Jump    SLEEP
 ```
 
-**Realization R1 — unrolled positions.** Eight copies of PKTq (q = 0…7) in instruction memory; the queued transfer at each timeup is a forward conditional: MORE → PKT(q+1), else → HK. Needs only forward transfers; costs ≈ 8 × 30 words of the 4,096.
-**Realization R2 — one packet body.** A queued re-entry to Base (= Stay Start State) while MORE holds. Needs a conditional backward transfer at timeup, or a loop count supplied as data (P).
+**Realization R1 — unrolled positions (bring-up).** Eight copies of PKTq (q = 0…7) in instruction memory; the queued transfer at each timeup is a forward conditional: MORE → PKT(q+1), else → HK. Needs only forward transfers; costs ≈ 8 × 30 words of the 4,096.
+**Realization R2 — one packet body (preferred).** A queued re-entry to Base (= Stay Start State) while MORE holds. Needs a conditional backward transfer at timeup, or a loop count supplied as data (P).
 
 Either way the profile issues **no Q-band command** at a packet boundary (it has no Q citizen), so the Core's single reservation slot (C3-F26) is free for this transfer. Under the retracted Mode T every packet would have queued a CMT *and* needed a transfer — the E7 conflict would have forced a gap.
 
@@ -191,7 +191,7 @@ Moot on the WPMS hot path: with log-domain amplitude (W-F29, ruled 2026-09-26), 
 | Item | Path |
 |---|---|
 | g = 0 across packet Stays; T_wake ≤ 4 | Core; Layer 4 |
-| Realization R1 or R2 of the packet repetition | Core (via the architect) |
+| Core syntax for R2 (preferred) and R1 (bring-up) | Core (via the architect) |
 | N_MIN (window clocks + Core clocks) on silicon | Layer 4 |
 | BCP duration in the chosen store organization | Layer 4; NMAX follows (§9) |
 | Paused-block reading of CR3-C1 | customer confirmation |

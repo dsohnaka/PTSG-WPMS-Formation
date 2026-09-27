@@ -11,7 +11,7 @@ import json, sys, datetime
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else "isa_table_master_2026-09-03.json"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "isa_table_w.json"
-REGISTER = "Decision Register W v0.6"
+REGISTER = "Decision Register W v0.7"
 
 m = json.load(open(SRC))
 w = {"provenance": {"profile": "PTSG-WPMS-Formation (L2 Formation)", "derived_from": SRC,

@@ -2,7 +2,7 @@
 # The L1 Consumer Interface / L1 消費者インターフェース
 
 *v0.1 DRAFT · WPMS-Formation amanuensis · 2026-09-26 · CC0 · rows first (F-F8).*
-*Anchored in Decision Register W v0.6 as **W-F17**. Answers WPMS Ch.3 §3.8: CR3-B1, CR3-B2, CR3-R1, CR3-T1, CR3-T3 (and the L1-visible part of CR3-C1). Register map: `L2_Formation_Register_Map_v0_3.md`.*
+*Anchored in Decision Register W v0.7 as **W-F17**. Answers WPMS Ch.3 §3.8: CR3-B1, CR3-B2, CR3-R1, CR3-T1, CR3-T3 (and the L1-visible part of CR3-C1). Register map: `L2_Formation_Register_Map_v0_3.md`.*
 
 *成果物 2。L1 パイプラインが L2 Formation から受け取るものの全て——パケット開始時に一度だけラッチするバンドル八値と、三本のレーン——と、その時刻の約束を定める。W-R6 により、本書が定めるのは信号・幅・時刻・保証であり、L1 内部と Q の解釈は WPMS 第3章の所有。*
 

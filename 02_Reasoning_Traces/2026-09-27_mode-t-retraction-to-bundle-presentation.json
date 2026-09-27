@@ -1,0 +1,178 @@
+{
+ "metadata": {
+  "title": "From Page Swap to Bundle — the Retraction of Mode T",
+  "title_ja": "ページ交代からバンドルへ——Mode T の撤回",
+  "date_range": [
+   "2026-09-26",
+   "2026-09-27"
+  ],
+  "prelude": "customer Layer 1 completed 2026-09-24 (FPGA_Spectrum_Engine_OpenPrompt @ 891fce6)",
+  "participants": [
+   "Tsuneo Ohnaka (大中庸生), architect and ruling authority",
+   "Claude (Anthropic), PTSG-WPMS-Formation amanuensis"
+  ],
+  "model_record": {
+   "2026-09-26": "Claude Opus 5.5",
+   "2026-09-27": "Claude Opus 5.5",
+   "earlier turns": "not recorded"
+  },
+  "session_type": "Evidence-driven retraction of a ratified design and its replacement",
+  "pins": {
+   "master": "PTSG-CPU-Formation @ ad43cc2",
+   "core": "PTSG-Core @ 1b58ebc (stay_value PROVISIONAL)",
+   "customer": "FPGA_Spectrum_Engine_OpenPrompt @ 891fce6"
+  },
+  "license": "CC0 1.0"
+ },
+ "precedence": [
+  "Register W v0.7, Register Map v0.3 and Deliverables 2-3 supersede all page-pair, CUR, Mode T and Mode W text of 2026-09-07",
+  "The customer's DP-5 (Mode T) and Appendix 5.A.2 +0xE row are superseded from the profile side (PR-5)",
+  "An agent finding both implements the bundle and flags the older text"
+ ],
+ "rulings": [
+  {
+   "date": "2026-09-26",
+   "id": "W-R10 amplitude",
+   "ruling": "log-domain amplitude (CR3-A1)"
+  },
+  {
+   "date": "2026-09-26",
+   "id": "remedy (ii)",
+   "ruling": "Mode T retracted; bundle presentation adopted; PPM-1/PPM-2 RESTRICTED for packet blocks"
+  },
+  {
+   "date": "2026-09-26",
+   "id": "extensions",
+   "ruling": "STP, masked block copy (BCP), sweep-sequencer alias approved"
+  },
+  {
+   "date": "2026-09-26",
+   "id": "Core",
+   "ruling": "g = 0 between consecutive Stays; Branch-0 wake within 4 clocks (1 clock or more is an investigation item)"
+  },
+  {
+   "date": "2026-09-27",
+   "id": "W-R12",
+   "ruling": "OMIT CMT and RTW; RT.OUT at +0xE; WSV RESTRICTED (sequencer sole writer)"
+  },
+  {
+   "date": "2026-09-27",
+   "id": "W-R13",
+   "ruling": "EW2 widened to N < N_MIN = 32; EW3-EW6 Error HALT"
+  },
+  {
+   "date": "2026-09-27",
+   "id": "W-R14",
+   "ruling": "mode 4: STP 4.0, BCP 4.1"
+  },
+  {
+   "date": "2026-09-27",
+   "id": "W-R15",
+   "ruling": "ADD/SUB wrap modulo 2^32 (W-F30)"
+  },
+  {
+   "date": "2026-09-27",
+   "id": "W-R16",
+   "ruling": "Condition lanes STROBE/NONEMPTY/MORE; TS_CSEL, TS_PKT"
+  },
+  {
+   "date": "2026-09-27",
+   "id": "W-R17",
+   "ruling": "R2 (one packet body) preferred; R1 (unrolled) kept for bring-up; both selectable"
+  }
+ ],
+ "reasoning_chain": [
+  "Mode T: L1 reads the block named by CUR; per-packet CMT; program prepares packet b+1 during packet b; relied on F-F14 and 'rewrite only what changed'",
+  "Customer Hook A priced: CR5-L1 software clamp 35 instr with E8 at canonical edges vs STP 9; CR5-S1 conflicts with W-F1/W-T3 -> alias; CR5-I1 masked copy -> hardware BCP",
+  "Pricing the masked copy raised: into which page does it land, and does it survive the next swap?",
+  "F-F14 is literally true: untouched values are what the consumer was 'just' using - i.e. before the last commit; delta writes under a pointer flip are safe only across two windows (the back buffer is two frames old)",
+  "Model: Mode T correct at P=1, block stuck at P=2, wrong at P=3; per-sweep commit fixes [S] but a retune reverts every other sweep (partial settles halfway, wobbling at Fs/2)",
+  "Remedy (i) mirror to both pages: a straightforward two-pass rule failed 1,263/2,000; remedy (ii) single store + bundle + write windows: 0/2,000",
+  "L1 reads a block once per sample at packet start (CR3-B1/B2): protect the instant, not the interval; the latch is W-F22's staged/presented pair widened to eight values (customer's candidate b)",
+  "Construction: CUR alias writes only in the packet window; all blocks writable in housekeeping; sequencer prefetch; take-set at strobe; BCP in housekeeping; stay_value pin driven N/0",
+  "Fell away: CMT, RTW, WSV, E3, E7; the profile has no Q-band citizen, freeing the Core's single reservation slot for the packet re-entry",
+  "Found in the oracle: phase ADD must wrap -> W-F30"
+ ],
+ "decision_points": [
+  {
+   "id": "DP-1",
+   "point": "level glide",
+   "chosen": "STP"
+  },
+  {
+   "id": "DP-2",
+   "point": "select the block now playing",
+   "chosen": "sequencer alias (W-F1, W-T3 kept)"
+  },
+  {
+   "id": "DP-3",
+   "point": "masked copy",
+   "chosen": "BCP"
+  },
+  {
+   "id": "DP-4",
+   "point": "delta writes under a flip",
+   "chosen": "single store"
+  },
+  {
+   "id": "DP-5",
+   "point": "where L1's guarantee lives",
+   "chosen": "bundle latch"
+  },
+  {
+   "id": "DP-6",
+   "point": "where GO items land",
+   "chosen": "housekeeping window; bound one sweep"
+  },
+  {
+   "id": "DP-7",
+   "point": "ADD overflow",
+   "chosen": "wrap (W-F30)"
+  },
+  {
+   "id": "DP-8",
+   "point": "packet repetition",
+   "chosen": "R2 preferred, R1 for bring-up (architect)"
+  }
+ ],
+ "evidence": {
+  "sweep_sim": "3 seeds x 20,000 samples; 215,627 packet plays; 4,174 GOs (1,175 full-load); 0 mismatches vs a reference from WPMS Ch.3/Ch.5 with the customer's step_toward; worst sweep 2,064/2,083 clocks",
+  "negative_tests": "13/13; mutant window (PH0 advanced twice) caught with 2,798 mismatches in 3,000 samples",
+  "contract": "16 instructions (master 18 - 5 + 3)",
+  "exp_demo": "27 instructions CLEAN, max err 7.39e-09",
+  "packet_window": "25 instructions -> N >= 29 -> N_MIN = 32",
+  "evidence_class": "oracle, not silicon"
+ },
+ "pitfalls": [
+  "A generator that stops generating looks like a clean run (null GO never cleared: 53 GOs in 12,000 samples)",
+  "A generator breaking the switch's sum-N rule exposed a missing backstop (2,899-clock sweeps) -> BCP re-checks the sweep in effect (EW5)",
+  "A failed hurried rule is not an impossibility proof for remedy (i)",
+  "Core timings in the oracle are nominal (wake 2, 4 per packet, 3 in housekeeping)"
+ ],
+ "design_patterns": [
+  "The Back Buffer Is Two Frames Old",
+  "Present, Don't Swap",
+  "Write Windows",
+  "Empty Q Band",
+  "Evidence-Driven Retraction"
+ ],
+ "filings": {
+  "upstream": [
+   "W-D22 F-F14 consequence holds only for two-window differences",
+   "W-D23 name 大中恒夫 -> 大中庸生 in the CPU-Formation README"
+  ],
+  "downstream": [
+   "W-D24 customer 01_Architecture README inventory",
+   "PR-1..PR-5 (sweep-word duplicates, N range, LE0 >= 0, paused-block reading of CR3-C1, +0xE wording and P <= 8 firm)"
+  ],
+  "relay": "by the architect"
+ },
+ "resumption_hooks": [
+  "A: the Core score in Core syntax, R2 (preferred) and R1 (bring-up)",
+  "B: Layer 4 on DE10-nano - g, T_wake, N_MIN, BCP duration",
+  "C: master absorption of STP, BCP, bundle presentation; F-F14 restated",
+  "D: customer alignment (PR-1..5)",
+  "E: Claude Code generation of the sequencer and slot-major store with sweep_sim.py as golden model"
+ ],
+ "closing_note": "Protect the instant the consumer reads, not the time between."
+}
