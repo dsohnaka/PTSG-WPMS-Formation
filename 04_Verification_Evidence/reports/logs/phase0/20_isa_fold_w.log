@@ -1,0 +1,12 @@
+/tmp/tmp.fwSmUvyHs6/isa_table_w.json: 16 instructions (18 in master); fold log:
+  W-F25 OMIT (routing merged into the block store at +0xE): RTW removed -> E4 in this profile
+  W-F25 OMIT (no page pair under W-F24: bundle presentation replaces the page swap): CMT removed -> E4 in this profile
+  W-T1 OMIT (no data stack): PSH removed -> E4 in this profile
+  W-T1 OMIT (no data stack): POP removed -> E4 in this profile
+  W-F28 RESTRICT (the sweep sequencer is the sole writer of the Stay-value path): WSV removed -> E4 in this profile
+  W-F23 EXTEND: WSH (mode 3, sub-op 3) added; SHV <- Accm[4:0]
+  W-F26 EXTEND: STP (mode 4, sub-op 0) added; Accm <- Accm + clamp(src - Accm, -Temp, +Temp); Temp < 0 -> EW6
+  W-F27 EXTEND: BCP (mode 4, sub-op 1) added; masked copy of the GO's take-set: inbox -> block store, sweep item -> SWEEP.a; HK only (EW4)
+  W-F1 RESTRICT F-F13: dest ID 6 (ADRS) removed -> E4
+  W-F24 RESTRICT PPM-1/PPM-2: dest ID 1 renamed PPM_SHADOW -> STORE (single block store, write windows)
+regenerated contract == committed contract (ignoring 'folded' 2026-09-27 vs 2026-09-27): True

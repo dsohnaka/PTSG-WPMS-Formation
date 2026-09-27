@@ -1,0 +1,22 @@
+WPMS Layer 1 oracle — evidence class ORACLE (not silicon)
+
+[PASS] CH2-CLOCK     clock budget per sample period per module  (Ch.2 v1.1 § 2.5.2)
+[PASS] CH2-WIDTH     product and accumulator widths  (Ch.2 v1.1 § 2.4.2, Ch.3 § 3.6)
+[PASS] CH3-ORIGIN    test-origin (Dirichlet) block integers  (Ch.3 § 3.10)
+[PASS] CH3-UNDERFLOW linear-domain k=0 amplitude underflow  (Ch.3 § 3.5.1 (1))
+[PASS] CH3-LINBIAS   linear-domain Q1.31/Q4.28 recurrence bias  (Ch.3 § 3.5.1 (3))
+[PASS] CH3-LOGEXACT  log-domain forward differences are exact; 54-bit bound  (Ch.3 § 3.5.2, § 3.5.4)
+[PASS] CH3-PHASE     phase coherence theorem (exact, zero drift)  (Ch.3 § 3.4.3)
+[PASS] CH3-EXP2      exp2 unit error; table fits one M10K  (Ch.3 § 3.5.4)
+[PASS] CH3-E2E       end-to-end: sigma = 71 Gaussian plays in the log domain  (Ch.3 § 3.5.1-3.5.5)
+[PASS] CH3-BUDGET    sweep timing budget  (Ch.3 § 3.7)
+[PASS] CH3-QFMT      resolutions and ranges of the log-domain slots  (Ch.3 § 3.5.3)
+[PASS] CH4-CREST     crest factor: Dirichlet vs Schroeder vs random  (Ch.4 § 4.4.3)
+[PASS] CH4-MG        master-gain slew and fade time  (Ch.4 § 4.4.1, § 4.4.5)
+[PASS] CH4-LATENCY   I2S clocks and latency to the wire  (Ch.4 § 4.6.1, § 4.8)
+[PASS] CH5-VELOCITY  phase-shape velocity == frequency shape  (Ch.5 § 5.3.3)
+[PASS] CH5-GLIDE     level glide reaches its target exactly and never overshoots  (Ch.5 § 5.3.2 (CR5-L1))
+[PASS] CH5-MASK      mask presets  (Ch.5 Appendix 5.B)
+[PASS] CH5-MAP       address-map spans  (Ch.5 § 5.6)
+
+ALL PASS

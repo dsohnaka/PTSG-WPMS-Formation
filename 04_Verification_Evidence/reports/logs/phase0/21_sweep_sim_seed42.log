@@ -1,0 +1,4 @@
+sweep_sim: 20000 samples, 74244 packet plays, 1354 GOs (re-seed 2464, retune 1154, level 1084 items; 836 sweep words; 1212 empty sweeps, 353 full-load GOs); glide law from customer oracle
+  L1 bundle mismatches vs reference: 0   machine/sequencer errors: none
+  per-packet window: 25 instructions -> N_MIN = 25 + 4 = 29 (profile constant 32)
+  BCP worst case: 10 clocks;  worst sweep (Core nominals included): 2064 of 2083 clocks

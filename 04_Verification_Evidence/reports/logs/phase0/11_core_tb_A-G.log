@@ -1,0 +1,12 @@
+PASS A: blink toggled 19 times
+PASS B: loop exited, loop_counter=0
+PASS C: branch advanced on condition
+PASS D: call/return reached return-to-after (st=4)
+PASS E: indirect jump landed at 7
+PASS F1: bare Stay-1 loop period = 3 (Stay-1 = one clock, like NOP)
+PASS F2: bare Stay-2 loop period = 4 (exact written value)
+PASS G1: idiom-D duty at PRESCALE=1 = 5:5 (written value, coincident tick counted)
+PASS G2: windowed Stay-1 fired at earliest tick (no 2^13 runaway)
+
+ALL TESTS PASSED
+ptsg_core_tb.v:220: $finish called at 4276000 (1ps)
