@@ -1,0 +1,13 @@
+cosim_sweep_mutants: one defect per scratch copy of the L2 RTL — evidence class RTL-SIM
+  S1   KILLED    prefetch the packet's own block instead of the next one  ->  seed 2026: sample 1: packet 1: got (7, [1349621006, 1706035757, 2738975628, 2588305540, 2568612154, 4041972234
+  S2   KILLED    stay_value follows StayVal.s (no second stage, W-F22)  ->  seed 2026: sample 1: bins per packet [362, 367, 367] want [92, 362, 367]
+  S3   KILLED    K on the L1 face not delayed with the timing signals (SD-11)  ->  seed 2026: sample 1: K did not run 0..N-1 in a packet
+  S4   KILLED    MORE lane off by one  ->  seed 2026: sample 1: packet 3: got (0, [3896678781, 3570848376, 1360031911, 4249945431, 1322675012, 4232987208
+  S5   KILLED    q not 0 in housekeeping (the dispatch reads the status view)  ->  seed 2026: sample 1: unexpected event ('T', 20163)
+  S6   KILLED    the first bundle is prefetched before BCP's copy has landed  ->  seed 2026: sample 1: packet 0: got (0, [0, 0, 0, 0, 0, 0, 0, 0]) want (0, [1349621006, 1706035757, 2738975628,
+  S7   KILLED    L1 not silenced on error  ->  error case EW6: F [('F', 650, 22, 197)] H [('H', 706, 1023)] M 32220 latches after 0 spill 0
+  S8   KILLED    StayVal.p not cleared at the housekeeping Stay Set  ->  seed 2026: sample 50: sweep of 2277 clocks > T_min 2083
+  S9   KILLED    NONEMPTY lane inverted  ->  seed 2026: sample 0: packet 0: got (0, [0, 0, 0, 0, 0, 0, 0, 0]) want - (1 latched, 0 expected)
+  S10  KILLED    insert_req held through insert_ack (the Phase 3 fix undone)  ->  error case EW6: F [('F', 650, 22, 197)] H [] M 0 latches after 0 spill 1
+  S11  KILLED    the Stay Set is taken from K alone (TS_PKT ignored: HK counted as a packet)  ->  seed 2026: sample 0: packet 0: got (0, [0, 0, 0, 0, 0, 0, 0, 0]) want - (1 latched, 0 expected)
+cosim_sweep_mutants: 11/11 mutants killed

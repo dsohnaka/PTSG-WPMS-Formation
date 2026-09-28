@@ -1,0 +1,128 @@
+--- ptsg_core.v@RH030
++++ ptsg_core_rh031p.v
+@@ -42,7 +42,10 @@
+ //    C3-T7 insertion flag bit ..... Core carries the "saved-by-insertion" flag
+ //    C3-F20 insertion timing ...... deferred to Stay-timeup inside a Stay window
+ //    C4-T1 indirect handshake ..... Core stalls until indirect_ready (covers B and C)
+-//    C4-T2 prescaler config ....... compile-time fixed (PRESCALE parameter)
++//    C4-T2 prescaler config ....... pin-level prescaler_value with PRESCALE parameter
++//                                   fallback (reference form "B'", RH029, PROVISIONAL)
++//    C4-T5 stay_value sampling .... read in the execute clock (form B; RH031, PROVISIONAL)
++//    C5-T2 stay_value width ....... CNT_W (12 bits; both zero = 4096 stays the maximum)
+ //    C4-T4 Stay Set role .......... clear/sync only — the stay counter ticks only
+ //                                   during the wait, so background-band length adds
+ //                                   no jitter to the wait duration (lean B)
+@@ -257,6 +260,51 @@
+ //                                          bare Stay-2/Stay-1 loops 5/4 -> exact 4/3 clocks; idiom-D
+ //                                          duty @P=1 6:6 -> written 5:5; over-constrained window @P=5
+ //                                          runaway -> earliest-tick resume. T1-T33 unaffected.
++// 029 2026-07-16       Arch. Ohnaka  Add : Externally settable prescaler (C4-T2, reference form "B'": pin-level
++//                                          value with parameter fallback, PROVISIONAL). New ports prescaler_value
++//                                          (tri0 input; 0/unconnected => PRESCALE parameter, i.e. option-A
++//                                          behaviour at zero cost) and prescaler_output (reserved, see note).
++//                                          presc_valueM registers (prescaler_value - 1) so the "-1" is off the
++//                                          compare path; presc_tickP compares presc_cnt against presc_valueM
++//                                          (or PRESCALE-1 at zero). Premise (architect, 2026-08-27): the
++//                                          prescaler counter value is not for external use; the prescaler is a
++//                                          base-frequency generator only. Trace: 2026-08-27_ptsg-free-running-
++//                                          fruits (closes 2026-06-23 reset-command-bands Hook E).
++// 030 2026-07-16       Arch. Ohnaka  Mod : One-clock registered tick (Fmax) + raw-tick export (sync).
++//                                          presc_tick <= presc_tickP: the internal tick is now a registered
++//                                          one-clock pulse; every in-core consumer uses it, so the whole tick
++//                                          grid shifts by exactly one clock and all intervals / C4-F9 phase-lock
++//                                          / RH028 collision rules are unchanged (silicon re-confirmation:
++//                                          Hook A). presc_cnt rolls over on the raw presc_tickP. prescaler_match
++//                                          now exports the RAW (pre-register) tick, one clock ahead of the
++//                                          internal tick; consumers must register it — a slave that does so
++//                                          lands coincident with this core's internal tick. Sync delivered =
++//                                          period-sharing (same prescaler_value + common rst + C3-F21);
++//                                          tick-following slave NOT provided (Chapter 6).
++//                                          RULING (architect, 2026-08-27): presc_tickP deliberately uses ==,
++//                                          NOT >=. A prescaler that runs past its terminal is a fatal fault;
++//                                          a loud 2^16-wrap is preferred to a quiet small error (fail-loud).
++//                                          This is the intended asymmetry with RH028's >= on the stay counter.
++//                                          OPEN (architect): prescaler_value==0 test is combinational while presc_valueM is
++//                                          registered (1-clk mismatch at 0<->non-0); prescaler_output is
++//                                          declared but undriven; presc_tick/presc_valueM have no rst.
++// 031 2026-09-27       Arch. Ohnaka  Add : Formation-supplied Stay duration (PROVISIONAL; C4-F15..F17, C5-F4).
++//                                          New optional port stay_value (tri0 [CNT_W-1:0]). IND-reverse, the
++//                                          RH029 pattern applied to Stay: stay_value != 0 => that value;
++//                                          0/unconnected => the operand (0 => 4096, C2-F3). stay_dur is the
++//                                          single substitution point, so the duration is read ONCE, at the
++//                                          Stay's execute clock, and held in stay_target for the whole Stay
++//                                          (a pin change mid-Stay affects later Stays only). RH028 >= applies
++//                                          unchanged. Zero test and value are one sample (never a raw-pin zero
++//                                          test beside a registered value: 0->N would latch 0 => 8192-tick
++//                                          runaway). Requirement: WPMS packet length = Stay length.
++//                                          Trace: 2026-09-26_ptsg-stay-value-from-formation.
++//                                          Header Tie list: C4-T5 = form B (execute clock), C5-T2 = CNT_W.
++//                                          NUMBER PROVISIONAL: applied by Claude Code on a working copy
++//                                          (PTSG-WPMS-Formation 03_Sample_Implementations/hw/core/
++//                                          ptsg_core_rh031p.v, SILICON_BRIEF_2026-09-27 Phase 1); the Core's
++//                                          office assigns the RH number and date at its checkpoint. The
++//                                          frozen RH030 source is untouched.
+ //
+ // ============================================================================
+ 
+@@ -270,7 +318,7 @@
+                                                   // extended operand (architect ruling 2026-07-07;
+                                                   // supersedes the 12-bit C3-V2 reading)
+     parameter integer IMEM_DEPTH  = 256,          // Instruction-memory depth (<= 4096)
+-    // ---- Prescaler (C4-T2 option A: compile-time fixed) ---------------------
++    // ---- Prescaler (C4-T2 form B': pin-level value, PRESCALE = fallback) -----
+     parameter integer PRESCALE    = 6250,         // System-clock divider for the time axis (>=1)
+     parameter integer PRESC_W     = 16,           // Prescaler counter width
+     // ---- External stack data layout ----------------------------------------
+@@ -321,6 +369,9 @@
+     input  tri0 [PRESC_W-1:0]   prescaler_value             , // RH029
+     output wire [PRESC_W-1:0]   prescaler_output            , // RH029
+ 
++    // ---- Formation-supplied Stay duration (§5.12a, RH031 PROVISIONAL) --------
++    input  tri0 [CNT_W-1:0]     stay_value                  , // RH031: 0/unconnected => Stays as written
++
+     // ---- Indirect-read bus (§5.11) ------------------------------------------
+     output wire                 indirect_req,
+     output wire [1:0]           indirect_purpose, // 00 = Jump, 01 = Loop target
+@@ -454,8 +505,8 @@
+     // Prescaler (free-running) -----------------------------------------------
+     reg [PRESC_W-1:0] presc_cnt;
+     reg [PRESC_W-1:0] presc_valueM;
+-    wire              presc_tickP = (presc_cnt == ((prescaler_value == 0) ? (PRESCALE-1) : presc_valueM));  //RH029: prescaler_value override (C4-T2 option B, PROVISIONAL)
+-    reg               presc_tick;  // RH030    -cycle pulse, synchronous to clk, at every prescaler tick
++    wire              presc_tickP = (presc_cnt == ((prescaler_value == 0) ? (PRESCALE-1) : presc_valueM));  //RH029: prescaler_value override (C4-T2 form B', PROVISIONAL); raw tick
++    reg               presc_tick;  // RH030: registered one-clock pulse, one clk after presc_tickP; the only tick the FSM uses
+ 
+     // Indirect-read latch ----------------------------------------------------
+     reg               ind_is_loop;      // 0 = indirect Jump, 1 = indirect Loop target
+@@ -576,12 +627,17 @@
+     assign loop_counter       = loop_cnt;
+     assign stay_counter       = stay_cnt[CNT_W-1:0];
+     assign prescaler_counter  = presc_cnt;
+-    assign prescaler_match    = presc_tickP;    // RH030: prescaler_value override (C4-T2 option B, PROVISIONAL)
++    assign prescaler_match    = presc_tickP;    // RH030: RAW tick export (1 clk ahead of presc_tick; consumer registers)
+ 
+     // ========================================================================
+     //  Resolved Stay duration: literal-zero-as-escape => 4096 (C2-F3)
++    //  RH031 (PROVISIONAL): IND-reverse, the RH029 pattern applied to Stay (C4-F15):
++    //    stay_value != 0 => stay_value ; else operand ; operand 0 => 4096 (C2-F3).
++    //    Read in the execute clock (C4-T5 form B) and latched by OP_STAY into
++    //    stay_target (C4-F16). The zero test and the value are ONE sample (C5-F4).
+     // ========================================================================
+-    wire [CNT_W:0] stay_dur = (operand == 12'd0) ? (1'b1 << CNT_W) : {1'b0, operand};
++    wire [CNT_W:0] stay_dur_lit = (operand == 12'd0) ? (1'b1 << CNT_W) : {1'b0, operand};
++    wire [CNT_W:0] stay_dur     = (stay_value != {CNT_W{1'b0}}) ? {1'b0, stay_value} : stay_dur_lit;
+ 
+     // Loop "increment-then-compare" helper (combinational) -------------------
+     //   target == 0           -> exit immediately, 0 iterations (C4-V1)
+@@ -630,8 +686,9 @@
+         (state_num + 1'b1);
+ 
+     always @(posedge clk) begin
+-        // RH030: prescaler tick pulse, synchronous to clk, at every prescaler tick
+-        presc_tick <= presc_tickP;
++        // RH030: registered one-clock tick, one clk after presc_tickP
++        presc_tick   <= presc_tickP;
++        // RH029: pre-decremented compare value, registered off the compare path
+         presc_valueM <= prescaler_value - 1;
+     end
+ 

@@ -1,0 +1,14 @@
+[PASS] N1 direct store write in a packet window             -> EW4 direct store write outside HK at line 7
+[PASS] N2 BCP in a packet window                            -> EW4 BCP outside HK at line 2
+[PASS] N3 CUR write in HK                                   -> EW4 CUR write outside a packet window at line 3
+[PASS] N4 STM into the inbox                                -> EW3 write to read-only 0x082 at line 3
+[PASS] N5 STP with LE0 < 0                                  -> EW6 STP with negative rate at line 25
+[PASS] N6 sweep word repeats a block                        -> EW5 invalid sweep word 0x0000083 at line 2
+[PASS] N7 sweep sum N > NMAX                                -> EW5 sum N > NMAX at line 2
+[PASS] N8 CMT (no page pair)                                -> line 2: CMT — not in the profile contract (E4)
+[PASS] N9 WSV (sequencer owns stay_value)                   -> line 2: WSV — not in the profile contract (E4)
+[PASS] N10 PSH (no data stack)                              -> line 2: PSH — not in the profile contract (E4)
+[PASS] N11 STA ADRS (W-F1)                                  -> line 2: STA — destination 'ADRS' not in contract (E4; W-F1 if ADRS)
+[PASS] N12 mutant window (PH0 advanced twice) caught        -> L1 bundle mismatches vs reference: 2798   machine/sequencer errors: ['window overrun: L=32 N=32']
+[PASS] N13 block N = 16 < N_MIN at prefetch                 -> EW2 N=16 in block 0
+13/13 negative tests behave as specified

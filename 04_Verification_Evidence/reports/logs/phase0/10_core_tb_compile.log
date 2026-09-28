@@ -1,0 +1,2 @@
+ptsg_core_tb.v:40: warning: Port 23 (prescaler_counter) of ptsg_core expects 16 bits, got 32.
+ptsg_core_tb.v:40:        : Padding 16 high bits of the expression.

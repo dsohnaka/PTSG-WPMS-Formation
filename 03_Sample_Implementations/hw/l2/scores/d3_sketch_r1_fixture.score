@@ -1,0 +1,84 @@
+; ============================================================================
+; d3_sketch_r1_fixture.score — TEST FIXTURE for score_as.py (SILICON_BRIEF Phase 2)
+;
+; A literal transcription of the Deliverable 3 §3 sketch in realization R1
+; (eight unrolled packet positions, a forward queued transfer at each timeup).
+; NOT THE PHASE 3 SCORE. Encoded literally, the sketch meets the Core's Branch
+; law as built (discrepancy SD-05):
+;   * "Branch HK" on NONEMPTY is TAKEN on every empty sweep (the reset state) and
+;     auto-saves; with the holding register occupied the next save waits for
+;     stack_ack in S_PUSH;
+;   * a queued Branch NOT taken (MORE true) resumes at Branch + 1 — the packet's
+;     own Stay — not at the next position's Stay Set.
+; Phase 3 designs the score around these laws. This file exists to show what the
+; assembler makes of the sketch: words, TS_PKT / TS_CSEL placement, window splices.
+;
+; Layout differences from the sketch, forced by encoding, not by design:
+;   * address 0 holds a NOP: "Jump SLEEP" to address 0 would encode the indirect
+;     Jump (Core: Jump operand 0 = indirect), so SLEEP sits at address 1.
+;   * TS bits that must hold through a window are written in both the Stay Set
+;     and the Stay word (Deliverable 2, Deliverable 3 §4).
+; License: MIT (Layer 3).
+; ============================================================================
+.depth  4096
+.trap   0xFFF                   ; = wpms_formation TRAP_ADDR default
+.window PKT wpms_packet.pfasm
+.window HK  wpms_housekeeping.pfasm
+.equ    N_MIN   32
+.equ    T_HK    13              ; Deliverable 3 §9 (oracle-counted)
+
+        NOP                                     ; see header: SLEEP must not be address 0
+SLEEP:  Branch  0               CSEL=STROBE     ; self-loop until the synchronized strobe
+        Branch  HK              CSEL=NONEMPTY   ; false (P = 0) -> HK
+PKT0:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT1:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT2:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT3:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT4:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT5:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT6:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+
+PKT7:  StaySet                 PKT CSEL=MORE   ; TS_PKT = 1 · K := 0 · packet_start
+        Window  PKT                             ; 25 Formation instructions
+        ProgEnd
+        Branch  HK                              ; queued: MORE false -> HK (taken); true -> Branch+1 (SD-05)
+        Stay    N_MIN           PKT CSEL=MORE   ; operand not authoritative (stay_value supersedes)
+HK:     StaySet                                 ; TS_PKT = 0
+        Window  HK                              ; BCP
+        ProgEnd
+        Stay    T_HK                            ; stay_value = 0 here: the literal applies
+        Jump    SLEEP

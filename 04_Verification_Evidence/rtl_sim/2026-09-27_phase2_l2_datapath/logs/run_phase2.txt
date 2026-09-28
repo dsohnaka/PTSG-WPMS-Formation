@@ -1,0 +1,34 @@
+run_phase2: 2026-09-27T13:42:11Z — Icarus Verilog version 12.0 (stable) (); Python 3.11.15
+  gen_decode: map consistent with the contract; RTL table up to date ; published map up to date
+  [PASS] decode_map.json consistent with isa_table_w.json; wpms_decode.vh and decode_map.md regenerate identically
+  3 programs assembled: wpms_packet.hex;wpms_housekeeping.hex;exp_maclaurin_w.hex;
+  [PASS] pfasm_as.py: wpms_packet (25), wpms_housekeeping (1), exp_maclaurin_w (27) equal the committed images
+  score_as: 240 words (+ trap at 0xFFF) -> d3_sketch_r1_fixture.hex, d3_sketch_r1_fixture.mif
+  [PASS] score_as.py: the D3 §3 sketch fixture equals the committed .hex/.mif
+  iverilog -Wall: 11 '@* sensitive to all words' notes, 0 other lines
+  [PASS] wpms_formation.v + wpms_formation_tb.v compile clean
+  ORACLE: max |err| over sweep = 7.39e-09 at x=+0.40 (Q4.28 LSB = 3.73e-09)
+    seed 20260927; 3914 cases in 4 simulator runs (3914 played); generation 6.5 s, simulation 6.9 s
+    group      cases   pass   instr err-cases  first-error codes (expected = observed)
+    packet        60     60   13100         0  
+    hk           300    300     397        73  EW5 73
+    fwd          120    120    3645         0  
+    exp           21     21     567         0  
+    neg           15     15     151        12  E4 4, EW2 1, EW3 1, EW4 3, EW5 2, EW6 1
+    e4           377    377    2646       376  E4 376
+    prefetch      14     14      14         8  EW2 8
+    timing         7      7      45         1  EW3 1
+    random      3000   3000   84954       450  E5 125, E8 75, EW3 95, EW4 117, EW5 2, EW6 36
+    total       3914   3914  105519       920
+    instructions issued by mnemonic: ADD 9518, BCP 1647, CMT 1, LDA 10892, LDM 14074, MAC 4097, MUL 4232, PSH 1, SAD 24820, SFT 4051, STA 4671, STM 6190, STP 3445, SUB 5736, SWP 4457, WJV 2015, WLV 1943, WSH 3352, WSV 1
+  cosim_l2: PASS — 3914/3914 cases bit-identical to the model
+  [PASS] cosim_l2.py: every case bit-identical to pfasm_tools_w.Machine; no protocol warning or invariant violation
+  [PASS] exp_maclaurin_w on the hardware: max |err| = 7.39e-09 (the oracle's figure)
+  [PASS] negative cases N1..N13 (N12 three times) raise their codes on the hardware
+  cosim_mutants: 20/20 mutants killed
+  [PASS] cosim_mutants.py: every deliberate defect is caught (the cosimulation bites)
+  score_rt: PASS — the Core decodes the assembled words as encoded (observations above are discrepancies, filed, not failures)
+  [PASS] score_rt.py: the Core copy issues exactly the assembled words
+  ESTIMATE (Yosys 0.69, synth_intel_alm cyclonev + abc -lut 6): $lut 4611; MISTRAL_MUL18X18 2; MISTRAL_MUL27X27 2; MISTRAL_ALUT_ARITH 931; MISTRAL_FF 1203; MISTRAL_MLAB 1568; 
+  [PASS] Yosys synthesis for Cyclone V completes
+run_phase2: ALL PHASE 2 CHECKS PASSED

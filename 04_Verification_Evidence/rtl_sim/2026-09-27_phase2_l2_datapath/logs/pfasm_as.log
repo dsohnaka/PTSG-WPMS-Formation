@@ -1,0 +1,3 @@
+pfasm_as: 25 words -> /home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/build/programs/wpms_packet.hex
+pfasm_as: 1 words -> /home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/build/programs/wpms_housekeeping.hex
+pfasm_as: 27 words -> /home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/build/programs/exp_maclaurin_w.hex

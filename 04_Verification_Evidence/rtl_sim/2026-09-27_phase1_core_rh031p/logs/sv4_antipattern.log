@@ -1,0 +1,6 @@
+ptsg_core_sv_tb — stay_value regression, PRESCALE=1, build: ANTI-PATTERN (sketch 4), forced in the testbench
+VCD info: dumpfile sv4_antipattern.vcd opened for output.
+FAIL SV-4: pin 0 -> 37 in the execute clock: that Stay lasted 8192 clocks (expected 37; the anti-pattern gives 8192)
+
+SV SUMMARY: 0 passed, 1 failed: SV-4 (build: ANTI-PATTERN (sketch 4), forced in the testbench)
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/core/ptsg_core_sv_tb.v:397: $finish called at 81956000 (1ps)

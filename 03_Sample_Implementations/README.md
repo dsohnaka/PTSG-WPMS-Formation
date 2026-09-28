@@ -30,6 +30,7 @@ Nothing in the chain is hand-edited. Re-run both steps whenever the master's Ch.
 | `instruction_lists/wpms_housekeeping.pfasm` | Housekeeping window: `BCP` | this profile |
 | `instruction_lists/exp_maclaurin_master.pfasm` | The master's first program (26 instructions) | inherited |
 | `instruction_lists/exp_maclaurin_w.pfasm` v0.2 | The same program on the profile, owning its Q (`WSH`), without CMT, in a non-packet window (27 instructions) | this profile |
+| `hw/` | **Silicon phase** (SILICON_BRIEF_2026-09-27): `hw/core/ptsg_core_rh031p.v` — working copy of PTSG-Core RH030 with `stay_value` (RH031, provisional) — its testbench `ptsg_core_sv_tb.v` (SV-0 … SV-7); `hw/l2/wpms_formation.v` — the L2 Formation datapath, its decode map (`hw/tools/decode_map.json` → RTL table, assemblers, `decode_map.md`), assemblers `pfasm_as.py` / `score_as.py`, and the cosimulation against `pfasm_tools_w.Machine`; `hw/l2/wpms_sequencer.v` and `hw/l2/wpms_l2_top.v` — the sweep sequencer and the L2 integration running the R1 score (`hw/l2/scores/`), cosimulated against `sweep_sim.py`; recipes per phase; see `hw/README.md` | this profile, 2026-09-27/28 |
 
 ## Evidence (2026-09-26, oracle runs — not silicon) / 証拠
 

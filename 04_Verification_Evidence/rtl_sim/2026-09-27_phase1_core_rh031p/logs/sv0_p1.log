@@ -1,0 +1,4 @@
+  SV-0 stimulus (RH030 side): 17587 Stays executed (12268 windowed, 5319 bare, 5 with operand 0), 17571 timeups, 4193 queued firings,
+                               1546 HALTs, 1874 insertions, 4719 pushes, 301 pops, 4720 indirect reads, 6363 external issues
+PASS SV-0 random, PRESCALE=1: 300 epochs x 2000 clocks = 600000 clocks in lockstep, 0 mismatching clocks
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/core/ptsg_core_sv_tb.v:643: $finish called at 6008995000 (1ps)

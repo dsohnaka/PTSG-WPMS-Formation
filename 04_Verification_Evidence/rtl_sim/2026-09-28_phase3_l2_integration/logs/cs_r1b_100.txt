@@ -1,0 +1,14 @@
+cosim_sweep: wpms_l2_top (wpms_r1b.score) vs sweep_sim.py — evidence class RTL-SIM; NMAX 2048, T_min 2083
+  seed 2026: 12000 sweeps, 42056 packets latched, 17732862 bins, 5595 full-load sweeps; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  total: 12000 sweeps, 42056 packets, 17732862 bins, 5595 full-load sweeps, 54056 Stays with the pin checked; sweeps longer than T_min: 0
+  T_wake (strobe clock -> first packet Stay Set): 3..3 clocks; L1 packet_start one clock later
+  g (Stay Set to next Stay Set minus N): 1..1
+  housekeeping Stay Set -> first SLEEP clock: 14..14; BCP commit -> copy landed: 2..9 clocks
+  sweep length (strobe -> first SLEEP clock): 17..2073; full-load sweeps: 2066..2073 of T_min 2083 (10 spare at worst)
+  floor (N_MIN lowered to 16 for this case only): N = 28 29 30 31 32 33 -> Stay Set to next Stay Set 30 30 31 32 33 34
+  [PASS] EW6: LE0 < 0 lands in block 1 (a listed block): its next packet window's STP -> error_flag EW6 at clock 665; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 56 clocks later
+  [PASS] EW5: a sweep item repeating block 2, taken at the strobe: BCP in housekeeping -> error_flag EW5 at clock 576; L1 muted from that clock (latches after: 0, bins while muted: 0); Core waits in S_PUSH at 0x0EE (holding register taken by the sweep's Branch; no external stack)
+  [PASS] EW2: block 0's N = 16 lands with the sweep [0]: the post-housekeeping prefetch -> error_flag EW2 at clock 581; L1 muted from that clock (latches after: 0, bins while muted: 0); Core waits in S_PUSH at 0x0EE (holding register taken by the sweep's Branch; no external stack)
+  [PASS] EW4: a window writing the store directly (negative_tests N1) as the packet window -> error_flag EW4 at clock 172; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 57 clocks later
+  [PASS] EW3: a window writing the inbox view (negative_tests N4) as the packet window -> error_flag EW3 at clock 168; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 61 clocks later
+cosim_sweep: PASS (456 s)
