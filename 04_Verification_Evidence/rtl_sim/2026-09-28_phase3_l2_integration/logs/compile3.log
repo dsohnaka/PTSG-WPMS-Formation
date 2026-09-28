@@ -1,0 +1,16 @@
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/core/ptsg_core_rh031p.v:311: warning: timescale for ptsg_core inherited from another file.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_l2_top.v:29: ...: The inherited timescale is here.
+/home/user/PTSG-Core/03_Sample_Implementations/ai_friendly_vendor_wrappers/ptsg_imem/ptsg_imem.v:42: warning: timescale for ptsg_imem inherited from another file.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_l2_top.v:29: ...: The inherited timescale is here.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_l2_top.v:103: warning: input port stay_value is coerced to inout.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:282: warning: @* is sensitive to all 16 words in array 'ib_rd_a'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:284: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:362: warning: @* is sensitive to all 8 words in array 'pmask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:362: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:363: warning: @* is sensitive to all 8 words in array 'ib_n'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:363: warning: @* is sensitive to all 8 words in array 'st_n'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:452: warning: @* is sensitive to all 8 words in array 'pmask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:467: warning: @* is sensitive to all 8 words in array 'rtout'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:467: warning: @* is sensitive to all 16 words in array 'ib_rd_c'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:479: warning: @* is sensitive to all 8 words in array 'pmask'.
+/home/user/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:483: warning: @* is sensitive to all 8 words in array 'cm_mask'.

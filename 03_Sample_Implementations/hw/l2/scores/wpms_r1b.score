@@ -1,0 +1,82 @@
+; ============================================================================
+; wpms_r1b.score — the Phase 3 Core score, realization R1 in BRANCH (lane) form
+; (SILICON_BRIEF Phase 3; Deliverable 3 §3-§4; SD-14 ruled 2026-09-28)
+;
+; The sketch's lanes, used as the Core's Branch law allows:
+;   * SLEEP: Branch 0 on STROBE; then the lane word NOP CSEL=NONEMPTY (SD-14 (a):
+;     a foreground Branch reads the CSEL of the word before it) and Branch HK on
+;     NONEMPTY: P = 0 -> HK. T_wake = 3.
+;   * each position closes its window with the Stay (CSEL=MORE on the Stay word)
+;     and, AFTER the timeup, a foreground Branch HK: MORE true -> not taken -> the
+;     next position follows directly; MORE false -> taken -> HK. One clock
+;     between packets (g = 1); no queued Branch, so SD-05 (b) does not arise.
+;   * exactly one Branch per sweep is taken (the NONEMPTY one for P = 0, else
+;     the last packet's) and auto-saves; housekeeping ends with a foreground
+;     Reset, which clears the holding register (SD-05 (a) does not arise) and
+;     returns to SLEEP at address 0.
+; Fits 100 MHz at full load; does not fit 50 MHz with NMAX = 1024 (see the
+; Phase 3 report). Kept because it exercises all three lanes.
+; License: MIT (Layer 3).
+; ============================================================================
+.depth  1024
+.trap   0x3FF
+.window PKT wpms_packet.pfasm
+.window HK  wpms_housekeeping.pfasm
+.equ    N_MIN   32
+.equ    T_HK    13
+
+SLEEP:  Branch  0                               ; 0x000: wait for the strobe (CSEL 0 = STROBE)
+        NOP                     CSEL=NONEMPTY   ; the lane word (SD-14 ruled)
+        Branch  HK              CSEL=NONEMPTY   ; P = 0 -> HK (taken: the sweep's one auto-save)
+POS0:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS1:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS2:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS3:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS4:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS5:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS6:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+
+POS7:   StaySet                 PKT             ; TS_PKT = 1
+        Window  PKT
+        ProgEnd
+        Stay    N_MIN           PKT CSEL=MORE   ; the lane word for the Branch below
+        Branch  HK                              ; foreground, after the timeup: MORE -> next position
+HK:     StaySet                                 ; TS_PKT = 0
+        Window  HK                              ; BCP
+        ProgEnd
+        Stay    T_HK
+        Reset                                   ; clears the holding register; -> SLEEP (CSEL 0 = STROBE)

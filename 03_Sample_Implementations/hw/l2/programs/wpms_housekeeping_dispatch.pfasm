@@ -1,0 +1,26 @@
+; ============================================================================
+; wpms_housekeeping_dispatch.pfasm — the housekeeping window of the Phase 3
+; score in its R1 dispatch form (hw/l2/scores/wpms_r1d.score).
+;
+; BCP first, exactly as wpms_housekeeping.pfasm (Deliverable 3 §6.2). Then the
+; window prepares the next sweep's entry: it reads the status view (Map v0.3
+; §4: [8] HK phase = 1, [7:4] P of SWEEP.a — the word BCP has just landed —,
+; [3:0] q = 0 in HK) and writes JumpVal = TAIL_BASE + 16·P, the address of the
+; housekeeping tail that ends in the queued Jump to SLEEP_P. The score's
+; background indirect Jump (JumpInd) reads JumpVal right after WJV: a
+; background computed dispatch, the use Register Map v0.3 §2 allows JumpVal
+; (W-T3 restricts only the foreground).
+;
+; TAIL_BASE = 0x300 in wpms_r1d.score:  ADD #(0x300 - 0x100) = ADD #512.
+; A Layer 3 program of this build; the golden oracle keeps running the
+; one-instruction wpms_housekeeping.pfasm, whose effect on the store and on
+; SWEEP.a this program shares (the rest writes Accm, ADRS and JumpVal only).
+; License: MIT (Layer 3). Illustrative.
+; ============================================================================
+.window wpms_housekeeping_dispatch
+.bg
+        BCP                     ; W-F27: land the take-set; SWEEP.a <- sweep item
+        SAD     0x11A           ; status view
+        LDA     @PPM            ; Accm = 0x100 + 16 P   (HK, q = 0)
+        ADD     #512            ; Accm = 0x300 + 16 P = TAIL_P
+        WJV                     ; JumpVal <- Accm[11:0]

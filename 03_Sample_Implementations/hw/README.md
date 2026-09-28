@@ -11,7 +11,8 @@
 | 0 Baseline | done — all golden models and the frozen Core green | `04_Verification_Evidence/reports/phase0_baseline.md` |
 | 1 Core copy (RH031 provisional, `stay_value` form B) | done — bit-identical with the pin silent; SV-0 … SV-7 pass; the anti-pattern is caught | `04_Verification_Evidence/reports/phase1_core.md` |
 | 2 L2 Formation datapath | done — bit-identical to `pfasm_tools_w.Machine` on 3,914 cases (programs, 13 negatives, hardware-only E4, 3,000 random sequences); 20/20 mutants caught; decode map, assemblers, score round trip | `04_Verification_Evidence/reports/phase2_datapath.md` |
-| 3 sequencer · 4 L1 · 5 switch · 6 DE10-nano | not started (stopped after Phase 2 for the architect's reading) | — |
+| 3 Sequencer and integration | done — Core + Formation + sequencer run the R1 score in its dispatch form (g = 0, T_wake 1) and its branch form; every latched bundle, N, K sequence and `stay_value` equal the sweep oracle's over 36,000 sweeps per budget; 100 MHz and 50 MHz budgets; injected errors silence L1 at once | `04_Verification_Evidence/reports/phase3_integration.md` |
+| 4 L1 · 5 switch · 6 DE10-nano | not started (stopped after Phase 3 for the architect's reading) | — |
 
 ## Layout / 構成
 
@@ -31,6 +32,12 @@
 | `tools/decode_map.json` | The one source of the encoding: RTL table, assemblers, published map. |
 | `tools/pfasm_as.py`, `tools/score_as.py` | Window-program assembler (`.pfasm` → Global words); score assembler (Core words + TS_PKT/TS_CSEL + window splices → `.hex`/`.mif`). |
 | `tools/cosim_l2.py`, `tools/cosim_mutants.py`, `tools/score_rt.py` | Cosimulation against the golden model; the mutant check; the score round trip. |
+| `l2/wpms_sequencer.v` | The sweep sequencer (Phase 3): packet index, CUR, lanes STROBE / NONEMPTY / MORE, StayVal.s / StayVal.p → `stay_value`, bundle prefetch, window label (SSS), the L1 face (one clock after the Core, SD-11), L1 silenced on error. |
+| `l2/wpms_l2_top.v` | Core RH031p + Formation + sequencer; JumpVal / LoopVal on the Core's indirect-read bus; insertion to the trap word; parameters for the 100 MHz and 50 MHz budgets. |
+| `l2/scores/wpms_r1d.*`, `l2/scores/wpms_r1b.*` | The Phase 3 score, R1 in dispatch form (queued Jumps, entry chosen in housekeeping; g = 0) and in branch form (lanes; g = 1). |
+| `l2/programs/wpms_housekeeping_dispatch.pfasm` | Housekeeping window of the dispatch form: BCP, then JumpVal = TAIL_BASE + 16·P. |
+| `l2/wpms_l2_tb.v`, `l2/run_phase3.sh` | The sweep-level testbench (switch and L1 stand-in) and the Phase 3 recipe. |
+| `tools/sweep_dump.py`, `tools/cosim_sweep.py`, `tools/cosim_sweep_mutants.py`, `tools/r2_probe.py` | The oracle's GO stimulus and bundles (sweep_sim.py run unchanged); the sweep-level cosimulation; its mutants; the R2 probe (Hook A). |
 | `l1/`, `switch/` | (later phases) |
 
 ## Running / 実行
@@ -41,6 +48,7 @@ The scripts expect the workspace of the brief: four repositories side by side (`
 03_Sample_Implementations/hw/tools/run_phase0_baseline.sh    # logs -> 04_Verification_Evidence/reports/logs/phase0
 03_Sample_Implementations/hw/core/run_phase1.sh [EVIDENCE_DIR]   # build -> hw/core/build (git-ignored)
 03_Sample_Implementations/hw/l2/run_phase2.sh [EVIDENCE_DIR]     # build -> hw/l2/build (git-ignored)
+03_Sample_Implementations/hw/l2/run_phase3.sh [EVIDENCE_DIR]     # about 40 min; SAMPLES=<n> per seed (default 12000)
 ```
 
-Each script prints its checks and ends with a one-line verdict; `run_phase1.sh` and `run_phase2.sh` exit non-zero if any expectation fails. Phase 2's optional resource estimate needs `pip install yowasp-yosys`. / 各スクリプトは検査を表示し、一行の判定で終わる。
+Each script prints its checks and ends with a one-line verdict; `run_phase1.sh`, `run_phase2.sh` and `run_phase3.sh` exit non-zero if any expectation fails. Phase 2's optional resource estimate needs `pip install yowasp-yosys`. / 各スクリプトは検査を表示し、一行の判定で終わる。

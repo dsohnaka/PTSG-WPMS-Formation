@@ -1,0 +1,8 @@
+cosim_sweep: wpms_l2_top (wpms_r1b.score) vs sweep_sim.py — evidence class RTL-SIM; NMAX 1024, T_min 1041
+  seed 2026: 3000 sweeps, 9798 packets latched, 2178264 bins, 1362 full-load sweeps; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  total: 3000 sweeps, 9798 packets, 2178264 bins, 1362 full-load sweeps, 12798 Stays with the pin checked; sweeps longer than T_min: 1362
+  T_wake (strobe clock -> first packet Stay Set): 3..3 clocks; L1 packet_start one clock later
+  g (Stay Set to next Stay Set minus N): 1..1
+  housekeeping Stay Set -> first SLEEP clock: 14..14; BCP commit -> copy landed: 2..9 clocks
+  sweep length (strobe -> first SLEEP clock): 17..1049; full-load sweeps: 1042..1049 of T_min 1041 (-8 spare at worst)
+cosim_sweep: PASS (70 s)

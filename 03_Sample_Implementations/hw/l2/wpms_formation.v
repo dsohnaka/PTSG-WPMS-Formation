@@ -54,6 +54,9 @@
 //  REVISION HISTORY(RH)
 //  001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 2;
 //                                          W-F1, W-F22..W-F30, W-R12..W-R16; Map v0.3).
+//  002 2026-09-28       Claude Code   Fix : insert_req withdrawn while insert_ack is up (found in
+//                                          Phase 3 integration: the Core took the insertion twice
+//                                          and spilled its holding register at the trap word).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -107,7 +110,7 @@ module wpms_formation #(
     output reg          error_flag,
     output reg  [4:0]   error_code,
     output reg  [11:0]  error_sn,
-    output reg          insert_req,             // Error HALT toward the Core (C3-F24 via insertion)
+    output wire         insert_req,             // Error HALT toward the Core (C3-F24 via insertion)
     output wire [11:0]  insert_target,
     input  wire         insert_ack
 );
@@ -116,6 +119,13 @@ module wpms_formation #(
 
     assign ext_op_ready  = 1'b1;
     assign insert_target = TRAP_ADDR;
+    // The Core takes an insertion in the clock it sees insert_req and answers with a
+    // registered insert_ack one clock later; in that clock it looks at insert_req
+    // again (its own testbench drops the request as soon as the ack shows). So the
+    // request is withdrawn combinationally while the ack is up, else it would be
+    // taken twice — the second time at the trap word, spilling the holding register.
+    reg  insert_req_r;
+    assign insert_req    = insert_req_r && !insert_ack;
 
     // ========================================================================
     //  Architectural registers (Map v0.3 §2)
@@ -492,7 +502,7 @@ module wpms_formation #(
             for (bs = 0; bs < 8; bs = bs + 1) begin
                 pmask[bs] <= 16'd0; cm_mask[bs] <= 17'd0; rtout[bs] <= 16'd0;
             end
-            error_flag <= 1'b0; error_code <= 5'd0; error_sn <= 12'd0; insert_req <= 1'b0;
+            error_flag <= 1'b0; error_code <= 5'd0; error_sn <= 12'd0; insert_req_r <= 1'b0;
         end else begin
             // ---- the input switch writes the inbox side --------------------
             if (ibx_we && ibx_addr[7]) begin
@@ -539,12 +549,12 @@ module wpms_formation #(
                     default: ;
                 endcase
             end else if (x_go) begin                                      // x_err != 0
-                error_flag <= 1'b1; error_code <= x_err; error_sn <= x_sn; insert_req <= 1'b1;
+                error_flag <= 1'b1; error_code <= x_err; error_sn <= x_sn; insert_req_r <= 1'b1;
             end
             if (pf_ew2 && !error_flag && !(x_go && x_err != 5'd0)) begin
-                error_flag <= 1'b1; error_code <= ERR_EW2; error_sn <= tap_sn; insert_req <= 1'b1;
+                error_flag <= 1'b1; error_code <= ERR_EW2; error_sn <= tap_sn; insert_req_r <= 1'b1;
             end
-            if (insert_req && insert_ack) insert_req <= 1'b0;
+            if (insert_req_r && insert_ack) insert_req_r <= 1'b0;
 
             // ---- the strobe latches the take-set (sequencer) -----------------
             // Placed after execute: an instruction in X in the strobe's clock was

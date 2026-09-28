@@ -1,0 +1,8 @@
+r2_probe: queued Base Set + queued Loop on the Core copy (PRESCALE 1, stay_value 0) — evidence class RTL-SIM
+  R2-lit: Loop 3: body Stay Sets before housekeeping at clocks [151, 183, 215] -> periods [32, 32, 32]; indirect reads requested: 0
+  R2-ind: Loop 0: body Stay Sets before housekeeping at clocks [151] -> periods [32]; indirect reads requested: 0
+  reading: the queued Loop re-enters the whole window at timeup with no clock lost (C3-F25's self-loop),
+  but its count is the literal D16-D31 only; Loop 0 is 'zero iterations' and no indirect read is made in
+  the Q band (need_ind_loop excludes it; C4-V1). A data-driven R2 needs the Core to read a queued Loop's
+  register-source target at scan time (INT-R1 on Loop) — a Core-office item, not done here.
+r2_probe: as read (SD-04 confirmed)

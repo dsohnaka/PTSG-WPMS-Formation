@@ -16,8 +16,12 @@
 #   .window NAME FILE     a .pfasm window program (path relative to the score, then to
 #                         03_Sample_Implementations/instruction_lists)
 #   .equ   NAME VALUE     a constant
+#   .org   ADDR           continue at ADDR (forward only; the gap is filled with 0)
 #   LABEL:                a label (alone or before a statement)
 #   Stay N | Branch OFF|LABEL | Jump ADDR|LABEL            opcodes 1, 2, 3
+#   JumpInd               the indirect Jump (opcode 3, operand 0): the target comes
+#                         from the Core's indirect-read bus — JumpVal in this profile,
+#                         legal only in a background band here (W-T3)
 #   Reset | BaseSet | StaySet | Return | Call OFF|LABEL | Loop N | ProgEnd | NOP
 #                                                           Global internal sub-ops 0-7
 #   Window NAME           the window's Formation Global words, spliced here
@@ -32,6 +36,7 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF Phase 2).
+# 002 2026-09-28       Claude Code   Add : .org, JumpInd (Phase 3 scores).
 # ============================================================================
 import os, re, sys
 
@@ -47,7 +52,7 @@ CSEL_LSB, CSEL_W = TSB["TS_CSEL"]["lsb"], TSB["TS_CSEL"]["width"]
 CSEL = {"STROBE": 0, "NONEMPTY": 1, "MORE": 2}
 OPC = {"Stay": 1, "Branch": 2, "Jump": 3}
 SUB = {"Reset": 0, "BaseSet": 1, "StaySet": 2, "Return": 3, "Call": 4, "Loop": 5, "ProgEnd": 6, "NOP": 7}
-TS_WORDS = {"Stay", "Branch", "Jump", "Reset", "StaySet", "NOP"}
+TS_WORDS = {"Stay", "Branch", "Jump", "JumpInd", "Reset", "StaySet", "NOP"}
 
 
 class ScoreError(Exception):
@@ -78,13 +83,16 @@ def parse(path):
         if f[0] == ".depth": depth = int(f[1], 0); continue
         if f[0] == ".trap": trap = f[1]; continue
         if f[0] == ".equ": equ[f[1]] = int(f[2], 0); continue
+        if f[0] == ".org":
+            if labels_pending: raise ScoreError(f"line {ln}: a label cannot stand before .org")
+            st.append(dict(ln=ln, mn=".org", arg=f[1], ts=0, tsspec=[], labels=[])); continue
         if f[0] == ".window":
             p = os.path.join(os.path.dirname(os.path.abspath(path)), f[2])
             if not os.path.exists(p): p = os.path.join(LISTS, f[2])
             if not os.path.exists(p): raise ScoreError(f"line {ln}: window file {f[2]} not found")
             windows[f[1]] = (p, A.assemble_file(p)); continue
         mn = f[0]
-        if mn not in OPC and mn not in SUB and mn not in ("Window", "Word"):
+        if mn not in OPC and mn not in SUB and mn not in ("Window", "Word", "JumpInd"):
             raise ScoreError(f"line {ln}: unknown statement {mn!r}")
         arg, ts, rest = None, 0, f[1:]
         needs_arg = mn in ("Stay", "Branch", "Jump", "Call", "Loop", "Window", "Word")
@@ -116,6 +124,10 @@ def assemble(path):
     # pass 1: addresses
     labels, a = {}, 0
     for s in st:
+        if s["mn"] == ".org":
+            to = num(s["arg"], equ)
+            if to < a: raise ScoreError(f"line {s['ln']}: .org 0x{to:03X} is behind 0x{a:03X}")
+            s["addr"] = a; a = to; continue
         for l in s["labels"]:
             if l in labels: raise ScoreError(f"line {s['ln']}: label {l} defined twice")
             labels[l] = a
@@ -127,6 +139,7 @@ def assemble(path):
     words = []                                               # (addr, word, comment)
     for s in st:
         mn, arg, ts, here = s["mn"], s["arg"], s["ts"], s["addr"]
+        if mn == ".org": continue
         tag = (",".join(s["labels"]) + ": ") if s["labels"] else ""
         tss = (" " + " ".join(s["tsspec"])) if s["tsspec"] else ""
         if mn == "Window":
@@ -136,6 +149,8 @@ def assemble(path):
             continue
         if mn == "Word":
             words.append((here, num(arg, equ, labels) & 0xFFFFFFFF, f"{tag}Word")); continue
+        if mn == "JumpInd":
+            words.append((here, (ts << 16) | OPC["Jump"], f"{tag}JumpInd (indirect: JumpVal){tss}")); continue
         if mn in OPC:
             if mn == "Stay":
                 n = num(arg, equ)

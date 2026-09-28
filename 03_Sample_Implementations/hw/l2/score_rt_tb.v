@@ -10,6 +10,7 @@
 //                             from the bus ({data, sub_operand, subopcode, 0})
 //    "H cyc state"            a stack push request (auto-save spilled; S_PUSH)
 //    "Z cyc state"            the Core raised error_flag (S_HALT)
+//    "I cyc state purpose"    an indirect read requested (purpose 0 Jump, 1 Loop target)
 //  The Condition input is the profile's lane mux (Deliverable 3 §4): TS_CSEL =
 //  timing_signals[2:1] selects STROBE (a one-clock pulse every STROBE_T clocks),
 //  NONEMPTY (P > 0) or MORE (packets begun since the strobe < P), where a packet
@@ -20,6 +21,7 @@
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF Phase 2).
+//  002 2026-09-28       Claude Code   Add : "I" events (indirect reads) for the Phase 3 R2 probe.
 // ============================================================================
 `timescale 1ns/1ps
 module score_rt_tb;
@@ -90,6 +92,7 @@ module score_rt_tb;
                     {ext_op_data, ext_op_sub_operand, ext_op_subopcode, 4'd0});
         if (stack_push_req && !push_seen) begin $fwrite(fout, "H %0d %03h\n", cyc, state_number); push_seen <= 1; end
         if (error_flag && !halt_seen) begin $fwrite(fout, "Z %0d %03h\n", cyc, state_number); halt_seen <= 1; end
+        if (indirect_req) $fwrite(fout, "I %0d %03h %0d\n", cyc, state_number, indirect_purpose);
     end
 
     reg [8*512-1:0] out_path;

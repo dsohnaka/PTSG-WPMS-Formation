@@ -1,0 +1,16 @@
+cosim_sweep: wpms_l2_top (wpms_r1d.score) vs sweep_sim.py — evidence class RTL-SIM; NMAX 2048, T_min 2083
+  seed 2026: 12000 sweeps, 42056 packets latched, 17732862 bins, 5595 full-load sweeps; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  seed 7: 12000 sweeps, 43975 packets latched, 18268731 bins, 5762 full-load sweeps; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  seed 42: 12000 sweeps, 42290 packets latched, 18204121 bins, 5383 full-load sweeps; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  total: 36000 sweeps, 128321 packets, 54205714 bins, 16740 full-load sweeps, 164321 Stays with the pin checked; sweeps longer than T_min: 0
+  T_wake (strobe clock -> first packet Stay Set): 1..1 clocks; L1 packet_start one clock later
+  g (Stay Set to next Stay Set minus N): 0..0
+  housekeeping Stay Set -> first SLEEP clock: 13..13; BCP commit -> copy landed: 2..9 clocks
+  sweep length (strobe -> first SLEEP clock): 14..2062; full-load sweeps: 2062..2062 of T_min 2083 (21 spare at worst)
+  floor (N_MIN lowered to 16 for this case only): N = 28 29 30 31 32 33 -> Stay Set to next Stay Set 30 30 30 31 32 33
+  [PASS] EW6: LE0 < 0 lands in block 1 (a listed block): its next packet window's STP -> error_flag EW6 at clock 650; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 56 clocks later
+  [PASS] EW5: a sweep item repeating block 2, taken at the strobe: BCP in housekeeping -> error_flag EW5 at clock 564; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 11 clocks later
+  [PASS] EW2: block 0's N = 16 lands with the sweep [0]: the post-housekeeping prefetch -> error_flag EW2 at clock 569; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 8 clocks later
+  [PASS] EW4: a window writing the store directly (negative_tests N1) as the packet window -> error_flag EW4 at clock 168; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 57 clocks later
+  [PASS] EW3: a window writing the inbox view (negative_tests N4) as the packet window -> error_flag EW3 at clock 164; L1 muted from that clock (latches after: 0, bins while muted: 0); Core HALT at the trap 0x3FF, 61 clocks later
+cosim_sweep: PASS (463 s)
