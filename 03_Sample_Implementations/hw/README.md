@@ -21,6 +21,7 @@
 | `core/ptsg_core_rh031p.v` | Working copy of PTSG-Core RH030 (module `ptsg_core`) + RH029/030 header patch + `stay_value` (C4-F15…F17, C5-F4; form B; `CNT_W` = 12) + draft RH031 entry. The frozen `PTSG-Core/…/ptsg_core.v` is never edited. |
 | `core/ptsg_core_sv_tb.v` | SV-0 … SV-7 (+ SV-5b) of `stay_value_reference_sketch.md` §7; two tops (`ptsg_core_sv_tb`, `ptsg_core_sv0_tb`). |
 | `core/run_phase1.sh` | Phase 1 recipe (RTL-SIM). |
+| `core/sd15_insert_handshake_tb.v`, `core/run_sd15.sh` | SD-15 bug report to the Core's office: the insertion handshake reproduced on the frozen source and on the copy (one Core, a six-word program; RTL-SIM). |
 | `tools/run_phase0_baseline.sh` | Phase 0 recipe (golden models + frozen Core testbenches). |
 | `tools/vcd_compare.py`, `tools/vcd_dump.v` | VCD comparison by signal name; a dump root for unchanged testbenches. |
 | `l2/wpms_formation.v` | The L2 Formation datapath (Phase 2): issue register + execute, slot-major store and inbox, CUR alias, STP, BCP with background copy and forwarding, errors → insertion. |
