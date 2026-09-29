@@ -1,0 +1,66 @@
+run_phase4: 2026-09-29T13:15:47Z — Icarus Verilog version 12.0 (stable) (); Python 3.11.15; numpy 2.4.6; 3000 samples per seed
+  (regression skipped: REGRESSION=0)
+  customer oracle: ALL PASS; CH4-CREST: 7 sub-checks run
+  [PASS] wpms_layer1_oracle.py (unchanged): ALL PASS, CH4-CREST with numpy
+  sin_q040: max |err| vs sin(2 pi phi) = 5.960e-08 = 2^-24.00 at phase 0x3FFFF88F; max output 1099511611388 <= 2^40-1: True  [exhaustive over u (2^26 values, both ends of each u's 16 phases)]
+  [PASS] l1_model.py self-test: the sin core within 2^-23.9 of sin(2 pi phi) (exhaustive over u), phases = l1_phase (ORACLE)
+  [PASS] wpms_exp2_table.hex/.mif and wpms_l1_consts.vh equal a fresh generation (oracle _T/_C1/_C2; model constants)
+  iverilog -Wall: 11 '@* sensitive' notes (L2, as Phase 3), 1 tri0-port note(s), 0 other lines
+  [PASS] wpms_synth_top (L2 + L1 + output path) and the output-path blocks compile
+  sin core  (wpms_l1_sin.v)  vs l1_model.sin_q040 : 1000000 phases (44 directed edges): mismatches 0
+  exp2 unit (wpms_l1_exp2.v) vs oracle exp2_q131  : 1000000 L values (31758 directed: every integer part x every table entry x 4 lo edges, and the clamps): mismatches 0
+  [PASS] sin core = l1_model.sin_q040 and exp2 unit = the oracle's exp2_q131, 1,000,000 inputs each
+  [seed 1]   400 sweeps, 1115 packets, 224529 bins (a = 0: 106204; a clamped at 1: 56361; in between: 61964); controls: G, G override, MG target/rate, soft mute, the error silence; 401 samples (193 zero, 387 with the sticky clip set); one deliberate overrun: True
+  [seed 1]   TB: 224529/224529 bins compared (0 mismatches), 401/401 samples compared (0 mismatches, incl. 270 inspector captures); overrun 1 (expected 1); sweep_clocks_max 4095
+  [seed 2]   400 sweeps, 1065 packets, 216865 bins (a = 0: 115040; a clamped at 1: 55569; in between: 46256); controls: G, G override, MG target/rate, soft mute, the error silence; 401 samples (219 zero, 398 with the sticky clip set); one deliberate overrun: True
+  [seed 2]   TB: 216865/216865 bins compared (0 mismatches), 401/401 samples compared (0 mismatches, incl. 268 inspector captures); overrun 1 (expected 1); sweep_clocks_max 4095
+  [seed 3]   400 sweeps, 1105 packets, 210030 bins (a = 0: 109207; a clamped at 1: 61809; in between: 39014); controls: G, G override, MG target/rate, soft mute, the error silence; 401 samples (226 zero, 374 with the sticky clip set); one deliberate overrun: True
+  [seed 3]   TB: 210030/210030 bins compared (0 mismatches), 401/401 samples compared (0 mismatches, incl. 258 inspector captures); overrun 1 (expected 1); sweep_clocks_max 3738
+  [PASS] wpms_l1_module + output stage: every bin (phase = l1_phase, a = l1_amplitude, sin, product) and every sample (bank, clip, MG, SWEEP_CLOCKS)
+  MG 0 -> -60 dB (target -668792462) at 13,933 per sample: reached at strobe 48001 = 1.0000 s at 48 kHz (CH4-MG: 1.0 s); the RTL's MG equals the model's at every strobe
+  soft mute: MG -> the floor (-32) reached at strobe 154130; the last non-zero sample 128 LSB (a sweep played just above the floor), then exact zero from sample 154130 (the first sweep played at the floor, C4-D6)
+  [PASS] MG 0 -> -60 dB in 1.0 s at 13,933 per sample (CH4-MG); soft mute to the floor, then exact zero (C4-D6)
+  [grid 50 MHz origin] PASS (7 s)
+  [grid 50 MHz origin_literal] PASS (8 s)
+  [grid 50 MHz glide] PASS (3 s)
+  [grid 50 MHz full8] PASS (3 s)
+  [grid 100 MHz origin] PASS (15 s)
+  [grid 100 MHz gauss] PASS (1 s)
+  [grid 100 MHz glide] PASS (5 s)
+  [grid 100 MHz full8] PASS (6 s)
+   error_flag: EW5 at clock 1042; non-zero samples after it: 0; Core HALT: at 0x3FF, 11 clocks after the flag
+   latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+   sigma = 71 Gaussian, N = 2,048 (naive and consistent slots, CH3-E2E): bins with a != 0 per packet: [927] over 6 packets (customer: 927)
+   strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 0 (< T_min 1041); overrun 0
+   strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 1028 (< T_min 1041); overrun 0
+   strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 720 (< T_min 1041); overrun 0
+   strobe interval (clk_sys clocks): min 2083, max 2084 (expected 2083 / 2084); SWEEP_CLOCKS max 2068 (< T_min 2083); overrun 0
+   strobe interval (clk_sys clocks): min 2083, max 2084 (expected 2083 / 2084); SWEEP_CLOCKS max 720 (< T_min 2083); overrun 0
+   test origin (N = 1008), G = 12: PCM peak over 120 samples 2002439 = -12.44 dBFS (Ch.3 §3.6.4 / CH3-ORIGIN: -6.3 dBFS for N = 2,048)
+   test origin (N = 2048), G = 12: PCM peak over 120 samples 4068448 = -6.29 dBFS (Ch.3 §3.6.4 / CH3-ORIGIN: -6.3 dBFS for N = 2,048)
+  [PASS] wpms_synth_top on the 48 kHz grid: samples = model, I2S wire = bank, latency 21.48 us, strobe 1041/1042 and 2083/2084, 927 audible bins, test-origin peak
+  [oracle 50 MHz]   total: 9000 sweeps, 32473 packets, 6867874 bins, 0 full-load; 9003 output samples compared
+  [oracle 50 MHz]   T_wake 1..1; g 0..0; sweep length (strobe -> first SLEEP clock) 14..1019, full-load - of T_min 1041
+  [oracle 50 MHz]   SWEEP_CLOCKS (strobe -> last product in the accumulator), worst: 1025 of T_min 1041 (15 spare)
+  [oracle 100 MHz]   total: 9000 sweeps, 32839 packets, 13448806 bins, 4178 full-load; 9003 output samples compared
+  [oracle 100 MHz]   T_wake 1..1; g 0..0; sweep length (strobe -> first SLEEP clock) 14..2062, full-load 2062..2062 of T_min 2083
+  [oracle 100 MHz]   SWEEP_CLOCKS (strobe -> last product in the accumulator), worst: 2068 of T_min 2083 (14 spare)
+  [PASS] wpms_synth_top under sweep_sim's GO traffic: bundles as the oracle, every output sample as the model, SWEEP_CLOCKS < T_min
+  video_tb: 1237500 clocks per frame (1650 x 750 = 1237500), 720 active lines of 1280 pixels, VSYNC 5 lines from line 725, HSYNC 40 clocks at pixel 1391, frame period 16666.651 us = 60.0001 Hz
+  [PASS] video carrier: 720p60 timing (VIC 4)
+  adv7513_tb: first table: 29 writes acknowledged in order (1 reads of 0x42 so far); nack 0; SCL 97.6 kHz (with one 30 us stretch)
+  adv7513_tb: after the hot-plug: 58 writes in all (the table again), done 1, hpd 1; register file: 0x41=10 0xAF=16 0x0A=01 0x0C=04 0x15=20 N=001800
+  [PASS] ADV7513 configurator: HPD poll, the table written and acknowledged in order, rewritten after a hot-plug
+  cosim_l1_mutants: 23/23 mutants killed
+  [PASS] cosim_l1_mutants.py: every deliberate defect in the L1 RTL is caught
+  ESTIMATE wpms_l1_sin: $lut 67; MISTRAL_ALUT_ARITH 177; MISTRAL_FF 962; MISTRAL_MUL27X27 7; 
+  ESTIMATE wpms_l1_exp2: $lut 173; MISTRAL_ALUT_ARITH 261; MISTRAL_FF 312; MISTRAL_M10K 1; MISTRAL_MUL18X18 2; MISTRAL_MUL27X27 5; 
+  ESTIMATE wpms_l1_module: $lut 880; MISTRAL_ALUT_ARITH 1396; MISTRAL_FF 2664; MISTRAL_M10K 1; MISTRAL_MUL18X18 4; MISTRAL_MUL27X27 14; 
+  ESTIMATE wpms_output_stage: $lut 792; MISTRAL_ALUT_ARITH 488; MISTRAL_FF 321; 
+  ESTIMATE wpms_i2s_master: $lut 44; MISTRAL_ALUT_ARITH 20; MISTRAL_FF 61; 
+  ESTIMATE wpms_strobe_sync: $lut 54; MISTRAL_ALUT_ARITH 38; MISTRAL_FF 52; 
+  ESTIMATE wpms_video_720p: $lut 31; MISTRAL_ALUT_ARITH 90; MISTRAL_FF 45; 
+  ESTIMATE wpms_adv7513_cfg: $lut 180; MISTRAL_ALUT_ARITH 70; MISTRAL_FF 117; 
+  run_sd15: reproduced — the registered drop is taken twice in every scene, the in-ack-clock drop once (both sources)
+  [PASS] SD-15 reproduction on the frozen Core and the copy (bug report to the Core's office)
+run_phase4: ALL PHASE 4 CHECKS PASSED

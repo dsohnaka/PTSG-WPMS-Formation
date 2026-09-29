@@ -1,0 +1,9 @@
+l1_model self-test — evidence class ORACLE
+  golden: FPGA_Spectrum_Engine_OpenPrompt/04_Verification/oracle/wpms_layer1_oracle.py (imported unchanged)
+  sin constants c0..c5 = [52707179, 43349917, 42784653, 40215962, 44101737, 63311520]; stage shifts {5: 32, 4: 31, 3: 30, 2: 29, 1: 27, 0: 11}
+  sin_q040: max |err| vs sin(2 pi phi) = 5.960e-08 = 2^-24.00 at phase 0x3FFFF88F; max output 1099511611388 <= 2^40-1: True  [exhaustive over u (2^26 values, both ends of each u's 16 phases)]
+    (Ch.2 §2.8.2 aggregate budget ~1.3e-7; 24-bit DAC LSB 2^-23 = 1.19e-7; the 11th-order truncation alone at pi/2 is 5.69e-08)
+  sin_q040: sin(phi + 1/2) = -sin(phi) on 998 phases: True
+  phases(): equal to the oracle's l1_phase at 5 bins of each of 300 random packets: mismatches 0
+  exp2 table: 256 x 31 bits (oracle _T), C1 = 744261118, C2 = 257941248
+l1_model: self-test PASS

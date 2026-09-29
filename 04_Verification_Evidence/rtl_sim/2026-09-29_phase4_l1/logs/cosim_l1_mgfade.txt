@@ -1,0 +1,7 @@
+cosim_l1 mgfade — evidence class RTL-SIM (Icarus): MG slew and soft mute (Ch.4 §4.4.1, §4.4.5)
+  MG 0 -> -60 dB (target -668792462) at 13,933 per sample: reached at strobe 48001 = 1.0000 s at 48 kHz (CH4-MG: 1.0 s); the RTL's MG equals the model's at every strobe
+  soft mute: MG -> the floor (-32) reached at strobe 154130; the last non-zero sample 128 LSB (a sweep played just above the floor), then exact zero from sample 154130 (the first sweep played at the floor, C4-D6)
+  154134 sweeps, 154134 bins, 154135 samples
+  TB: 154134/154134 bins compared (0 mismatches), 154135/154135 samples compared (0 mismatches, incl. 0 inspector captures); overrun 0 (expected 0); sweep_clocks_max 21
+  TB: PASS
+cosim_l1 mgfade: PASS

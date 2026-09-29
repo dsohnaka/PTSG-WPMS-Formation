@@ -1,0 +1,4 @@
+adv7513_tb: first table: 29 writes acknowledged in order (1 reads of 0x42 so far); nack 0; SCL 97.6 kHz (with one 30 us stretch)
+adv7513_tb: after the hot-plug: 58 writes in all (the table again), done 1, hpd 1; register file: 0x41=10 0xAF=16 0x0A=01 0x0C=04 0x15=20 N=001800
+adv7513_tb: PASS
+<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l1/wpms_adv7513_tb.v:106: $finish called at 18857750000 (1ps)

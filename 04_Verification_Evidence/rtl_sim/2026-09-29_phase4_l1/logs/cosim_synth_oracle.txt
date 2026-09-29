@@ -1,0 +1,16 @@
+cosim_synth oracle: wpms_synth_top vs sweep_sim.py (bundles) and l1_model over the customer's oracle (samples) — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  seed 2026 (G 12, MG target +0.00 log2): 3000 sweeps, 10702 packets, 2241880 bins, 0 full-load; 3001 output samples, 0 differ from the model (2590 non-zero, 0 at full scale); SWEEP_CLOCKS max 1025; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  seed 7 (G override 10, MG target +0.00 log2): 3000 sweeps, 10983 packets, 2293959 bins, 0 full-load; 3001 output samples, 0 differ from the model (2510 non-zero, 0 at full scale); SWEEP_CLOCKS max 1012; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  seed 42 (G 8, MG target -1.00 log2): 3000 sweeps, 10788 packets, 2332035 bins, 0 full-load; 3001 output samples, 0 differ from the model (2610 non-zero, 0 at full scale); SWEEP_CLOCKS max 1022; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  total: 9000 sweeps, 32473 packets, 6867874 bins, 0 full-load; 9003 output samples compared
+  T_wake 1..1; g 0..0; sweep length (strobe -> first SLEEP clock) 14..1019, full-load - of T_min 1041
+  SWEEP_CLOCKS (strobe -> last product in the accumulator), worst: 1025 of T_min 1041 (15 spare)
+cosim_synth oracle: PASS (187 s)
+cosim_synth oracle: wpms_synth_top vs sweep_sim.py (bundles) and l1_model over the customer's oracle (samples) — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  seed 2026 (G 12, MG target +0.00 log2): 3000 sweeps, 10644 packets, 4371562 bins, 1540 full-load; 3001 output samples, 0 differ from the model (2443 non-zero, 0 at full scale); SWEEP_CLOCKS max 2068; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  seed 7 (G override 10, MG target +0.00 log2): 3000 sweeps, 11382 packets, 4552395 bins, 1274 full-load; 3001 output samples, 0 differ from the model (2507 non-zero, 0 at full scale); SWEEP_CLOCKS max 2068; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  seed 42 (G 8, MG target -1.00 log2): 3000 sweeps, 10813 packets, 4524849 bins, 1364 full-load; 3001 output samples, 0 differ from the model (2610 non-zero, 0 at full scale); SWEEP_CLOCKS max 2068; oracle: L1 bundle mismatches vs reference: 0   machine/sequencer errors: none; PASS
+  total: 9000 sweeps, 32839 packets, 13448806 bins, 4178 full-load; 9003 output samples compared
+  T_wake 1..1; g 0..0; sweep length (strobe -> first SLEEP clock) 14..2062, full-load 2062..2062 of T_min 2083
+  SWEEP_CLOCKS (strobe -> last product in the accumulator), worst: 2068 of T_min 2083 (14 spare)
+cosim_synth oracle: PASS (316 s)

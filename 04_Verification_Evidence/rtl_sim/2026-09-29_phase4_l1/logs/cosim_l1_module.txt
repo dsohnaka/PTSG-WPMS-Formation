@@ -1,0 +1,15 @@
+cosim_l1 module — evidence class RTL-SIM (Icarus), seed 1
+  400 sweeps, 1115 packets, 224529 bins (a = 0: 106204; a clamped at 1: 56361; in between: 61964); controls: G, G override, MG target/rate, soft mute, the error silence; 401 samples (193 zero, 387 with the sticky clip set); one deliberate overrun: True
+  TB: 224529/224529 bins compared (0 mismatches), 401/401 samples compared (0 mismatches, incl. 270 inspector captures); overrun 1 (expected 1); sweep_clocks_max 4095
+  TB: PASS
+cosim_l1 module: PASS
+cosim_l1 module — evidence class RTL-SIM (Icarus), seed 2
+  400 sweeps, 1065 packets, 216865 bins (a = 0: 115040; a clamped at 1: 55569; in between: 46256); controls: G, G override, MG target/rate, soft mute, the error silence; 401 samples (219 zero, 398 with the sticky clip set); one deliberate overrun: True
+  TB: 216865/216865 bins compared (0 mismatches), 401/401 samples compared (0 mismatches, incl. 268 inspector captures); overrun 1 (expected 1); sweep_clocks_max 4095
+  TB: PASS
+cosim_l1 module: PASS
+cosim_l1 module — evidence class RTL-SIM (Icarus), seed 3
+  400 sweeps, 1105 packets, 210030 bins (a = 0: 109207; a clamped at 1: 61809; in between: 39014); controls: G, G override, MG target/rate, soft mute, the error silence; 401 samples (226 zero, 374 with the sticky clip set); one deliberate overrun: True
+  TB: 210030/210030 bins compared (0 mismatches), 401/401 samples compared (0 mismatches, incl. 258 inspector captures); overrun 1 (expected 1); sweep_clocks_max 3738
+  TB: PASS
+cosim_l1 module: PASS
