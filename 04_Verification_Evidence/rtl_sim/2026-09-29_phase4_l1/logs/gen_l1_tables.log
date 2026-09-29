@@ -1,0 +1,4 @@
+  wpms_exp2_table.hex: equal
+  wpms_exp2_table.mif: equal
+  wpms_l1_consts.vh: equal
+gen_l1_tables: CHECK PASS

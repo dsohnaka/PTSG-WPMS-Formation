@@ -1,0 +1,4 @@
+cosim_l1 units — evidence class RTL-SIM (Icarus), seed 1
+  sin core  (wpms_l1_sin.v)  vs l1_model.sin_q040 : 1000000 phases (44 directed edges): mismatches 0
+  exp2 unit (wpms_l1_exp2.v) vs oracle exp2_q131  : 1000000 L values (31758 directed: every integer part x every table entry x 4 lo edges, and the clamps): mismatches 0
+cosim_l1 units: PASS

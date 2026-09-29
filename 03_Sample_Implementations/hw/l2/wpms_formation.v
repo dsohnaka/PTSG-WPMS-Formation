@@ -57,13 +57,21 @@
 //  002 2026-09-28       Claude Code   Fix : insert_req withdrawn while insert_ack is up (found in
 //                                          Phase 3 integration: the Core took the insertion twice
 //                                          and spilled its holding register at the trap word).
+//  003 2026-09-29       Claude Code   Add : parameter JUMPVAL_RESET, the power-up value of JumpVal
+//                                          (default 0, the model's). The L2 top sets the dispatch
+//                                          score's TAIL_0, so a dispatch reached before the first WJV —
+//                                          only after an error in the first housekeeping window —
+//                                          lands on a housekeeping tail, whose Stay timeup lets the
+//                                          Core take the error insertion (C3-F20) and HALT (found in
+//                                          Phase 4: the grid test of the literal test origin at NMAX 1008).
 // ============================================================================
 `timescale 1ns/1ps
 
 module wpms_formation #(
     parameter integer NMAX      = 2048,         // Map v0.3 §9
     parameter integer N_MIN     = 32,           // Map v0.3 §9 (EW2)
-    parameter [11:0]  TRAP_ADDR = 12'hFFF       // insertion target on Error HALT (set by the score)
+    parameter [11:0]  TRAP_ADDR = 12'hFFF,      // insertion target on Error HALT (set by the score)
+    parameter [11:0]  JUMPVAL_RESET = 12'h000   // JumpVal at power-up (Map v0.3 gives none; the model: 0)
 ) (
     input  wire         clk,
     input  wire         rst,                    // synchronous, active-high (Core C5-V1/V3)
@@ -494,7 +502,7 @@ module wpms_formation #(
     always @(posedge clk) begin
         if (rst) begin
             accm <= 32'd0; temp <= 32'd0; adrs <= 10'd0; shv <= 5'd0;
-            loopval <= 12'd0; jumpval <= 12'd0;
+            loopval <= 12'd0; jumpval <= JUMPVAL_RESET;
             sweep_a <= 28'd0;                                    // CR5-R1: P = 0
             armed <= 8'd0; sweep_armed <= 1'b0; take <= 8'd0; take_sweep <= 1'b0;
             copied <= 8'd0; sweep_copied <= 1'b0; inbox_taken <= 1'b0; taken_due <= 1'b0;

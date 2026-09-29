@@ -1,0 +1,4 @@
+video_tb: 1237500 clocks per frame (1650 x 750 = 1237500), 720 active lines of 1280 pixels, VSYNC 5 lines from line 725, HSYNC 40 clocks at pixel 1391, frame period 16666.651 us = 60.0001 Hz
+video_tb: bars at line 100: bfbfbf bfbf00 00bfbf 00bf00 bf00bf bf0000 0000bf 000000 000000 000000
+video_tb: PASS
+<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l1/wpms_video_tb.v:56: $finish called at 16666698138 (1ps)

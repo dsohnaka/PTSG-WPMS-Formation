@@ -20,11 +20,16 @@
 //  provided (stack_ack 0): the Phase 3 scores never spill; a spill would stall
 //  the Core and is exported for the testbench (stack_spill).
 //
-//  Parameters for the two clock targets (ruling 2026-09-28): 100 MHz — NMAX 2048
-//  (sample period 2,083 clocks); 50 MHz — NMAX 1024 (1,041 clocks).
+//  Parameters for the two clock targets (rulings 2026-09-28, 2026-09-29): 100 MHz —
+//  NMAX 2048 (sample period 2,083 clocks); 50 MHz — NMAX 1008 (1,041 clocks).
+//  TAIL_BASE: the dispatch score's TAIL_0; JumpVal powers up there (see the
+//  Formation's RH003), so that an error raised in the first housekeeping window
+//  after reset, before its WJV, still reaches the Core's HALT.
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-09-28       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 3).
+//  002 2026-09-29       Claude Code   Add : parameter TAIL_BASE -> the Formation's JUMPVAL_RESET
+//                                          (Phase 4 finding); header: NMAX 1008 at 50 MHz (ruling).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -33,6 +38,7 @@ module wpms_l2_top #(
     parameter integer N_MIN       = 32,
     parameter integer IMEM_DEPTH  = 1024,
     parameter [11:0]  TRAP_ADDR   = 12'h3FF,         // = the score's .trap
+    parameter [11:0]  TAIL_BASE   = 12'h300,         // = the dispatch score's TAIL_0 (JumpVal at power-up)
     parameter         SCORE_HEX   = "wpms_r1d.hex",
     parameter         SCORE_MIF   = "",
     parameter         IMEM_VENDOR = "SIM"            // "M10K" for Quartus
@@ -113,7 +119,7 @@ module wpms_l2_top #(
     wire        bcp_busy;
     wire [31:0] pf_n, pf_ph0, pf_phd1, pf_phd2, pf_lp, pf_ls0, pf_lad1, pf_lad2, pf_rt;
 
-    wpms_formation #(.NMAX(NMAX), .N_MIN(N_MIN), .TRAP_ADDR(TRAP_ADDR)) form (
+    wpms_formation #(.NMAX(NMAX), .N_MIN(N_MIN), .TRAP_ADDR(TRAP_ADDR), .JUMPVAL_RESET(TAIL_BASE)) form (
         .clk(clk), .rst(rst),
         .ext_op_valid(ext_op_valid), .ext_op_subopcode(ext_op_subopcode),
         .ext_op_sub_operand(ext_op_sub_operand), .ext_op_data(ext_op_data), .ext_op_ready(ext_op_ready),

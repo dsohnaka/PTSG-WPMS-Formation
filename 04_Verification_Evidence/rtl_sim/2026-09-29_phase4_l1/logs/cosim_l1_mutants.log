@@ -1,0 +1,25 @@
+cosim_l1_mutants: one defect per scratch copy of the L1 RTL — evidence class RTL-SIM
+  X1  KILLED    exp2 table read one entry off  ->  FAIL exp2 L=-1: RTL 1076653028 oracle 2147483637
+  X2  KILLED    exp2 underflow clamp at <= instead of <  ->  FAIL exp2 L=-33285996544: RTL 0 oracle 1
+  X3  KILLED    exp2 polynomial without its second-order term  ->  FAIL exp2 L=-1: RTL 2147475788 oracle 2147483637
+  X4  KILLED    exp2 final shift one too far  ->  FAIL exp2 L=-1: RTL 1073741818 oracle 2147483637
+  S1  KILLED    reflection by two's complement instead of bit inversion (Ch.2 §2.3.3 wording)  ->  FAIL sin phase=0x40000000: RTL 0 model 1099511578624
+  S2  KILLED    Horner stage 3 scaled one bit wrong  ->  FAIL sin phase=0x20000000: RTL 777492070400 model 777472147456
+  S3  KILLED    the sign of Q3/Q4 lost  ->  FAIL sin phase=0x80000010: RTL 25735 model -25735
+  E1  KILLED    phase engine: the second difference never added  ->  MISMATCH bin 3: phase b5f29a05/bdc758e1 a 00000000/00000000 sin 107c0899af9/100615fc2b9 prod 0000000000000000/0000000000
+  E2  KILLED    LAD2 zero-extended instead of sign-extended  ->  MISMATCH bin 9: phase 75d92f94/75d92f94 a 29acf80d/029acf80 sin 03f2067c07b/03f2067c07b prod 0a46d78e222d5fee/00a46d78ae
+  E3  KILLED    master gain not added to the level (Ch.4 §4.4.1)  ->  MISMATCH bin 17990: phase b8b72aa9/b8b72aa9 a 00000a61/000000a6 sin 10414a75bcf/10414a75bcf prod fffff5c95a5cffe0/ffffff
+  E4  KILLED    product truncated by floor instead of toward zero  ->  MISMATCH bin 10: phase a8ba1305/a8ba1305 a 029bce1c/029bce1c sin 128a3f8ee29/128a3f8ee29 prod fdce35d5f8c3b20a/fdce35d5f
+  E5  KILLED    RT.OUT routing swapped (L <- bit 1)  ->  MISMATCH sample 1: L 000a47/000000 R 000a47/000a47 clip 00/00 MG 00000000/00000000 sweep_clocks 93/93 (RTL/expected)
+  E6  KILLED    a product in the strobe clock left out of the closing sample  ->  MISMATCH sample 29: L ffe501/ffeae1 R 000000/000000 clip 11/11 MG 00000000/00000000 sweep_clocks 74/74 (RTL/expected)
+  E7  KILLED    amplitude delay one clock short (a paired with the next bin's sin)  ->  MISMATCH bin 7: phase 587fd280/587fd280 a 0298d268/0298d268 sin 0d318eab710/0d318eab710 prod 0225080308806de7/02243620fd
+  E8  KILLED    accumulation not stopped by the error flag (ruling 2026-09-28)  ->  MISMATCH sample 49: L 000000/000000 R 000000/000000 clip 11/11 MG 80000000/80000000 sweep_clocks 1210/0 (RTL/expected)
+  N1  KILLED    the inspector captures the bin after the selected one  ->  MISMATCH inspector, sample 1: phase 05c5c4bd/587fd280 L 3ffffe984135a0/3ffffe981de2e0 a 0299d0ef/0298d268
+  O1  KILLED    rounding replaced by truncation  ->  MISMATCH sample 3: L f40968/f40969 R 023073/023073 clip 00/00 MG 00000000/00000000 sweep_clocks 1614/1614 (RTL/expected)
+  O2  KILLED    saturation replaced by wrap  ->  MISMATCH sample 26: L caf8b5/800000 R 800000/800000 clip 11/11 MG 00000000/00000000 sweep_clocks 2843/2843 (RTL/expected
+  O3  KILLED    MG jumps to its target (no slew)  ->  MISMATCH sample 30: L fff9e5/fff9e5 R 000000/000000 clip 11/11 MG 80000000/f0000000 sweep_clocks 175/175 (RTL/expected)
+  O4  KILLED    soft mute zeroes at once, not at the floor (C4-D6)  ->  MISMATCH sample 30: L 000000/fff9e5 R 000000/000000 clip 11/11 MG f0000000/f0000000 sweep_clocks 175/175 (RTL/expected)
+  I1  KILLED    left-justified instead of I2S (no one-SCLK delay)  ->  FAIL I2S: 116 frames decoded differently from the words captured; 0 captures differ from the bank
+  I2  KILLED    the strobe at F_m (no Delta_pre)  ->  FAIL origin: sample 2 (strobe 3): RTL L 0 R 0 clip 0 MG 0 / model L 531044 R 531044 clip 0 MG 0
+  Y1  KILLED    a two-clock strobe (edge detector on two stages)  ->  FAIL origin: sample 2 (strobe 3): RTL L 0 R 0 clip 0 MG 0 / model L 531044 R 531044 clip 0 MG 0
+cosim_l1_mutants: 23/23 mutants killed
