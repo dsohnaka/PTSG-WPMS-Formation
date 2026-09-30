@@ -1,9 +1,17 @@
-check_host_tcl: wpms_issp_host.tcl and wpms_music_demo.tcl under tclsh 8.6.14, against issp_standin.tcl (not Quartus, not the RTL)
+check_host_tcl: wpms_issp_host.tcl and wpms_music_demo.tcl under tclsh 8.6.14, against issp_standin.tcl (a check of the scripts: not Quartus, not the RTL)
   file    PASS: wpms_music_demo.tcl is what wpms_music.py writes (NMAX 1,008)
   demo    PASS: 91 writes and 27 reads, in the order of wpms_music.py's 109 steps; applied GOs 2, 3, 4, 5, 6
-  stress  PASS: 91 writes and 27 reads, in the order of wpms_music.py's 109 steps; applied GOs 2, 3, 4, 5, 6
-  stress  PASS: the same transactions as without the stress
+  stress  PASS: 91 writes and 27 reads, in the order of wpms_music.py's 109 steps; applied GOs 2, 3, 4, 5, 6; the same transactions as without the stress
   refuse  PASS: a refused write prints REFUSED and returns 1; the next write goes on
-  dead    PASS: no acknowledge -> the error 'wpms: no acknowledge (addr 0x010)'
+  dead    PASS: no acknowledge -> the error 'wpms: no acknowledge (addr 0x010)', no hang
   status  PASS: wpms_status reads its 11 words
+  H1     KILLED  no wait for the acknowledge  ->  stress, dead
+  H2     KILLED  only WR_ACK compared  ->  stress
+  H3     KILLED  the probe not padded  ->  stress
+  H4     KILLED  the first device of the chain (the HPS)  ->  demo, stress, refuse, dead, status
+  H5     KILLED  REJ ignored  ->  refuse
+  H6     KILLED  the source's state not read at open  ->  stress
+  H7     KILLED  an 8-bit address  ->  demo, stress, refuse, status
+  H8     KILLED  no poll of APPLIED_SEQ  ->  demo, stress
+  mutants 8/8 broken copies of wpms_issp_host.tcl caught
 check_host_tcl: PASS

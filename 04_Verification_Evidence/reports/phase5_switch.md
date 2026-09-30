@@ -95,24 +95,27 @@
 ## 2. Commands run and their last lines / 実行したコマンドと末尾行
 
 ```
-# the recorded Phase 5 run (Icarus Verilog 12.0, Python 3.11.15), 2026-09-30T13:51:41Z
-REGRESSION=0 03_Sample_Implementations/hw/switch/run_phase5.sh
+# the recorded Phase 5 run (Icarus Verilog 12.0, Python 3.11.15, tclsh 8.6.14), 2026-09-30T14:16:21Z
+REGRESSION=0 03_Sample_Implementations/hw/switch/run_phase5.sh 04_Verification_Evidence/rtl_sim/2026-09-30_phase5_switch
   [PASS] ROM images wpms_rom_origin_{1008,2048}.{hex,mif} regenerate identically (Ch.3 §3.10, Ch.5 §5.8)
   iverilog -Wall: 16 lines, 0 from hw/switch
   [PASS] cosim_switch: the switch, the host path, the ROM and the sound agree with the models in every run
+  check_host_tcl: PASS
   cosim_switch_mutants: 22/22 mutants killed
   ESTIMATE wpms_switch: $lut 2938; MISTRAL_ALUT_ARITH 667; MISTRAL_FF 1275; MISTRAL_M10K 3;
   cosim_switch evidence: PASS (1 s)
 run_phase5: ALL PHASE 5 CHECKS PASSED
+# the third recording of the recipe: the first two (13:51:41Z and 14:11:45Z), before the check of the
+# host scripts was added and then extended with its mutants, gave the same results line for line
 
 # the regression, on the same tree (the Formation's RH004, the ADV7513 table's RH002, the checkers' fix),
 # started 2026-09-30T13:40:36Z
 03_Sample_Implementations/hw/l1/run_phase4.sh        (REGRESSION=1: Phase 3's recipe, which runs Phase 2's)
-# (still running when this revision was committed: Phase 2 passed, Phase 3's first nine checks passed;
-#  the recipe's last lines are added when it ends)
+# (still running when this revision was committed: the Phase 2 and Phase 3 recipes passed, Phase 4's
+#  steps are running; the recipe's last lines are added when it ends)
 ```
 
-Logs: `04_Verification_Evidence/rtl_sim/2026-09-30_phase5_switch/logs/` (`run_phase5.txt`, `cosim_switch.txt` — fifteen runs in full, `cosim_switch_mutants.log`, `yosys_stat.txt`, the regression's `phase{2,3,4}_regression.txt`); the VCD of a short run (reset, the ROM, one host GO): `phase5_host_go.vcd.gz`; `observation.md` (expected before observed).
+Logs: `04_Verification_Evidence/rtl_sim/2026-09-30_phase5_switch/logs/` (`run_phase5.txt`, `cosim_switch.txt` — fifteen runs in full, `check_host_tcl.txt`, `cosim_switch_mutants.log`, `yosys_stat.txt`, the regression's `phase{2,3,4}_regression.txt`); the VCD of a short run (reset, the ROM, one host GO): `phase5_host_go.vcd.gz`; `observation.md` (expected before observed).
 
 ## 3. Results, with evidence classes / 結果と証拠クラス
 
@@ -184,7 +187,7 @@ Eight broken copies of `wpms_issp_host.tcl` (no wait for the acknowledge, a chec
 
 In the first mutant run five mutants survived. None of them pointed at the RTL: each showed a scenario that did not test what it meant to, and those scenarios were fixed (§4.3).
 
-**3.9 Regression.** *Pending at this revision:* the Phase 2 recipe passed on RH004; Phase 3's first nine checks passed (the R1 dispatch and branch forms at both budgets); Phase 4 is still running. The result follows in the next revision.
+**3.9 Regression.** *Pending at this revision:* on RH004 the Phase 2 recipe passed and the Phase 3 recipe passed (ALL PHASE 3 CHECKS PASSED, its 11 mutants killed); Phase 4's steps are still running. The result follows in the next revision.
 
 **3.10 The ADV7513 table against the guide (reading; the architect's extracts of the Programming Guide Rev. B).**
 

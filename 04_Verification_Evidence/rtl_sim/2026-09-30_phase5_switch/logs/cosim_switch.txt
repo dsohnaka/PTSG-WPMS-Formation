@@ -34,7 +34,7 @@ cosim_switch reject (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 1252 .. 1967 clocks = 1.2019 .. 1.8883 periods, from strobe 2 .. 2 after the GO, over 4 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
   strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
-cosim_switch reject: PASS (6 s)
+cosim_switch reject: PASS (5 s)
 cosim_switch timing (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
   switch: 995 transactions (974 port 0, 21 port 3; 0 refused), 301 apply steps, 302 strobes: answers equal to switch_model's: 995/995
   inbox port: 566 writes presented (clock, address, data) equal to the model's: True; hand-overs 62
@@ -46,7 +46,7 @@ cosim_switch timing (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 1043 .. 2084 clocks = 1.0013 .. 2.0006 periods, from strobe 2 .. 2 after the GO, over 62 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-2, -1, 0, 1, 2, 3]
   strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
-cosim_switch timing: PASS (32 s)
+cosim_switch timing: PASS (33 s)
 cosim_switch bridge (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
   switch: 182 transactions (77 port 0, 105 port 3; 0 refused), 43 apply steps, 47 strobes: answers equal to switch_model's: 182/182
   inbox port: 114 writes presented (clock, address, data) equal to the model's: True; hand-overs 6
@@ -58,7 +58,7 @@ cosim_switch bridge (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 1568 .. 1967 clocks = 1.5053 .. 1.8883 periods, from strobe 2 .. 2 after the GO, over 3 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
   strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
-cosim_switch bridge: PASS (7 s)
+cosim_switch bridge: PASS (6 s)
 cosim_switch random (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
   switch: 3589 transactions (3295 port 0, 294 port 3; 374 refused), 294 apply steps, 295 strobes: answers equal to switch_model's: 3589/3589
   inbox port: 1249 writes presented (clock, address, data) equal to the model's: True; hand-overs 182
@@ -70,7 +70,7 @@ cosim_switch random (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 1044 .. 2076 clocks = 1.0022 .. 1.9930 periods, from strobe 2 .. 2 after the GO, over 182 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-2, -1]
   strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
-cosim_switch random: PASS (31 s)
+cosim_switch random: PASS (32 s)
 cosim_switch random (seed 2): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
   switch: 3439 transactions (3166 port 0, 273 port 3; 367 refused), 291 apply steps, 292 strobes: answers equal to switch_model's: 3439/3439
   inbox port: 1216 writes presented (clock, address, data) equal to the model's: True; hand-overs 220
@@ -94,7 +94,7 @@ cosim_switch random (seed 3): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 1051 .. 2073 clocks = 1.0090 .. 1.9901 periods, from strobe 2 .. 2 after the GO, over 225 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
   strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
-cosim_switch random: PASS (32 s)
+cosim_switch random: PASS (31 s)
 cosim_switch origin (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
   switch: 56 transactions (35 port 0, 21 port 3; 0 refused), 117 apply steps, 118 strobes: answers equal to switch_model's: 56/56
   inbox port: 19 writes presented (clock, address, data) equal to the model's: True; hand-overs 1
@@ -119,7 +119,7 @@ cosim_switch music (seed 1): wpms_system on the 48 kHz grid, host path by the de
   GO -> first sweep playing it: 2771 .. 4106 clocks = 1.3301 .. 1.9709 periods, from strobe 2 .. 2 after the GO, over 6 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
   strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
-cosim_switch music: PASS (13 s)
+cosim_switch music: PASS (12 s)
 cosim_switch reject (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
   switch: 398 transactions (377 port 0, 21 port 3; 28 refused), 42 apply steps, 43 strobes: answers equal to switch_model's: 398/398
   inbox port: 165 writes presented (clock, address, data) equal to the model's: True; hand-overs 4
@@ -131,7 +131,7 @@ cosim_switch reject (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 2294 .. 4036 clocks = 1.1011 .. 1.9373 periods, from strobe 2 .. 2 after the GO, over 4 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
   strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
-cosim_switch reject: PASS (10 s)
+cosim_switch reject: PASS (8 s)
 cosim_switch timing (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
   switch: 995 transactions (974 port 0, 21 port 3; 0 refused), 302 apply steps, 303 strobes: answers equal to switch_model's: 995/995
   inbox port: 566 writes presented (clock, address, data) equal to the model's: True; hand-overs 62
@@ -143,7 +143,7 @@ cosim_switch timing (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 2084 .. 4167 clocks = 1.0003 .. 2.0002 periods, from strobe 2 .. 2 after the GO, over 62 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-3, -2, -1, 0, 1, 2, 3]
   strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
-cosim_switch timing: PASS (53 s)
+cosim_switch timing: PASS (54 s)
 cosim_switch bridge (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
   switch: 182 transactions (77 port 0, 105 port 3; 0 refused), 43 apply steps, 47 strobes: answers equal to switch_model's: 182/182
   inbox port: 114 writes presented (clock, address, data) equal to the model's: True; hand-overs 6
@@ -155,7 +155,7 @@ cosim_switch bridge (seed 1): wpms_system on the 48 kHz grid, host path by the d
   GO -> first sweep playing it: 3652 .. 4037 clocks = 1.7530 .. 1.9378 periods, from strobe 2 .. 2 after the GO, over 3 GOs (Ch.5 §5.4.3: <= 2)
   hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
   strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
-cosim_switch bridge: PASS (8 s)
+cosim_switch bridge: PASS (9 s)
 cosim_switch random (seed 4): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
   switch: 3196 transactions (3049 port 0, 147 port 3; 386 refused), 235 apply steps, 236 strobes: answers equal to switch_model's: 3196/3196
   inbox port: 981 writes presented (clock, address, data) equal to the model's: True; hand-overs 180

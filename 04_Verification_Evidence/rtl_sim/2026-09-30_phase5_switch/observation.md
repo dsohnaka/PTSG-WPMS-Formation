@@ -25,7 +25,7 @@
 
 ## Observed (the recorded run) / 観測値（記録実行）
 
-Fifteen system runs of `cosim_switch.py`, recorded by `run_phase5.sh`:
+Fifteen system runs of `cosim_switch.py`, recorded by `run_phase5.sh` at 2026-09-30T14:16:21Z (the third recording; the first two, at 13:51:41Z and 14:11:45Z, before the check of the host scripts was added and extended, gave the same results line for line):
 - 50 MHz budget (NMAX 1,008, T_min 1,041): origin, music, reject, timing, bridge, and random seeds 1–3;
 - 100 MHz budget (NMAX 2,048, T_min 2,083): the same cases, and random seed 4;
 - the test ROM image.
@@ -46,3 +46,4 @@ Logs: `logs/cosim_switch.txt`.
 | E10 | Strobe interval 1,041 … 1,042 and 2,083 … 2,084; SWEEP_CLOCKS_MAX 1,028 and 2,068; no overrun | as expected |
 | E11 | No Formation error, no Core halt, no simulator WARNING or ERROR line in any run | as expected |
 | E12 | **22 of 22** mutants killed (`logs/cosim_switch_mutants.log`): the switch (W1–W9, W13–W22, including RH004's mirror in the strobe clock, W9), the Formation's RH004 undone (W10), the bridge (W11 no settling, W12 replay after a design reset). Each is caught by a named check: a transaction answer, the inbox-port list, a sweep's bundles or a Formation error | as expected |
+| E14 | Under tclsh 8.6.14, against the stand-ins: the demo made **91 writes and 27 reads in the order of the 109 steps** of `wpms_music.py`, and exactly the same transactions with acknowledges 3 probe reads late, hex without leading zeros and both toggles left set. A refused write printed REFUSED and returned 1; with no acknowledge, `wpms_write` ended in the error after its timeout; `wpms_status` read its 11 words. **8 of 8** broken copies of `wpms_issp_host.tcl` were caught (`logs/check_host_tcl.txt`). *A check of the scripts: not Quartus, not the RTL* | as expected |
