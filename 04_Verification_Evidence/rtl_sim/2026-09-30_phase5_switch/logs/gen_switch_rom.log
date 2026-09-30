@@ -1,0 +1,5 @@
+  wpms_rom_origin_1008.hex: identical
+  wpms_rom_origin_1008.mif: identical
+  wpms_rom_origin_2048.hex: identical
+  wpms_rom_origin_2048.mif: identical
+gen_switch_rom --check: PASS

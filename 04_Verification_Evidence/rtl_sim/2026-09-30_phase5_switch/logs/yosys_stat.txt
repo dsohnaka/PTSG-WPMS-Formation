@@ -1,0 +1,3 @@
+wpms_switch: $lut 2938; MISTRAL_ALUT_ARITH 667; MISTRAL_FF 1275; MISTRAL_M10K 3; 
+wpms_host_bridge: $lut 28; MISTRAL_ALUT_ARITH 4; MISTRAL_FF 186; 
+wpms_key_pulse: $lut 9; MISTRAL_ALUT_ARITH 19; MISTRAL_FF 23; 

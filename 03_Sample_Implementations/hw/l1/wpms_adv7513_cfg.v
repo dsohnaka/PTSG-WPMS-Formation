@@ -15,16 +15,33 @@
 //  THE TABLE — intent (Ch.4 §4.6.2): power up; HDMI mode (not DVI); 24-bit RGB
 //  4:4:4, separate syncs, 720p60 in the AVI InfoFrame; I2S, 24 bit, 2 ch,
 //  48 kHz, N = 6144 with CTS from the transmitter; audio InfoFrame 2-ch L-PCM.
-//  Each entry's basis is marked: [PG] the fixed/documented values confirmed
-//  from the ADV7513 Programming Guide's published summaries on 2026-09-29;
-//  [R] recalled from the guide's register map, NOT verified against the
-//  document in this session (its host was blocked by the session's network
-//  policy) — every [R] entry is to be confirmed on silicon in Phase 6 (read-back
-//  of the register, HPD 0x42, detected VIC 0x3E). Regenerated from the
-//  documentation, not copied from any framework (Ch.4 §4.2.1, C4-D11).
+//  Each entry's basis is marked:
+//    [G nn]  checked against the ADV7513 Programming Guide Rev. B, page nn
+//            (the architect's extracts of 2026-09-30: pp. 14, 16-20, 25-27,
+//            32-34, 56, 58-62, 69-101 and the contents);
+//    [R]     not on those pages (recalled defaults or reserved bits) — to be
+//            confirmed on silicon in Phase 6 (read-back of the register, a
+//            stable picture, HPD 0x42, detected VIC 0x3E).
+//  Every value in the table agrees with the pages; four fields remain [R]:
+//  0x41[4], 0x9D[7:4], 0xAF[2] and 0xBA[7:5] (the video capture clock delay:
+//  the picture only). The order follows the guide (p. 16, 25): with HPD high,
+//  power up (0x41[6] = 0), then the fixed registers; the whole table again
+//  after every HPD rise (registers reset while HPD is low). Defaults the table relies on without
+//  writing them [G 70-88]: 0x0B = 0 (I2S latched on SCLK rising, MCLK made
+//  inside: our MCLK pin is optional), 0x44[6] N/CTS packet, [5] audio sample
+//  packet and [3] audio InfoFrame enabled, 0x4A[7] automatic checksum, 0x0E
+//  (I2S0 L/R into subpacket 0), 0x12 = 0x13 = 0 (L-PCM, consumer channel
+//  status). Regenerated from the documentation, not copied from any framework
+//  (Ch.4 §4.2.1, C4-D11).
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-09-29       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 4).
+//  002 2026-09-30       Claude Code   Fix : 0x0C = 0x84 (was 0x04): [7] Audio Sampling Frequency Select
+//                                          back to its default 1 — the sampling frequency for pixel
+//                                          repetition comes from 0x15[7:4] (48 kHz); 0 selects the
+//                                          stream's, which standard I2S does not carry (guide p. 71-72).
+//                                          Found by checking the table against the guide's pages;
+//                                          basis marks updated ([G nn], pages of the guide).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -52,35 +69,35 @@ module wpms_adv7513_cfg #(
         input [5:0] i;
         begin
             case (i)
-            6'd0:  tab = 16'h41_10;   // [PG] 0x41[6] = 0: power up (while HPD is high)
-            6'd1:  tab = 16'h98_03;   // [PG] fixed
-            6'd2:  tab = 16'h9A_E0;   // [PG] fixed: [7:5] = 111
-            6'd3:  tab = 16'h9C_30;   // [PG] fixed
-            6'd4:  tab = 16'h9D_61;   // [PG] fixed: [1:0] = 01
-            6'd5:  tab = 16'hA2_A4;   // [PG] fixed
-            6'd6:  tab = 16'hA3_A4;   // [PG] fixed
-            6'd7:  tab = 16'hE0_D0;   // [PG] fixed
-            6'd8:  tab = 16'hF9_00;   // [PG] fixed
-            6'd9:  tab = 16'h15_20;   // [PG] [7:4] I2S sampling frequency = 48 kHz (0010); [R] [3:0] input ID 0: 24-bit RGB 4:4:4, separate syncs
-            6'd10: tab = 16'h16_30;   // [R] output 4:4:4, 8 bit per colour, input style 0, RGB
-            6'd11: tab = 16'h17_02;   // [R] [1] aspect 16:9 (VIC 4)
-            6'd12: tab = 16'h18_46;   // [R] [7] = 0: colour-space converter off
-            6'd13: tab = 16'hAF_16;   // [R] [1] = 1: HDMI mode (not DVI), other bits at their defaults
-            6'd14: tab = 16'h40_80;   // [R] general control packet enable
-            6'd15: tab = 16'h55_00;   // [R] AVI InfoFrame: RGB
-            6'd16: tab = 16'h56_28;   // [R] AVI InfoFrame: picture 16:9, active format = picture
-            6'd17: tab = 16'h01_00;   // [PG] N = 6144 = 0x001800 (Ch.4 §4.6.2) ...
-            6'd18: tab = 16'h02_18;   // [PG] ...
-            6'd19: tab = 16'h03_00;   // [PG] ...
-            6'd20: tab = 16'h0A_01;   // [PG] [6:4] = 000: I2S; [R] [7] = 0 automatic CTS, [1:0] = 01 MCLK = 256 Fs
-            6'd21: tab = 16'h0C_04;   // [PG] [5:2] = 0001: I2S0 enabled, [1:0] = 00: standard I2S
-            6'd22: tab = 16'h0D_18;   // [R] I2S bit width 24 (used by right-justified mode only; harmless)
-            6'd23: tab = 16'h14_0B;   // [PG] [3:0] word length; [R] 1011 = 24 bit (IEC 60958 code)
-            6'd24: tab = 16'h73_01;   // [R] audio InfoFrame channel count: 2
-            6'd25: tab = 16'h76_00;   // [R] speaker allocation: FL, FR
-            6'd26: tab = 16'hBA_60;   // [R] input clock delay: none
-            6'd27: tab = 16'h94_C0;   // [R] interrupts: HPD, monitor sense
-            default: tab = 16'h96_C0; // [R] clear the HPD / monitor-sense interrupts
+            6'd0:  tab = 16'h41_10;   // [G 14, 16] [6] = 0 power up (HPD high); [G 34] [1] = 0 no sync adjustment; [R] [4] = 1
+            6'd1:  tab = 16'h98_03;   // [G 14, 25] fixed: 0x03
+            6'd2:  tab = 16'h9A_E0;   // [G 14, 25] fixed: [7:1] = 1110000
+            6'd3:  tab = 16'h9C_30;   // [G 14, 25] fixed: 0x30
+            6'd4:  tab = 16'h9D_61;   // [G 14, 25, 32] [1:0] = 01 fixed, [3:2] = 00 no clock divide; [R] [7:4] = 0110
+            6'd5:  tab = 16'hA2_A4;   // [G 14, 25] fixed: 0xA4
+            6'd6:  tab = 16'hA3_A4;   // [G 14, 25] fixed: 0xA4
+            6'd7:  tab = 16'hE0_D0;   // [G 14, 25] fixed: 0xD0
+            6'd8:  tab = 16'hF9_00;   // [G 14, 25] fixed: 0x00
+            6'd9:  tab = 16'h15_20;   // [G 85] [7:4] I2S fs 0010 = 48 kHz; [G 26-27, 34] [3:0] input ID 0: 24-bit RGB 4:4:4, separate syncs
+            6'd10: tab = 16'h16_30;   // [G 27, 34, 56] [7] output 4:4:4, [5:4] 8 bit, [3:2] style not needed for ID 0, [0] RGB
+            6'd11: tab = 16'h17_02;   // [G 14, 34] [1] aspect 16:9 (VIC 4); [6:5] = 00 sync polarity passed through
+            6'd12: tab = 16'h18_46;   // [G 56] the register's default: [7] = 0 CSC off, [6:5] = 10, [4:0] = A1 high bits
+            6'd13: tab = 16'hAF_16;   // [G 100] [7] = 0 no HDCP, [4] = 1 its default; [G 18] [1] = 1 HDMI mode; [R] [2] = 1
+            6'd14: tab = 16'h40_80;   // [G 18-19] [7] general control packet enable; [G 89, 91] [4] ACP, [3] ISRC off
+            6'd15: tab = 16'h55_00;   // [G 58, 60] AVI Y1Y0 = RGB; no active-format, bar or scan information
+            6'd16: tab = 16'h56_28;   // [G 60-61] AVI picture aspect 16:9, active format = as picture
+            6'd17: tab = 16'h01_00;   // [G 79-80] N = 6144 = 0x01800 (Table 60: 48 kHz at 74.25 MHz, and "Other"), 0x01[3:0] = N[19:16] ...
+            6'd18: tab = 16'h02_18;   // [G 80] ... 0x02 = N[15:8] ...
+            6'd19: tab = 16'h03_00;   // [G 80] ... 0x03 = N[7:0]
+            6'd20: tab = 16'h0A_01;   // [G 70, 80] [7] = 0 CTS automatic; [6:4] = 000 I2S; [3:2] = 00; [1:0] = 01 MCLK ratio 256 fs
+            6'd21: tab = 16'h0C_84;   // [G 71-72] [7] = 1 fs from 0x15 (default; RH002); [6] = 0; [5:2] = 0001 I2S0 only; [1:0] = 00 standard I2S
+            6'd22: tab = 16'h0D_18;   // [G 71] I2S bit width 24 = the default (right-justified mode only)
+            6'd23: tab = 16'h14_0B;   // [G 84-85] [7:4] source number 0; [3:0] word length 1011 = 24 bits
+            6'd24: tab = 16'h73_01;   // [G 72, 83] channel count 001 = stereo (with 0x0C[2] for I2S0 only)
+            6'd25: tab = 16'h76_00;   // [G 87-88] speaker mapping CA = 0: FL, FR
+            6'd26: tab = 16'hBA_60;   // [G 100] [2:1] = 00 as required; [G 32] [7:5] clock delay of the video capture: [R] 011 = none
+            6'd27: tab = 16'h94_C0;   // [G 17] [7:6] HPD and monitor-sense interrupts on (their defaults); [G 71, 96, 100] [4], [2], [1] off
+            default: tab = 16'h96_C0; // [G 16-17, 96] clear the HPD and monitor-sense interrupts (write 1)
             endcase
         end
     endfunction
