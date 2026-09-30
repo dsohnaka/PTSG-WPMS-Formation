@@ -111,8 +111,9 @@ run_phase5: ALL PHASE 5 CHECKS PASSED
 # the regression, on the same tree (the Formation's RH004, the ADV7513 table's RH002, the checkers' fix),
 # started 2026-09-30T13:40:36Z
 03_Sample_Implementations/hw/l1/run_phase4.sh        (REGRESSION=1: Phase 3's recipe, which runs Phase 2's)
-# (still running when this revision was committed: the Phase 2 and Phase 3 recipes passed, Phase 4's
-#  steps are running; the recipe's last lines are added when it ends)
+  run_phase2: ALL PHASE 2 CHECKS PASSED
+  run_phase3: ALL PHASE 3 CHECKS PASSED
+run_phase4: ALL PHASE 4 CHECKS PASSED
 ```
 
 Logs: `04_Verification_Evidence/rtl_sim/2026-09-30_phase5_switch/logs/` (`run_phase5.txt`, `cosim_switch.txt` — fifteen runs in full, `check_host_tcl.txt`, `cosim_switch_mutants.log`, `yosys_stat.txt`, the regression's `phase{2,3,4}_regression.txt`); the VCD of a short run (reset, the ROM, one host GO): `phase5_host_go.vcd.gz`; `observation.md` (expected before observed).
@@ -187,7 +188,7 @@ Eight broken copies of `wpms_issp_host.tcl` (no wait for the acknowledge, a chec
 
 In the first mutant run five mutants survived. None of them pointed at the RTL: each showed a scenario that did not test what it meant to, and those scenarios were fixed (§4.3).
 
-**3.9 Regression.** *Pending at this revision:* on RH004 the Phase 2 recipe passed and the Phase 3 recipe passed (ALL PHASE 3 CHECKS PASSED, its 11 mutants killed); Phase 4's steps are still running. The result follows in the next revision.
+**3.9 Regression.** The Phase 4 recipe, which runs Phase 3's, which runs Phase 2's, was re-run on this tree — the Formation's RH004, the ADV7513 table's RH002 and the checkers' fix — with Phase 4's own sample count (3,000 per seed). All three passed (RTL-SIM): **ALL PHASE 2 CHECKS PASSED**, **ALL PHASE 3 CHECKS PASSED**, **ALL PHASE 4 CHECKS PASSED** (14 checks of Phase 4 itself, the first being the Phase 3 recipe). So everything Phases 2–4 check still holds with RH004: the datapath against the golden model with its mutants, the sweep-level cosimulation of the R1 score at both budgets with its error injection, the L1 and the output path bit-exact against the customer's oracle and the published model, and the ADV7513 configurator's bench with the corrected table. Logs: `phase{2,3,4}_regression.txt`, `phase4_adv7513_tb.log`, `phase4_cosim_synth_grid.txt`.
 
 **3.10 The ADV7513 table against the guide (reading; the architect's extracts of the Programming Guide Rev. B).**
 
