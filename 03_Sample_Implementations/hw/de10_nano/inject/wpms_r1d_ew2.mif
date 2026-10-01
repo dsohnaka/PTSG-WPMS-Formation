@@ -1,0 +1,118 @@
+-- wpms_r1d_ew2.score (Phase 6 injection: the window writes N = 16 into its own block (CUR slot 0); the next prefetch: EW2) — assembled by score_as.py (decode_map.json v0.1)
+DEPTH = 1024;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT BEGIN
+0 : 00000700;   -- NOP
+1 : 00000002;   -- SLEEP_0: Branch 0
+2 : 00000200;   -- HK: StaySet
+3 : 00000140;   -- [HKD] BCP
+4 : 011A0020;   -- [HKD] SAD 0x11A
+5 : 00002010;   -- [HKD] LDA @PPM
+6 : 02000210;   -- [HKD] ADD #512
+7 : 00000230;   -- [HKD] WJV
+8 : 00000003;   -- JumpInd (indirect: JumpVal)
+9 : 00000002;   -- SLEEP_8: Branch 0
+A : 00010200;   -- POS0: StaySet PKT
+B : 01000020;   -- [PKT] SAD 0x100
+C : 00100010;   -- [PKT] LDA #16
+D : 00000220;   -- [PKT] STM
+E : 00000600;   -- ProgEnd
+F : 00000123;   -- Jump POS1
+10 : 00010201;   -- Stay N_MIN PKT
+11 : 00000002;   -- SLEEP_7: Branch 0
+12 : 00010200;   -- POS1: StaySet PKT
+13 : 01000020;   -- [PKT] SAD 0x100
+14 : 00100010;   -- [PKT] LDA #16
+15 : 00000220;   -- [PKT] STM
+16 : 00000600;   -- ProgEnd
+17 : 000001A3;   -- Jump POS2
+18 : 00010201;   -- Stay N_MIN PKT
+19 : 00000002;   -- SLEEP_6: Branch 0
+1A : 00010200;   -- POS2: StaySet PKT
+1B : 01000020;   -- [PKT] SAD 0x100
+1C : 00100010;   -- [PKT] LDA #16
+1D : 00000220;   -- [PKT] STM
+1E : 00000600;   -- ProgEnd
+1F : 00000223;   -- Jump POS3
+20 : 00010201;   -- Stay N_MIN PKT
+21 : 00000002;   -- SLEEP_5: Branch 0
+22 : 00010200;   -- POS3: StaySet PKT
+23 : 01000020;   -- [PKT] SAD 0x100
+24 : 00100010;   -- [PKT] LDA #16
+25 : 00000220;   -- [PKT] STM
+26 : 00000600;   -- ProgEnd
+27 : 000002A3;   -- Jump POS4
+28 : 00010201;   -- Stay N_MIN PKT
+29 : 00000002;   -- SLEEP_4: Branch 0
+2A : 00010200;   -- POS4: StaySet PKT
+2B : 01000020;   -- [PKT] SAD 0x100
+2C : 00100010;   -- [PKT] LDA #16
+2D : 00000220;   -- [PKT] STM
+2E : 00000600;   -- ProgEnd
+2F : 00000323;   -- Jump POS5
+30 : 00010201;   -- Stay N_MIN PKT
+31 : 00000002;   -- SLEEP_3: Branch 0
+32 : 00010200;   -- POS5: StaySet PKT
+33 : 01000020;   -- [PKT] SAD 0x100
+34 : 00100010;   -- [PKT] LDA #16
+35 : 00000220;   -- [PKT] STM
+36 : 00000600;   -- ProgEnd
+37 : 000003A3;   -- Jump POS6
+38 : 00010201;   -- Stay N_MIN PKT
+39 : 00000002;   -- SLEEP_2: Branch 0
+3A : 00010200;   -- POS6: StaySet PKT
+3B : 01000020;   -- [PKT] SAD 0x100
+3C : 00100010;   -- [PKT] LDA #16
+3D : 00000220;   -- [PKT] STM
+3E : 00000600;   -- ProgEnd
+3F : 00000423;   -- Jump POS7
+40 : 00010201;   -- Stay N_MIN PKT
+41 : 00000002;   -- SLEEP_1: Branch 0
+42 : 00010200;   -- POS7: StaySet PKT
+43 : 01000020;   -- [PKT] SAD 0x100
+44 : 00100010;   -- [PKT] LDA #16
+45 : 00000220;   -- [PKT] STM
+46 : 00000600;   -- ProgEnd
+47 : 00000023;   -- Jump HK
+48 : 00010201;   -- Stay N_MIN PKT
+[49..2FF] : 00000000;
+300 : 00000600;   -- TAIL_0: ProgEnd
+301 : 00000013;   -- Jump SLEEP_0
+302 : 000000D1;   -- Stay T_HK
+[303..30F] : 00000000;
+310 : 00000600;   -- TAIL_1: ProgEnd
+311 : 00000413;   -- Jump SLEEP_1
+312 : 000000D1;   -- Stay T_HK
+[313..31F] : 00000000;
+320 : 00000600;   -- TAIL_2: ProgEnd
+321 : 00000393;   -- Jump SLEEP_2
+322 : 000000D1;   -- Stay T_HK
+[323..32F] : 00000000;
+330 : 00000600;   -- TAIL_3: ProgEnd
+331 : 00000313;   -- Jump SLEEP_3
+332 : 000000D1;   -- Stay T_HK
+[333..33F] : 00000000;
+340 : 00000600;   -- TAIL_4: ProgEnd
+341 : 00000293;   -- Jump SLEEP_4
+342 : 000000D1;   -- Stay T_HK
+[343..34F] : 00000000;
+350 : 00000600;   -- TAIL_5: ProgEnd
+351 : 00000213;   -- Jump SLEEP_5
+352 : 000000D1;   -- Stay T_HK
+[353..35F] : 00000000;
+360 : 00000600;   -- TAIL_6: ProgEnd
+361 : 00000193;   -- Jump SLEEP_6
+362 : 000000D1;   -- Stay T_HK
+[363..36F] : 00000000;
+370 : 00000600;   -- TAIL_7: ProgEnd
+371 : 00000113;   -- Jump SLEEP_7
+372 : 000000D1;   -- Stay T_HK
+[373..37F] : 00000000;
+380 : 00000600;   -- TAIL_8: ProgEnd
+381 : 00000093;   -- Jump SLEEP_8
+382 : 000000D1;   -- Stay T_HK
+[383..3FE] : 00000000;
+3FF : 00000600;   -- TRAP: foreground Prog End -> Core HALT (C3-F23/C3-F24); Formation error insertion lands here
+END;

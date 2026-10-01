@@ -1,0 +1,233 @@
+# Phase 6 — DE10-nano and Layer 4 evidence / 実機と第 4 層の証拠 — part 1: before the board / その 1：実機の前まで
+
+*CC0 · 2026-10-01 · Claude Code for the architect, per `04_Verification_Evidence/SILICON_BRIEF_2026-09-27.md` §4 Phase 6, with the rulings of 2026-10-01. This part ends where the board begins: Quartus, the bitstream and the SignalTap captures are the architect's. It stops here for the architect's compile and captures.*
+
+*Verdict: **prepared — every check that can run without the board is green.***
+
+*What is built:*
+
+- *the **board top** (`hw/de10_nano/`):*
+  - *three PLLs: `clk_sys` 50 or 100 MHz, MCLK 12.288 MHz, the pixel clock at 0° and at 180°;*
+  - *resets from power-on, PLL lock, SW[2] and JTAG;*
+  - *the 720p60 video carrier and the ADV7513 configurator, I2S with MCLK;*
+  - *eight LEDs, the ISSP instance BRD, and two tap registers for SignalTap;*
+- *its **Quartus project**, generated with two revisions (50 MHz: the effective target; 100 MHz), and the **SDC**;*
+- *the **injection images** for EW2–EW5 (ISMCE) and the **host scripts** for the captures (EW6, the full take-set, the first GO);*
+- *an **evidence reader** that measures the eight items from a SignalTap export.*
+
+*Where it was checked:*
+
+- ***Board-level RTL-SIM** of the top with every capture of the bring-up recipe, at both clock budgets.*
+  - *All eight evidence items are within the brief's bounds.*
+  - *Every bundle and every bank is bit-exact with the models.*
+  - *Each run was also cut as its SignalTap capture, written in the layout of a SignalTap export and read back by the same reader: the silicon path, dry-run.*
+- *The **regression** of Phases 2–5.*
+- ***Stand-in checks** of what only Quartus can really judge (plain tclsh, Icarus with stand-in primitives).*
+
+*Evidence class: **RTL-SIM** (stand-in checks marked). No SILICON number exists yet: each one gets its own row, with its expected value written before the capture.*
+
+*判定: **準備完了。実機なしで走らせられる検査はすべて緑。***
+
+*作ったもの:*
+
+- *ボードのトップ（PLL 3 基、リセット、映像キャリア、ADV7513 設定器、I2S と MCLK、LED、ISSP BRD、SignalTap 用タップ）。*
+- *その Quartus プロジェクト（50 MHz と 100 MHz の 2 リビジョン）と SDC。*
+- *EW2〜EW5 の注入イメージと、取得用のホストスクリプト。*
+- *SignalTap のエクスポートから証拠 8 項目を測る読取りツール。*
+
+*検査したこと:*
+
+- *両予算での基板レベル RTL-SIM で、8 項目すべてが指示書の上限内に収まり、バンドルと出力はモデルとビット一致した。*
+- *各実行を SignalTap の取得どおりに切り出し、エクスポート形式で書き出して同じツールで読み戻した（シリコン経路の予行演習）。*
+- *Phase 2〜5 の回帰。*
+- *Quartus でしか本当は判定できない部分の代役検査。*
+
+*SILICON の数値はまだない。各数値には、取得の前に期待値を記した行を用意してある。*
+
+---
+
+## 0. Rulings applied (2026-10-01) / 適用した裁定
+
+| Ruling | How Phase 6 applies it |
+|---|---|
+| (1) RH004 (SD-21) approved; Map v0.3's "armed" wording at the next version | Recorded (`discrepancies.md`, SD-21 closed). The board runs Formation RH004. |
+| (2) SD-19: ISSP addressable transactions adopted; the customer may be told C5-D8 is overridden | Recorded; `reports/customer_note_sd19_host_path.md` prepared. The board's host path is exactly that. |
+| (3) SD-20: the ROM is exempt from the ownership rules | Recorded (SD-20 closed). |
+| (4) All fail-safe choices C-1 … C-15 approved | Recorded; nothing changes. |
+| (5) Proceed to Phase 6 | This report. With the rulings of 2026-09-28/29, the 50 MHz revision (NMAX 1,008) is the effective target if 100 MHz does not close. |
+
+## 1. What was built / 作ったもの
+
+| File | What it is |
+|---|---|
+| `hw/de10_nano/DE10_Nano_wpms_top.v` | **The board top.** Pins: the Terasic golden top's names, the locations of the Core's `.qsf`. **Clocks:** FPGA_CLK1_50 → PLL `clk_sys` (one parameter, `SYS_MHZ`: 50 → NMAX 1,008, the ROM's origin N = 1,008; 100 → 2,048); FPGA_CLK2_50 → fractional PLL MCLK 12.288 MHz; FPGA_CLK3_50 → fractional PLL 74.25 MHz at 0° (pixel) and 180° (forwarded as HDMI_TX_CLK, the ADV7513's sampling edge in the middle of each pixel). FPGA_CLK1_50 itself runs the configurator. **Resets:** power-on counter, PLL lock, SW[2], ISSP BRD source[0] — each a 2-FF level into its domain; video and configurator do not follow SW[2] (the link stays up while the sound restarts). **HDMI:** the 720p60 carrier (colour bars), the configurator (open-drain I2C, 2-FF inputs), I2S + MCLK. **LEDs** (README §2). **ISSP BRD:** 21 probes of the board's state, one source = the JTAG reset. **Taps:** `tap_ctl` (101 used bits: the strobe, packets, bins, take, error and code, halt, idle, bank write, K, the Core's state, q, SWEEP.a, strobes since reset, a storage-qualifier bit) and `tap_dat` (the bundle, the bank), registered, `noprune` |
+| `hw/de10_nano/wpms_pll.v` | One Cyclone V PLL: `altera_pll` instantiated directly, as the Core's 100 MHz top does; `SIM` branch for the bench |
+| `hw/de10_nano/DE10_Nano_wpms.sdc` | Started from the Core's SDC (base clocks, `derive_pll_clocks`, JTAG, human I/O). Added: the five clock domains as asynchronous groups, found by the PLL instance names inside the clock names (no full name `derive_pll_clocks` invents is written down); HDMI_TX_CLK as a clock generated on its pin from the 180° output; the pixel bus constrained against it from the ADV7513 data sheet (t_VSU 1.8 ns, t_VHLD 1.3 ns, + 0.2 ns board); I2C, I2S, KEY, SW, LED, TX_INT cut with the reason written next to each. **The imem half-cycle path is not relaxed** (the brief) |
+| `hw/de10_nano/make_quartus_project.py` | Writes the project (flat directory, git-ignored, as the Core keeps its files side by side): 22 Verilog files, 2 includes, the memory images, the SDC, `DE10_Nano_wpms.qpf` with revisions `DE10_Nano_wpms` (50 MHz) and `DE10_Nano_wpms100` (100 MHz), which differ in `set_parameter -name SYS_MHZ` only; the injection images and the host scripts beside them; `MANIFEST.txt` (source, SHA-256, commit). `--check`: §3.4 |
+| `hw/de10_nano/README.md` | Build, first light, LEDs, the ISSP instances, the SignalTap set-up (one instance), the captures C1–C5 of the eight items, the analysis, the ledger |
+| `hw/de10_nano/run_phase6.sh` | The Phase 6 recipe |
+| `hw/de10_nano/inject/` | EW2, EW3, EW4, EW5 (NMAX 1,008 and 2,048) as whole score images: `wpms_r1d.score` with its packet window replaced, the window source, `.hex` and `.mif` (ISMCE instance PTSG). Generated by `hw/tools/gen_inject_scores.py` |
+| `hw/de10_nano/sim/` | The board-level bench `DE10_Nano_wpms_tb.v` (three oscillators, KEY/SW, an ADV7513 I2C model, an I2S receiver, the video timing check, the host through the ISSP bit protocol, LED tracking); the behavioural PLL; stand-ins of the Intel primitives (`vendor_stubs.v`, for the elaboration check). Never given to Quartus |
+| `hw/switch/wpms_system.v` **RH002** | Three tap ports (error code, the Core's state, sequencer idle) for the board's tap bus. Behaviour unchanged |
+| `hw/tools/cosim_board.py` | The board-level cosimulation: cases origin, first_go, full8, ew6, ew2–ew5, pcm, at both budgets; the brief's bounds (`EXPECT`, written before any run) checked; each run cut as its SignalTap capture and read back (§3.2) |
+| `hw/tools/phase6_evidence.py` | The evidence reader. It takes a bench VCD or a SignalTap export (bits one by one, with or without the clock signal, X at time 0), continuous or storage-qualified. It measures g, T_wake, the window, BCP (the full take-set's included), sweep length, errors (code, packets/bins after, non-zero banks after, halt), and every bundle and bank against the model (the host log replayed through `switch_model.py`, `sweep_sim.Reference` unchanged, `l1_model.py` over the customer's oracle). A capture taken long after reset starts the model from the last complete GO before it (every slot of every block it plays, and the sweep word). It also gives the spectrum of the captured PCM beside the model's |
+| `hw/tools/phase6_templates.py` | The observation templates of the captures, from the RTL-SIM values (§3.6) |
+| `hw/tools/resource_ledger.py` | The resource ledger from the Fitter's *Resource Utilization by Entity*: the Core's row in the Core's format, and ALMs, ALUTs, registers, M10K, DSP for every WPMS entity (`--selftest`) |
+| `hw/tools/gen_inject_scores.py` | The injection images (`--check`) |
+| `hw/tools/host/wpms_phase6_steps.py`, `wpms_phase6_{first_go,full8,ew6}_{1008,2048}.tcl` | **Outside WPMS.** The host's part of captures C2, C3, C4, written once and played two ways: Tcl for `quartus_stp` on the board, and commands for the board-level bench |
+| `hw/tools/host/check_host_tcl.py` **RH002** | Adds the six Phase 6 scripts to the tclsh check (§3.5) |
+
+## 2. Commands run and their last lines / 実行したコマンドと末尾行
+
+(filled from the recorded run: §2 below the line)
+
+## 3. Results, with evidence classes / 結果と証拠クラス
+
+All numbers are **RTL-SIM** unless marked: the board top, with its PLLs and ISSP instances in their simulation branches, on the board-level bench.
+- 18 runs: nine cases at the 50 MHz budget (NMAX 1,008, T_min 1,041) and the same nine at 100 MHz (NMAX 2,048, T_min 2,083).
+- Host steps through the ISSP bit protocol.
+- The tap bus dumped as SignalTap holds it.
+
+### 3.1 The eight evidence items / 証拠 8 項目
+
+Each bound was written in `cosim_board.py` (`EXPECT`) before any run; the values are the runs'.
+
+| # | Evidence item (brief) | Bound | 50 MHz (NMAX 1,008) | 100 MHz (NMAX 2,048) | Capture | SILICON |
+|---|---|---|---|---|---|---|
+| 1 | g between consecutive packet Stays | 0 | **0** in every sweep with more than one packet (full8: 8 packets, 47 sweeps; first_go: 3) | **0** (45 and 44 sweeps) | C2 | pending |
+| 2 | T_wake: strobe → first packet_start | ≤ 4 (nominal 2) | **2** in every sweep of every run | **2** | C1, C2 | pending |
+| 3 | packet window → N_MIN | 25 + Core clocks; 32 must hold | window **28** (Stay Set → the Stay word) → floor **30** ≤ 32 | **28 → 30** | C1, C2 | pending |
+| 4 | BCP, full take-set | ≤ 10 | **10** with eight blocks, the full mask and the sweep word — at the bound; 2–3 without a take, up to 5 for the triad's | **10** | C2 | pending |
+| 5 | full-load sweep fits with the housekeeping window | ≤ T_min | strobe → asleep **1,023** of 1,041 (47 sweeps of full8, 62 of the origin) | **2,063** of 2,083 (the brief's oracle estimate: 19 spare; here 20) | C1, C2 | pending |
+| 6 | each EW2–EW6 injected | the right code; L1 silent | EW2, EW3, EW4, EW5, EW6: **each its code, exactly once**; after the flag **0 packets, 0 bins**, the following 59–62 banks **all zero**; the Core halts (9 clocks after EW2, 11 after EW5; at the end of the packet's Stay, 1,000–1,005 clocks, after EW3, EW4, EW6) | the same codes; 0, 0, all zero; halts after 9 / 11 / 2,040–2,045 clocks | C4, C5 | pending |
+| 7 | bundle at packet_start vs prediction | equal | **534 / 534** equal (every bundle of every run) | **531 / 531** | C1–C3 | pending |
+| 8 | first sound: test origin, then one GO | audible; the oracle's spectrum | banks **1,320 / 1,320** equal (the I2S wire = the bank, 1,629 frames); after the GO, 1,147 samples: left 524.4 + 659.2 Hz, right 660.6 + 782.2 Hz — C5, E5, G5 as routed, the model's spectrum identical | **1,316 / 1,316** (1,625 frames); 1,146 samples, the same peaks | C3 (and by ear) | pending |
+
+**Item 6's injections.**
+- EW6 is the host's: LE0 = −1 into the playing block. The switch has no check on LE0, so the next packet window's STP raises it.
+- EW2–EW5 are score images for the In-System Memory Content Editor (`hw/de10_nano/inject/`), each loaded and followed by a reset. The switch refuses what would raise EW2 and EW5 from the inbox (PR-1, PR-2), so their windows make the condition themselves:
+  - **EW2**: the window writes N = 16 into its own block (CUR slot 0); the prefetch after housekeeping finds N < N_MIN.
+  - **EW3**: the window stores into the inbox view.
+  - **EW4**: the window writes the store directly.
+  - **EW5**: the window writes N = NMAX + 1. Housekeeping's BCP re-checks the sum of N of the sweep in effect **every sweep**, not only with a take. That was open in the Phase 5 notes; it is now shown.
+
+**Item 7 needs the host's log.** The reader replays the log through `switch_model.py` (the ROM's list after the reset, each write, each GO at the sample the switch reported). It then plays the takes with `sweep_sim.Reference` (golden, unchanged) and `l1_model.py` over the customer's oracle.
+
+**On the board the GO lands seconds after reset**, so the model must not start at reset. A capture far from reset starts the model from the last complete take before it: a GO that sets every slot of every block it plays, and the sweep word. All three host captures' GOs are complete. `cosim_board.py` checks this on the first_go and full8 runs at both budgets: it cuts each run from the first sweep that plays the GO, and starts the model from the GO alone. Results: LATE_CAPTURE.
+
+**Board-level checks (every run):**
+- The ADV7513 table: 29 writes, done, no NACK.
+- The video carrier: every line 1,650 pixels with 1,280 of active video; HDMI_TX_CLK 6.0–7.5 ns after each pixel edge. Frame timing was checked by Phase 4's video bench; these runs are shorter than a frame.
+- I2S: every frame decoded equal to the bank captured.
+- Strobe intervals 1,041/1,042 (2,083/2,084).
+- No overrun; LEDs as `README` §2; simulator warnings 0.
+
+**Other readings.**
+- SWEEP_CLOCKS_MAX, the L1's own count read by the host at 0x299 (strobe → the last product accumulated, D_L1 after the last bin): 1,028 and 2,068 — also within T_min.
+- PCM peaks: origin −12.44 dBFS (N = 1,008) and −6.29 dBFS (N = 2,048), as in Phases 4 and 5; the triad, after its GO, −26.4 dBFS at both budgets (N = 240 per note).
+
+### 3.2 The silicon path, dry-run / シリコン経路の予行演習
+
+Each run was also cut as its SignalTap capture in the recipe (`hw/de10_nano/README.md` §4, `cosim_board.py` `TRIGGERS`): depth 4,096, "pre trigger position" (12 %), the case's trigger, the storage qualifier where the recipe enables it. The cut was then:
+1. written in the layout of a SignalTap export (QUARTUS_VCD_EXPORT 1.0: 1 ps, one variable per bit, X at time 0, the acquisition clock as a signal; the qualified capture without it);
+2. read back by `phase6_evidence.py`;
+3. measured and compared with the model like the board's export will be.
+
+All 16 cuts read back unchanged and agree with the full runs. In them:
+- C1 shows a full-load sweep (1,023 / 2,063) and T_wake 2.
+- C2 shows the full take-set's BCP (10) from its pre-trigger samples, and g = 0.
+- C3 (storage-qualified: 175 / 173 events) has 128/128 and 127/127 bundles and 47/47 and 46/46 banks equal.
+- C4/C5 show each code with silence after it.
+
+These cuts are the **expected captures** (`rtl_sim/2026-10-01_phase6_board/expected/expected_<case>_<budget>.vcd.gz`). The board's exports can be opened beside them.
+
+### 3.3 Regression / 回帰
+
+Phases 2–5 rerun on this tree (wpms_system RH002): (filled from the recorded run, §2).
+
+### 3.4 What only Quartus can judge, checked with stand-ins / Quartus でしか判定できないもの（代役で検査）
+
+`make_quartus_project.py --check` (**stand-in**, not Quartus):
+- **Under a plain tclsh against stand-ins of the Quartus commands:**
+  - both `.qsf` files: 52 pins equal to the Terasic golden top's (the Core's `.qsf`), each with an I/O standard, none twice; every file named present; `SYS_MHZ` set;
+  - the `.sdc`, under the clock names `derive_pll_clocks` gives an `altera_pll` on Cyclone V (VCO phase clock and output counters): twelve clocks in five asynchronous groups, each clock in exactly one; `hdmi_tx_clk` generated from the 180° counter; the pixel bus at −max 2.0 / −min −1.5 ns.
+- `--mutants`: seven broken copies of the project (a pin moved, the pixel PLL not found, a source missing, the forwarded clock taken from the 0° output, the hold sign, the audio group lost, an I/O standard missing) — each caught.
+- **Elaboration:** Icarus elaborated the project's own Verilog files, the INTEL branches taken, with stand-in primitives that print what they receive. At both revisions each of the nine primitives received the expected parameters:
+  - the PLLs: `clk_sys` "50.0000000 MHz" (equal-length strings: no NUL padding) or "100.000000 MHz"; 12.288 MHz fractional; 74.25 MHz at 0 and 6,734 ps, fractional;
+  - the ROM's image `wpms_rom_origin_1008.mif` or `_2048.mif` (ISMCE TORG), the score `wpms_r1d.mif` (ISMCE PTSG);
+  - the ISSP instances HOST, STAT, INSP and BRD.
+- **Not judged here:** whether Quartus accepts the PLL strings, the placement of three fractional PLLs on these clock pins, and timing. The imem half-cycle path at 100 MHz is the expected critical path.
+
+### 3.5 Host scripts / ホストスクリプト
+
+`check_host_tcl.py` (tclsh 8.6.14 against the ISSP stand-ins; **stand-in**, not Quartus):
+- the Phase 5 cases still pass;
+- the six Phase 6 scripts make exactly the transactions of their steps — 370 writes and 38 reads in all — and each one GO is applied;
+- the files on disk are what `wpms_phase6_steps.py` writes;
+- 8/8 broken copies of `wpms_issp_host.tcl` are caught (H4, H7 and H8 also by the Phase 6 scripts).
+
+The same steps run in the board-level RTL-SIM (§3.1).
+
+### 3.6 Expected before observed / 取得前の期待値
+
+`hw/tools/phase6_templates.py` writes `04_Verification_Evidence/signaltap/phase6_pending/<capture>/observation.md` for C1_origin, C2_full8, C3_first_go, C4_ew6 and C5_ew2–ew5. Each holds:
+- the capture's set-up and action;
+- the brief's bound and the RTL-SIM value at both budgets, per quantity;
+- an empty Observed column.
+
+When a capture is made, the folder is renamed `signaltap/<date>_phase6_<capture>/` and filled.
+
+## 4. Deviations and findings / 逸脱と発見
+
+**4.1 No deviation from the golden models.**
+- Every bundle and bank the board top produced equals the models.
+- Nothing in `../tools/`, the oracle, the frozen Core or Layer 1 was touched.
+
+**4.2 Findings.**
+1. **BCP with the full take-set takes exactly the bound, 10 clocks.** The BCP word → inbox_taken spans the background copy of eight blocks, one block per clock. The brief's ≤ 10 holds with no margin; a ninth block would not fit, but M = 1 has eight.
+2. **The Core's halt after an in-window error waits for the packet's Stay to end** (C3-F24's trap is inserted at the next instruction boundary): 1,000–1,005 clocks at 50 MHz, about N. L1 is silent from the flag on in every case — 0 packets, 0 bins, every bank zero — which is what the item asks. Errors raised in housekeeping or the prefetch (EW5, EW2) halt within 9–11 clocks.
+3. **74.25 MHz needs a fractional VCO.** From 50 MHz, an integer M/N/C needs M = 297, N = 10 (the phase detector at 5 MHz, its minimum) and a 1,485 MHz VCO, at the edge of the device's ranges. The pixel PLL is fractional (742.5 MHz, C = 10). The 180° shift is 40 VCO eighths, exactly 6,734 ps.
+4. **Two definitions of "the sweep's length".** The tap's strobe → asleep (1,023 / 2,063) is the brief's "with the housekeeping window". The L1's SWEEP_CLOCKS (1,028 / 2,068) counts to the last product accumulated. Both fit in T_min. The brief's oracle estimate is 19 spare at 100 MHz; here 20 (strobe → asleep) or 15 (the L1's view).
+5. **The Core copy uses `tri0` ports**, which Yosys does not read. For the ESTIMATE only (§7), the copy was read with `tri0` → `wire`: both ports are driven in `wpms_l2_top`, so nothing differs. The Core copy itself is unchanged.
+
+## 5. Discrepancies filed / 記録した食い違い
+
+None new in this part; SD-01 … SD-21 stand as ruled. The board run may add some: each goes in as its own row, with no fix applied.
+
+本パートで新たな食い違いはない。SD-01〜SD-21 は裁定どおり。実機で見つかれば、修正せず 1 行ずつ追加する。
+
+## 6. Questions for the architect / アーキテクトへの質問
+
+1. **Compile.**
+   - Please compile both revisions (`DE10_Nano_wpms` first) and send the TimeQuest summary.
+   - Please include the SDC's info line that lists the clocks found. A critical warning about the forwarded pixel clock is also worth sending.
+   - At 100 MHz the imem half-cycle path decides; if it fails, the 50 MHz revision is the target (rulings 2026-09-28/29).
+2. **SignalTap.** One instance (4 K deep, about 203 M10K), set up in the GUI from README §3; I did not write an `.stp` by hand. Shall your `wpms_tap.stp` be committed once it exists, as the Core's harness keeps its own?
+3. **Captures.**
+   - The plan is C1–C5 at the 50 MHz revision, and at 100 MHz if it closes.
+   - First sound needs an HDMI sink with speakers.
+   - Please put each export, with its host log, in `signaltap/<date>_phase6_<capture>/`; I will fill the observations from them.
+4. **The resource ledger** comes from your Fitter report (`resource_ledger.py`, README §5). The ESTIMATE below is only for context.
+
+1. 両リビジョン（まず `DE10_Nano_wpms`）をコンパイルし、TimeQuest の要約と SDC の情報行（見つかったクロック）をお送りください。100 MHz では imem 半周期パスが決め手で、通らなければ 50 MHz 版が目標です。
+2. SignalTap は README §3 の 1 インスタンス（深さ 4 K、M10K 約 203）を GUI で作る想定で、`.stp` は手書きしていません。作成後に `wpms_tap.stp` をコミットしてよいでしょうか。
+3. 取得はまず 50 MHz 版で C1〜C5、通れば 100 MHz 版でも行います。初音にはスピーカー付き HDMI 機器が要ります。エクスポートとホストのログを `signaltap/<日付>_phase6_<取得名>/` に置いていただければ、観測値を記入します。
+4. 資源台帳は Fitter 報告から作ります（README §5）。下の概算は参考です。
+
+## 7. Resource numbers / 資源数
+
+**ESTIMATE** (Yosys 0.69 `synth_intel_alm -family cyclonev` + `abc -lut 6`; not Quartus): the whole board top at 50 MHz, flattened, with the Intel primitives as black boxes.
+
+| | Count |
+|---|---|
+| LUTs (`$lut`) | 10,245 |
+| arithmetic ALUTs | 4,019 |
+| flip-flops | 6,479 (the taps' 432 included) |
+| MLAB cells (32 × 1 LUT-RAM) | 1,538 |
+| DSP: MUL27X27 / MUL18X18 | 16 / 6 |
+| M10K (inferred) | 2 |
+| black boxes | 3 PLLs; 2 altsyncram — the score memory (1,024 × 32: 4 M10K) and the ROM (256 × 44: 2 M10K); 2 ISSP (STAT and INSP, whose sources are unused, were dropped by Yosys; Quartus keeps all four) |
+
+For scale: the 5CSEBA6 has about 41,500 ALMs, 112 DSP blocks and some 500 M10K (the Fitter's summary states the exact totals). The SILICON ledger replaces this table once the Fitter has run.
+
+**概算**（Yosys、Quartus ではない）：ボード全体で LUT 10,245、算術 ALUT 4,019、FF 6,479、MLAB 1,538、DSP 22、M10K 2（ブラックボックスの M10K 6 を除く）。Fitter の結果が出れば SILICON の台帳に置き換える。

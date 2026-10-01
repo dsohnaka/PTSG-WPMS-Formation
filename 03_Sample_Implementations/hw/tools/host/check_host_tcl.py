@@ -14,6 +14,11 @@
 #   refuse  a refused write is reported (REFUSED, return 1) and the script goes on;
 #   dead    no acknowledge: wpms_write fails with an error instead of hanging;
 #   status  wpms_status reads its eleven words;
+#   phase6  each Phase 6 script (wpms_phase6_<case>_<nmax>.tcl: first_go,
+#           full8, ew6 at NMAX 1,008 and 2,048) makes exactly the transactions
+#           of its steps in wpms_phase6_steps.py — the steps cosim_board.py
+#           plays in RTL-SIM — its one GO is applied, and the file on disk is
+#           what wpms_phase6_steps.py writes;
 #   mutants eight broken copies of wpms_issp_host.tcl, each of which must fail
 #           at least one of the cases above.
 # This checks the scripts, not Quartus and not the RTL: the command names and
@@ -26,6 +31,7 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF Phase 5).
+# 002 2026-10-01       Claude Code   Add : the phase6 case (the Phase 6 scripts; SILICON_BRIEF Phase 6).
 # ============================================================================
 import argparse, os, re, shutil, subprocess, sys, tempfile
 
@@ -33,8 +39,10 @@ sys.dont_write_bytecode = True
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import wpms_music as MU                  # noqa: E402
+import wpms_phase6_steps as P6           # noqa: E402
 
-FILES = ("issp_standin.tcl", "wpms_issp_host.tcl", "wpms_music_demo.tcl")
+P6_FILES = tuple(P6.tcl_name(n, m) for m in (1008, 2048) for n in P6.CASES)
+FILES = ("issp_standin.tcl", "wpms_issp_host.tcl", "wpms_music_demo.tcl") + P6_FILES
 STATUS_WORDS = ["009", "00A", "00B", "012", "014", "016", "018", "030", "033", "292", "298"]
 
 # (name, text in wpms_issp_host.tcl, replacement): one defect each
@@ -161,6 +169,25 @@ def cases(tclsh, d):
           and len(re.findall(r"^  \S+ +[0-9A-F]{8}$", out, re.M)) == len(STATUS_WORDS))
     R.append(("status", ok, f"wpms_status reads its {len(STATUS_WORDS)} words"
               + ("" if ok else f"  <- rc {rc} {err.strip()[:200]} {T}")))
+
+    why, nw, nr = [], 0, 0
+    for nmax in (1008, 2048):
+        for name in P6.CASES:
+            fn = P6.tcl_name(name, nmax)
+            rc, out, err, T = run(tclsh, d, [f"source {tcl(os.path.join(d, fn))}"])
+            m = match(expected(P6.CASES[name](nmax)), T)
+            applied = re.findall(r"applied GO (\d+)", out)
+            if rc != 0 or err.strip():
+                why.append(f"{fn}: tclsh exit {rc}: {err.strip()[:120]}")
+            if m:
+                why.append(f"{fn}: {m}")
+            if applied != ["2"] or "REFUSED" in out:
+                why.append(f"{fn}: applied GOs {applied}{', a write refused' if 'REFUSED' in out else ''}")
+            nw += sum(1 for x in T if x.startswith("W "))
+            nr += sum(1 for x in T if x.startswith("R "))
+    R.append(("phase6", not why, f"{len(P6_FILES)} scripts: {nw} writes and {nr} reads, each script's in the "
+              f"order of its wpms_phase6_steps.py steps; one GO each, applied"
+              + ("" if not why else "  <- " + "; ".join(why[:3]))))
     return R
 
 
@@ -186,13 +213,19 @@ def main():
         say("check_host_tcl: no tclsh found — skipped")
         return done(2)
     ver = subprocess.run([tclsh], input="puts [info patchlevel]\n", capture_output=True, text=True).stdout.strip()
-    say(f"check_host_tcl: wpms_issp_host.tcl and wpms_music_demo.tcl under tclsh {ver}, "
+    say(f"check_host_tcl: wpms_issp_host.tcl, wpms_music_demo.tcl and the Phase 6 scripts under tclsh {ver}, "
         "against issp_standin.tcl (a check of the scripts: not Quartus, not the RTL)")
     ok_all = True
 
     same = open(os.path.join(HERE, "wpms_music_demo.tcl")).read() == MU.to_tcl(MU.demo(1008))
     say(f"  {'file':7s} {'PASS' if same else 'FAIL'}: wpms_music_demo.tcl is what wpms_music.py writes (NMAX 1,008)")
     ok_all &= same
+    stale = [P6.tcl_name(n, m) for m in (1008, 2048) for n in P6.CASES
+             if not os.path.exists(os.path.join(HERE, P6.tcl_name(n, m)))
+             or open(os.path.join(HERE, P6.tcl_name(n, m))).read() != P6.tcl_text(n, m)]
+    say(f"  {'file':7s} {'PASS' if not stale else 'FAIL'}: the {len(P6_FILES)} Phase 6 scripts are what "
+        f"wpms_phase6_steps.py writes" + (f"  <- {stale}" if stale else ""))
+    ok_all &= not stale
     for name, ok, text in cases(tclsh, HERE):
         say(f"  {name:7s} {'PASS' if ok else 'FAIL'}: {text}")
         ok_all &= ok

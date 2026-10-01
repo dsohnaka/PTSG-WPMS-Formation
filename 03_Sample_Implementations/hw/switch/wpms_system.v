@@ -36,6 +36,9 @@
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 5).
+//  002 2026-10-01       Claude Code   Add : tap ports error_code, state_number, seq_idle (Phase 6: the
+//                                          board top's SignalTap bus measures the window, the
+//                                          housekeeping copy and the sweep from them). Behaviour unchanged.
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -83,7 +86,10 @@ module wpms_system #(
     output wire         l1_packet_start,
     output wire         l1_bin_valid,
     output wire [11:0]  l1_k,
-    output wire [255:0] l1_bundle
+    output wire [255:0] l1_bundle,
+    output wire [4:0]   error_code,               // the Formation's code (with error_flag)
+    output wire [11:0]  state_number,             // the Core's state (program address)
+    output wire         seq_idle                  // the sequencer asleep, next bundle staged
 );
     // ---- board inputs -----------------------------------------------------------------------
     wire key_go_all, key_origin;
@@ -112,7 +118,7 @@ module wpms_system #(
     wire signed [31:0] mg_target, mg;
     wire [31:0] mg_rate, insp_phase, insp_a, insp_l_q626;
     wire [31:0] go_seq, applied_seq, applied_sample, reject0, reject3;
-    wire [4:0]  g_ctrl, error_code;
+    wire [4:0]  g_ctrl;
     wire        sw_mute, minmax_clear, overrun, rom_busy;
     wire [1:0]  clip_clear, clip;
     wire [3:0]  g_eff;
@@ -137,8 +143,8 @@ module wpms_system #(
 
     // ---- the synthesizer (Phase 4) ----------------------------------------------------------------
     wire soft_mute = sw_mute | dip2[3];
-    wire [11:0] error_sn, state_number;
-    wire        frame_start, seq_idle, stack_spill;
+    wire [11:0] error_sn;
+    wire        frame_start, stack_spill;
     wpms_synth_top #(.NMAX(NMAX), .N_MIN(N_MIN), .IMEM_DEPTH(IMEM_DEPTH), .TRAP_ADDR(TRAP_ADDR),
                      .SCORE_HEX(SCORE_HEX), .SCORE_MIF(SCORE_MIF), .IMEM_VENDOR(IMEM_VENDOR),
                      .EXP2_HEX(EXP2_HEX)) u_synth (
