@@ -1,0 +1,42 @@
+## Resource ledger / 資源台帳 (Fitter "Resource Utilization by Entity"; class SILICON)
+
+Core's format / Core の書式:
+
+| Date | Revision | ALMs needed (full trim) | Core proper (entity-only) | Comb. ALUTs | Notes |
+|---|---|---|---|---|---|
+| 2026-10-01 | RHtest | 441.8 | 398.0 | 631 (585) | inside WPMS (wpms_l2_top), score wpms_r1d, ISMCE port included |
+
+Per entity / 実体ごと — total (entity-only):
+
+| Entity | ALMs needed | Comb. ALUTs | Registers | M10K | DSP | Block memory bits |
+|---|---|---|---|---|---|---|
+| board top (all) | 5000.5 (40.5) | 7000 (50) | 6000 (500) | 120 (0) | 140 (0) | 900000 (0) |
+| wpms_system | 4500.0 (10.0) | 6500 (20) | 5000 (30) | 10 (0) | 140 (0) | 50000 (0) |
+| synthesizer (L2 + L1 + out) | 4000.0 (5.0) | 6000 (10) | 4500 (20) | 9 (0) | 140 (0) | 45000 (0) |
+| L2: Core + Formation + seq. | 1500.0 (2.0) | 2000 (4) | 1200 (6) | 4 (0) | 0 (0) | 32768 (0) |
+| PTSG-Core (RH031p) | 441.8 (398.0) | 631 (585) | 300 (290) | 4 (0) | 0 (0) | 32768 (0) |
+|   its instruction memory | absent | | | | | |
+| Formation | absent | | | | | |
+| sequencer | absent | | | | | |
+| L1 module | absent | | | | | |
+|   its sine | absent | | | | | |
+|   its exp2 | absent | | | | | |
+| output stage | absent | | | | | |
+| I2S master | absent | | | | | |
+| strobe sync | absent | | | | | |
+| input switch | absent | | | | | |
+|   its ROM (TORG) | absent | | | | | |
+| host bridge | absent | | | | | |
+| ISSP HOST | absent | | | | | |
+| ISSP STAT | absent | | | | | |
+| ISSP INSP | absent | | | | | |
+| ISSP BRD | absent | | | | | |
+| video carrier | absent | | | | | |
+| ADV7513 configurator | absent | | | | | |
+| PLL clk_sys | absent | | | | | |
+| PLL MCLK | absent | | | | | |
+| PLL pixel | absent | | | | | |
+| SignalTap | 400.0 (2.0) | 500 (2) | 900 (0) | 110 (0) | 0 (0) | 850000 (0) |
+| JTAG hub | 80.0 (1.0) | 120 (1) | 100 (0) | 0 (0) | 0 (0) | 0 (0) |
+
+resource_ledger --selftest: PASS

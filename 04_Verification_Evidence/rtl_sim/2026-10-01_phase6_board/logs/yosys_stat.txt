@@ -1,0 +1,1 @@
+DE10_Nano_wpms_top, SYS_MHZ 50, flattened, Intel primitives as black boxes (Yosys 0.69, synth_intel_alm cyclonev + abc -lut 6): $lut 10245; MISTRAL_ALUT_ARITH 4019; MISTRAL_FF 6479; MISTRAL_M10K 2; MISTRAL_MLAB 1538; MISTRAL_MUL18X18 6; MISTRAL_MUL27X27 16; wpms_bb_altera_pll 3; wpms_bb_altsource_probe 2; wpms_bb_altsyncram 2; 

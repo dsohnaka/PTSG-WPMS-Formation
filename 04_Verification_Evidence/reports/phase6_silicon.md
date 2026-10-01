@@ -79,7 +79,40 @@
 
 ## 2. Commands run and their last lines / 実行したコマンドと末尾行
 
-(filled from the recorded run: §2 below the line)
+```
+# the recorded Phase 6 run (Icarus Verilog 12.0, Python 3.11.15, tclsh 8.6.14, Yosys 0.69), 2026-10-01T14:45:10Z
+REGRESSION=0 03_Sample_Implementations/hw/de10_nano/run_phase6.sh 04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board
+  [PASS] injection images wpms_r1d_ew{2,3,4,5_1008,5_2048}.{score,pfasm,hex,mif} regenerate identically
+    phase6  PASS: 6 scripts: 370 writes and 38 reads, each script's in the order of its wpms_phase6_steps.py steps; one GO each, applied
+  check_host_tcl: PASS
+    mutants 7/7 broken copies of the project caught
+  make_quartus_project --check: PASS (stand-ins, not Quartus)
+  iverilog -Wall: 16 lines, 0 from hw/de10_nano
+  cosim_board: PASS (18 runs, 0 failed checks, 275 s)
+  [PASS] resource_ledger.py reads the Fitter's 'Resource Utilization by Entity' table (self-test)
+  ESTIMATE DE10_Nano_wpms_top: $lut 10245; MISTRAL_ALUT_ARITH 4019; MISTRAL_FF 6479; MISTRAL_M10K 2; MISTRAL_MLAB 1538; ...
+  [PASS] observation templates of captures C1-C5 written from the expected values (before any capture)
+run_phase6: ALL PHASE 6 CHECKS PASSED (RTL-SIM; the board is next)
+
+# the same recipe with its regression, on the same RTL, started 2026-10-01T13:43:18Z
+# (before the project mutants, the estimate and the templates were added: its board part gave the same
+#  18 verdicts, cosim_board 18 runs, 0 failed checks)
+03_Sample_Implementations/hw/de10_nano/run_phase6.sh     (REGRESSION=1: Phase 5's recipe, which runs Phase 4's, 3's, 2's)
+  run_phase5: ALL PHASE 5 CHECKS PASSED
+  run_phase4: ALL PHASE 4 CHECKS PASSED
+  run_phase3: ALL PHASE 3 CHECKS PASSED
+  run_phase2: ALL PHASE 2 CHECKS PASSED
+  [PASS] regression: Phases 2-5 on wpms_system RH002
+run_phase6: ALL PHASE 6 CHECKS PASSED (RTL-SIM; the board is next)
+```
+
+Logs: `04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board/logs/`:
+- `run_phase6.txt`, `cosim_board.txt` (all 18 runs in full), `check_host_tcl.txt`, `make_quartus_project.log`, `compile6.log`, `gen_inject_scores.log`, `resource_ledger_selftest.log`, `yosys_stat.txt`, `phase6_templates.log`;
+- the regression's `phase{2,3,4,5}_regression.txt`.
+
+Expected values per case and budget, and the expected SignalTap captures: `expected/`.
+
+ログは `rtl_sim/2026-10-01_phase6_board/logs/`、期待値と期待キャプチャは `expected/` にある。
 
 ## 3. Results, with evidence classes / 結果と証拠クラス
 
@@ -113,7 +146,7 @@ Each bound was written in `cosim_board.py` (`EXPECT`) before any run; the values
 
 **Item 7 needs the host's log.** The reader replays the log through `switch_model.py` (the ROM's list after the reset, each write, each GO at the sample the switch reported). It then plays the takes with `sweep_sim.Reference` (golden, unchanged) and `l1_model.py` over the customer's oracle.
 
-**On the board the GO lands seconds after reset**, so the model must not start at reset. A capture far from reset starts the model from the last complete take before it: a GO that sets every slot of every block it plays, and the sweep word. All three host captures' GOs are complete. `cosim_board.py` checks this on the first_go and full8 runs at both budgets: it cuts each run from the first sweep that plays the GO, and starts the model from the GO alone. Results: LATE_CAPTURE.
+**On the board the GO lands seconds after reset**, so the model must not start at reset. A capture far from reset starts the model from the last complete take before it: a GO that sets every slot of every block it plays, and the sweep word. All three host captures' GOs are complete. `cosim_board.py` checks this on the first_go and full8 runs at both budgets: it cuts each run from the first sweep that plays the GO, and starts the model from the GO alone. Results: first_go 121/121 bundles and 41/41 banks, full8 321/321 and 41/41, at each budget — all equal (the model starting from strobe 5 or 7 at 50 MHz, 4 or 5 at 100 MHz).
 
 **Board-level checks (every run):**
 - The ADV7513 table: 29 writes, done, no NACK.
@@ -143,7 +176,7 @@ These cuts are the **expected captures** (`rtl_sim/2026-10-01_phase6_board/expec
 
 ### 3.3 Regression / 回帰
 
-Phases 2–5 rerun on this tree (wpms_system RH002): (filled from the recorded run, §2).
+Phases 2–5 rerun on this tree (wpms_system RH002), 2026-10-01T13:43:18Z: **ALL PHASE 2, 3, 4 and 5 CHECKS PASSED** (§2; `logs/phase{2,3,4,5}_regression.txt`). Phase 5's check of the host scripts now includes the six Phase 6 scripts.
 
 ### 3.4 What only Quartus can judge, checked with stand-ins / Quartus でしか判定できないもの（代役で検査）
 

@@ -21,11 +21,18 @@
 #      checked against their bounds and the models; each cut as its SignalTap
 #      capture and read back (the expected captures, expected_*.vcd.gz).
 #   7. The resource ledger's parser (resource_ledger.py --selftest).
+#   8. Resources (yowasp-yosys, if installed): ESTIMATE of the whole board
+#      top, the Intel primitives as black boxes (the ledger proper comes from
+#      the Fitter: resource_ledger.py).
+#   9. The observation templates of the captures (phase6_templates.py): with
+#      EVIDENCE_DIR, written to 04_Verification_Evidence/signaltap/phase6_pending.
 #  Usage: hw/de10_nano/run_phase6.sh [EVIDENCE_DIR]
 #         REGRESSION=0 skips step 1; BUILD=<dir> (default hw/de10_nano/build).
 # ----------------------------------------------------------------------------
 #  REVISION HISTORY(RH)
 #  001 2026-10-01       Claude Code   Add : First version (Phase 6).
+#  002 2026-10-01       Claude Code   Add : step 8 (the board's Yosys ESTIMATE), step 9 (the capture
+#                                          templates), the project's mutants in step 4.
 # ============================================================================
 set -uo pipefail
 export PYTHONDONTWRITEBYTECODE=1
@@ -70,9 +77,10 @@ else
 fi
 
 # ---- 4. Quartus project ------------------------------------------------------------------------------
-python3 "$HERE/make_quartus_project.py" --out "$BUILD/quartus" --check > "$LOGS/make_quartus_project.log" 2>&1; r=$?
+python3 "$HERE/make_quartus_project.py" --out "$BUILD/quartus" --check --mutants > "$LOGS/make_quartus_project.log" 2>&1; r=$?
+say "  $(grep 'mutants' "$LOGS/make_quartus_project.log" | tail -1)"
 say "  $(tail -1 "$LOGS/make_quartus_project.log")"
-check $r "Quartus project: pins = the golden top's, files present, SDC groups and HDMI clock (stand-in), INTEL elaboration"
+check $r "Quartus project: pins = the golden top's, files present, SDC groups and HDMI clock (stand-in), INTEL elaboration, 7 mutants"
 
 # ---- 5. compile ----------------------------------------------------------------------------------------
 IMEM=$WS/PTSG-Core/03_Sample_Implementations/ai_friendly_vendor_wrappers/ptsg_imem/ptsg_imem.v
@@ -100,17 +108,44 @@ check $r "cosim_board: the eight evidence items within the brief's bounds, bit-e
 python3 "$TOOLS/resource_ledger.py" --selftest > "$LOGS/resource_ledger_selftest.log" 2>&1; r=$?
 check $r "resource_ledger.py reads the Fitter's 'Resource Utilization by Entity' table (self-test)"
 
+# ---- 8. resources (ESTIMATE) ----------------------------------------------------------------------------------
+if command -v yowasp-yosys > /dev/null 2>&1; then
+    S=$BUILD/synth; rm -rf "$S"; mkdir -p "$S"
+    cp "$BUILD"/quartus/*.v "$BUILD"/quartus/*.vh "$BUILD"/quartus/*.hex "$BUILD"/quartus/*.mif "$HERE"/sim/vendor_stubs.v "$S/"
+    # a copy for the estimate only: Yosys reads no tri0 port (both of the Core copy's are driven in
+    # wpms_l2_top) and has models of its own under Intel's primitive names, so these become black boxes
+    sed -i 's/\btri0\b/wire/g' "$S/ptsg_core_rh031p.v"
+    sed -i 's/\baltsyncram\b/wpms_bb_altsyncram/g; s/\baltera_pll\b/wpms_bb_altera_pll/g; s/\baltsource_probe\b/wpms_bb_altsource_probe/g' "$S"/*.v
+    sed -i 's/^module wpms_bb_/(* blackbox *)\nmodule wpms_bb_/' "$S/vendor_stubs.v"
+    FILES=$(grep "VERILOG_FILE" "$BUILD/quartus/DE10_Nano_wpms.qsf" | grep -v INCLUDE | awk '{print $4}' | tr '\n' ' ')
+    ( cd "$S" && yowasp-yosys -p "read_verilog -lib vendor_stubs.v; read_verilog -sv -DSYNTHESIS $FILES; chparam -set SYS_MHZ 50 DE10_Nano_wpms_top; synth_intel_alm -family cyclonev -top DE10_Nano_wpms_top -run begin:map_luts; abc -lut 6; opt -fast; clean; tee -o stat_board50.txt stat" > yosys_board50.log 2>&1 ); r=$?
+    line=$(grep -E '^\s+[0-9]+\s+(\$lut|MISTRAL_ALUT_ARITH|MISTRAL_FF|MISTRAL_MLAB|MISTRAL_MUL27X27|MISTRAL_MUL18X18|MISTRAL_M10K|wpms_bb_[a-z_]+)$' "$S/stat_board50.txt" | sort -u -k2 | awk '{printf "%s %s; ", $2, $1}')
+    echo "DE10_Nano_wpms_top, SYS_MHZ 50, flattened, Intel primitives as black boxes (Yosys $(yowasp-yosys -V 2>/dev/null | awk '{print $2}'), synth_intel_alm cyclonev + abc -lut 6): $line" > "$LOGS/yosys_stat.txt"
+    say "  ESTIMATE DE10_Nano_wpms_top: $line"
+    check $r "resource ESTIMATE of the whole board top (Yosys, not Quartus)"
+else
+    say "  resource estimate skipped: yowasp-yosys not installed"
+fi
+
+# ---- 9. observation templates ------------------------------------------------------------------------------------
+python3 "$TOOLS/phase6_templates.py" --expected "$BUILD/expected" --out "$BUILD/templates" > "$LOGS/phase6_templates.log" 2>&1; r=$?
+check $r "observation templates of captures C1-C5 written from the expected values (before any capture)"
+
 if [ "$FAIL" -eq 0 ]; then say "run_phase6: ALL PHASE 6 CHECKS PASSED (RTL-SIM; the board is next)"; else say "run_phase6: SOME CHECKS FAILED"; fi
 if [ -n "$EVID" ]; then
     mkdir -p "$EVID/logs" "$EVID/expected"
     for f in run_phase6.txt gen_inject_scores.log check_host_tcl.txt make_quartus_project.log compile6.log \
-             cosim_board.txt resource_ledger_selftest.log; do
+             cosim_board.txt resource_ledger_selftest.log yosys_stat.txt phase6_templates.log; do
         [ -f "$LOGS/$f" ] && sed "s#$WS/#<workspace>/#g" "$LOGS/$f" > "$EVID/logs/$f"
     done
     for f in "$BUILD"/expected/*.json; do
         sed "s#$WS/#<workspace>/#g" "$f" > "$EVID/expected/$(basename "$f")"
     done
     cp "$BUILD"/expected/expected_*.vcd.gz "$EVID/expected/" 2>/dev/null
+    PEND=$(cd "$HW/../../04_Verification_Evidence" && pwd)/signaltap/phase6_pending
+    for d in "$BUILD"/templates/*/; do
+        mkdir -p "$PEND/$(basename "$d")"; cp "$d/observation.md" "$PEND/$(basename "$d")/"
+    done
     if [ "$REGRESSION" = 1 ]; then
         sed "s#$WS/#<workspace>/#g" "$BUILD/phase5/logs5/run_phase5.txt" > "$EVID/logs/phase5_regression.txt"
         sed "s#$WS/#<workspace>/#g" "$BUILD/phase5/phase4/logs4/run_phase4.txt" > "$EVID/logs/phase4_regression.txt"
