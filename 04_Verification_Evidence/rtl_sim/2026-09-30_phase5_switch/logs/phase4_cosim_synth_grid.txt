@@ -1,0 +1,65 @@
+cosim_synth grid/origin: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget); 120 strobes
+  output samples: 120 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 119 closed sweeps: 118 of 118, equal to sweep_sim.Reference's: True
+  I2S wire: 120 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 120/120; captures equal to the bank written before F: 120/120
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 1022 of T_min 1041
+  strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 1028 (< T_min 1041); overrun 0
+  test origin (N = 1008), G = 12: PCM peak over 120 samples 2002439 = -12.44 dBFS (Ch.3 §3.6.4 / CH3-ORIGIN: -6.3 dBFS for N = 2,048)
+cosim_synth grid/origin: PASS (9 s)
+cosim_synth grid/origin_literal: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget); 129 strobes
+  error_flag: EW5 at clock 1042; non-zero samples after it: 0; Core HALT: at 0x3FF, 11 clocks after the flag
+  I2S wire: 129 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 129/129; captures equal to the bank written before F: 129/129
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 0 (< T_min 1041); overrun 0
+cosim_synth grid/origin_literal: PASS (9 s)
+cosim_synth grid/glide: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget); 40 strobes
+  output samples: 40 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 39 closed sweeps: 38 of 38, equal to sweep_sim.Reference's: True
+  I2S wire: 40 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 40/40; captures equal to the bank written before F: 40/40
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 714 of T_min 1041
+  strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 720 (< T_min 1041); overrun 0
+cosim_synth grid/glide: PASS (4 s)
+cosim_synth grid/full8: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget); 40 strobes
+  output samples: 40 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 39 closed sweeps: 304 of 304, equal to sweep_sim.Reference's: True
+  I2S wire: 40 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 40/40; captures equal to the bank written before F: 40/40
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 1022 of T_min 1041
+  strobe interval (clk_sys clocks): min 1041, max 1042 (expected 1041 / 1042); SWEEP_CLOCKS max 1028 (< T_min 1041); overrun 0
+cosim_synth grid/full8: PASS (5 s)
+cosim_synth grid/origin: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget); 120 strobes
+  output samples: 120 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 119 closed sweeps: 118 of 118, equal to sweep_sim.Reference's: True
+  I2S wire: 120 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 120/120; captures equal to the bank written before F: 120/120
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 2062 of T_min 2083
+  strobe interval (clk_sys clocks): min 2083, max 2084 (expected 2083 / 2084); SWEEP_CLOCKS max 2068 (< T_min 2083); overrun 0
+  test origin (N = 2048), G = 12: PCM peak over 120 samples 4068448 = -6.29 dBFS (Ch.3 §3.6.4 / CH3-ORIGIN: -6.3 dBFS for N = 2,048)
+cosim_synth grid/origin: PASS (20 s)
+cosim_synth grid/gauss: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget); 8 strobes
+  output samples: 8 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 7 closed sweeps: 6 of 6, equal to sweep_sim.Reference's: True
+  I2S wire: 8 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 8/8; captures equal to the bank written before F: 8/8
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 2062 of T_min 2083
+  strobe interval (clk_sys clocks): min 2083, max 2084 (expected 2083 / 2084); SWEEP_CLOCKS max 2068 (< T_min 2083); overrun 0
+  sigma = 71 Gaussian, N = 2,048 (naive and consistent slots, CH3-E2E): bins with a != 0 per packet: [927] over 6 packets (customer: 927)
+cosim_synth grid/gauss: PASS (2 s)
+cosim_synth grid/glide: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget); 40 strobes
+  output samples: 40 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 39 closed sweeps: 38 of 38, equal to sweep_sim.Reference's: True
+  I2S wire: 40 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 40/40; captures equal to the bank written before F: 40/40
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 714 of T_min 2083
+  strobe interval (clk_sys clocks): min 2083, max 2084 (expected 2083 / 2084); SWEEP_CLOCKS max 720 (< T_min 2083); overrun 0
+cosim_synth grid/glide: PASS (7 s)
+cosim_synth grid/full8: wpms_synth_top on the 48 kHz grid (I2S master -> synchronizer) — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget); 40 strobes
+  output samples: 40 compared with the model (sweep_sim.Reference pages -> l1_model), 0 differ
+  bundles latched in the 39 closed sweeps: 304 of 304, equal to sweep_sim.Reference's: True
+  I2S wire: 40 frames decoded by a receiver (SCLK rising edge, Philips); words equal to the master's capture: 40/40; captures equal to the bank written before F: 40/40
+  latency S_m -> left MSB of that sweep's sample on the wire: 21.484 .. 21.484 us = 1.0312 periods (Ch.4 §4.8: 21.48 us = 1.031)
+  Core sweep length (strobe -> first SLEEP clock): 14 .. 2062 of T_min 2083
+  strobe interval (clk_sys clocks): min 2083, max 2084 (expected 2083 / 2084); SWEEP_CLOCKS max 2068 (< T_min 2083); overrun 0
+cosim_synth grid/full8: PASS (8 s)

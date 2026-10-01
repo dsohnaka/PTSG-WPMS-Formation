@@ -1,0 +1,12 @@
+cosim_switch evidence (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 62 transactions (41 port 0, 21 port 3; 0 refused), 5 apply steps, 6 strobes: answers equal to switch_model's: 62/62
+  inbox port: 38 writes presented (clock, address, data) equal to the model's: True; hand-overs 2
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 26 clocks or more before the next strobe
+  host path: 19 writes, 3 reads, 0 KEY[0] presses -> 41 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 4 bundles in closed sweeps and 6 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 6 of 6 samples equal
+  takes with items: 2; heard (a block of the take plays in the next sweep, or the sweep word changes): 2
+  GO -> first sweep playing it: 1623 .. 1967 clocks = 1.5581 .. 1.8883 periods, from strobe 2 .. 2 after the GO, over 2 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch evidence: PASS (1 s)

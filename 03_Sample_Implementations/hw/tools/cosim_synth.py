@@ -24,6 +24,10 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-29       Claude Code   Add : First version (SILICON_BRIEF Phase 4).
+# 002 2026-09-30       Claude Code   Fix : reference_packets took N after the Reference had applied the
+#                                          strobe's GO: a GO changing N of a block that plays in that very
+#                                          sweep would have been modelled with the new N (latent: no Phase 4
+#                                          case changes N of a playing block; found by Phase 5's random case).
 # ============================================================================
 import argparse, json, math, os, random, subprocess, sys, time
 from concurrent.futures import ProcessPoolExecutor
@@ -359,8 +363,9 @@ def reference_packets(go, n_strobes, step):
     out = []
     for i in range(n_strobes):
         g = go.get(i)
+        n_played = [ref.blk[b][0] for b in range(8)]          # N as this sweep plays it (RH002)
         obs = ref.sample(dict(blocks=g["blocks"], sweep=g["sweep"]) if g else None)
-        out.append([(list(bun), ref.blk[b][0]) for b, bun in obs])
+        out.append([(list(bun), n_played[b]) for b, bun in obs])
     return out
 
 

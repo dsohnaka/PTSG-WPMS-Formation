@@ -64,6 +64,15 @@
 //                                          lands on a housekeeping tail, whose Stay timeup lets the
 //                                          Core take the error insertion (C3-F20) and HALT (found in
 //                                          Phase 4: the grid test of the literal test origin at NMAX 1008).
+//  004 2026-09-30       Claude Code   Add : inbox port address 0x9F — the nine armed flags written in one
+//                                          clock ([7:0] blocks, [8] sweep word). The input switch (Phase 5)
+//                                          hands a GO over with it, so a strobe takes all of a GO or none of
+//                                          it (customer Ch.5 §5.2). And the take-set latched at the strobe
+//                                          includes an arm write presented in the strobe clock itself (0x88-
+//                                          0x8F bit 30, 0x91, 0x9F), so a GO handed over in the clock before
+//                                          the strobe edge is taken by that strobe: it plays from the second
+//                                          strobe after its acceptance at the latest (Ch.5 §5.4.3; found by
+//                                          the Phase 5 timing case: 2 periods + 1 clock without it).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -104,7 +113,7 @@ module wpms_formation #(
     // ---- inbox write port (input switch; customer Ch.5 §5.6.2 module layout) -
     //   0x00-0x7F slot b*16+i · 0x80-0x87 RTOUT[b] · 0x88-0x8F COMMIT[b]
     //   ([16:0] mask, [30] armed for the next strobe) · 0x90 staged sweep word ·
-    //   0x91 sweep armed ([30])
+    //   0x91 sweep armed ([30]) · 0x9F all nine armed flags at once ([7:0] blocks, [8] sweep; RH004)
     input  wire         ibx_we,
     input  wire [7:0]   ibx_addr,
     input  wire [31:0]  ibx_wdata,
@@ -496,6 +505,19 @@ module wpms_formation #(
                            pm_next[3], pm_next[2], pm_next[1], pm_next[0]};
     wire bcp_commit   = x_commit && (op == OP_BCP);
 
+    // ---- the arm bits after this clock's inbox-port write (RH004) ----------------
+    reg  [7:0]  armed_nx;
+    reg         sweep_armed_nx;
+    always @* begin
+        armed_nx = armed;
+        sweep_armed_nx = sweep_armed;
+        if (ibx_we && ibx_addr[7]) begin
+            if (ibx_addr[6:3] == 4'b0001) armed_nx[ibx_addr[2:0]] = ibx_wdata[30];
+            if (ibx_addr[6:0] == 7'h11)   sweep_armed_nx = ibx_wdata[30];
+            if (ibx_addr[6:0] == 7'h1F) begin armed_nx = ibx_wdata[7:0]; sweep_armed_nx = ibx_wdata[8]; end
+        end
+    end
+
     // ========================================================================
     //  Sequential state
     // ========================================================================
@@ -515,13 +537,11 @@ module wpms_formation #(
             // ---- the input switch writes the inbox side --------------------
             if (ibx_we && ibx_addr[7]) begin
                 if (ibx_addr[6:3] == 4'b0000) rtout[ibx_addr[2:0]] <= ibx_wdata[15:0];
-                if (ibx_addr[6:3] == 4'b0001) begin
-                    cm_mask[ibx_addr[2:0]] <= ibx_wdata[16:0];
-                    armed[ibx_addr[2:0]]   <= ibx_wdata[30];
-                end
+                if (ibx_addr[6:3] == 4'b0001) cm_mask[ibx_addr[2:0]] <= ibx_wdata[16:0];
                 if (ibx_addr[6:0] == 7'h10) sweep_staged <= ibx_wdata[27:0];
-                if (ibx_addr[6:0] == 7'h11) sweep_armed  <= ibx_wdata[30];
             end
+            armed       <= armed_nx;                                    // the arm bits (RH004: armed_nx)
+            sweep_armed <= sweep_armed_nx;
 
             // ---- background copy, write-after-pending, BCP (pm_next) ----------
             for (bs = 0; bs < 8; bs = bs + 1) pmask[bs] <= pm_next[bs];
@@ -570,7 +590,7 @@ module wpms_formation #(
             // by the strobe's clears, as in the model's order). The physical copy of
             // that BCP still lands (pmask); only the flags restart.
             if (seq_strobe) begin
-                take <= armed; take_sweep <= sweep_armed;
+                take <= armed_nx; take_sweep <= sweep_armed_nx;         // RH004: with this clock's arm write
                 copied <= 8'd0; sweep_copied <= 1'b0; inbox_taken <= 1'b0; taken_due <= 1'b0;
             end
         end

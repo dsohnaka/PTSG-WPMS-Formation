@@ -1,0 +1,43 @@
+run_phase3: 2026-09-30T13:40:37Z — Icarus Verilog version 12.0 (stable) (); Python 3.11.15; 12000 samples per seed
+  run_phase2: ALL PHASE 2 CHECKS PASSED
+  [PASS] Phase 2 regression (datapath cosimulation, mutants, score round trip) on the current RTL
+  score_as: 899 words (+ trap at 0x3FF) -> wpms_r1d.hex, wpms_r1d.mif;score_as: 240 words (+ trap at 0x3FF) -> wpms_r1b.hex, wpms_r1b.mif;
+  [PASS] score_as.py: wpms_r1d and wpms_r1b equal the committed .hex/.mif
+  validate CLEAN ; JumpVal for P = 0..8: 0x300 0x310 0x320 0x330 0x340 0x350 0x360 0x370 0x380
+  [PASS] wpms_housekeeping_dispatch.pfasm: CLEAN; the model computes TAIL_BASE + 16 P (ORACLE)
+  iverilog -Wall: 11 '@* sensitive' notes, 1 tri0-port note(s), 0 other lines
+  [PASS] wpms_l2_top + Core copy + Formation + sequencer + testbench compile
+  R2-lit: Loop 3: body Stay Sets before housekeeping at clocks [151, 183, 215] -> periods [32, 32, 32]; indirect reads requested: 0
+  R2-ind: Loop 0: body Stay Sets before housekeeping at clocks [151] -> periods [32]; indirect reads requested: 0
+  [PASS] R2 probe: queued Base Set + Loop re-enters gap-free with a literal count; no data-driven count (SD-04)
+  [cs_r1d_100]   total: 36000 sweeps, 128321 packets, 54205714 bins, 16740 full-load sweeps, 164321 Stays with the pin checked; sweeps longer than T_min: 0
+  [cs_r1d_100]   T_wake (strobe clock -> first packet Stay Set): 1..1 clocks; L1 packet_start one clock later
+  [cs_r1d_100]   g (Stay Set to next Stay Set minus N): 0..0
+  [cs_r1d_100]   housekeeping Stay Set -> first SLEEP clock: 13..13; BCP commit -> copy landed: 2..9 clocks
+  [cs_r1d_100]   sweep length (strobe -> first SLEEP clock): 14..2062; full-load sweeps: 2062..2062 of T_min 2083 (21 spare at worst)
+  [cs_r1d_100]   floor (N_MIN lowered to 16 for this case only): N = 28 29 30 31 32 33 -> Stay Set to next Stay Set 30 30 30 31 32 33
+  [PASS] R1 dispatch form, 100 MHz budget: every bundle, N, K sequence and stay_value as the oracle; errors silence L1
+  [cs_r1d_50]   total: 36000 sweeps, 126763 packets, 27954068 bins, 17730 full-load sweeps, 162763 Stays with the pin checked; sweeps longer than T_min: 0
+  [cs_r1d_50]   T_wake (strobe clock -> first packet Stay Set): 1..1 clocks; L1 packet_start one clock later
+  [cs_r1d_50]   g (Stay Set to next Stay Set minus N): 0..0
+  [cs_r1d_50]   housekeeping Stay Set -> first SLEEP clock: 13..13; BCP commit -> copy landed: 2..9 clocks
+  [cs_r1d_50]   sweep length (strobe -> first SLEEP clock): 14..1038; full-load sweeps: 1038..1038 of T_min 1041 (3 spare at worst)
+  [cs_r1d_50]   floor (N_MIN lowered to 16 for this case only): N = 28 29 30 31 32 33 -> Stay Set to next Stay Set 30 30 30 31 32 33
+  [PASS] R1 dispatch form, 50 MHz budget (NMAX 1024, T_min 1041): as above, every sweep fits
+  [cs_r1b_100]   total: 12000 sweeps, 42056 packets, 17732862 bins, 5595 full-load sweeps, 54056 Stays with the pin checked; sweeps longer than T_min: 0
+  [cs_r1b_100]   T_wake (strobe clock -> first packet Stay Set): 3..3 clocks; L1 packet_start one clock later
+  [cs_r1b_100]   g (Stay Set to next Stay Set minus N): 1..1
+  [cs_r1b_100]   housekeeping Stay Set -> first SLEEP clock: 14..14; BCP commit -> copy landed: 2..9 clocks
+  [cs_r1b_100]   sweep length (strobe -> first SLEEP clock): 17..2073; full-load sweeps: 2066..2073 of T_min 2083 (10 spare at worst)
+  [cs_r1b_100]   floor (N_MIN lowered to 16 for this case only): N = 28 29 30 31 32 33 -> Stay Set to next Stay Set 30 30 31 32 33 34
+  [PASS] R1 branch form, 100 MHz budget: as above (T_wake 3, g 1)
+  [cs_r1b_50]   total: 3000 sweeps, 9798 packets, 2178264 bins, 1362 full-load sweeps, 12798 Stays with the pin checked; sweeps longer than T_min: 1362
+  [cs_r1b_50]   T_wake (strobe clock -> first packet Stay Set): 3..3 clocks; L1 packet_start one clock later
+  [cs_r1b_50]   g (Stay Set to next Stay Set minus N): 1..1
+  [cs_r1b_50]   housekeeping Stay Set -> first SLEEP clock: 14..14; BCP commit -> copy landed: 2..9 clocks
+  [cs_r1b_50]   sweep length (strobe -> first SLEEP clock): 17..1049; full-load sweeps: 1042..1049 of T_min 1041 (-8 spare at worst)
+  [cs_r1b_50] sweeps longer than T_min: 1362 (informative: the branch form does not fit 50 MHz at NMAX 1024)
+  [PASS] R1 branch form, 50 MHz budget: bundles as the oracle (overruns reported, not failed)
+  cosim_sweep_mutants: 11/11 mutants killed
+  [PASS] cosim_sweep_mutants.py: every deliberate defect in the sequencer / Formation is caught
+run_phase3: ALL PHASE 3 CHECKS PASSED

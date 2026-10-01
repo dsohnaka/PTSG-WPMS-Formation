@@ -1,0 +1,183 @@
+cosim_switch origin (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 56 transactions (35 port 0, 21 port 3; 0 refused), 117 apply steps, 118 strobes: answers equal to switch_model's: 56/56
+  inbox port: 19 writes presented (clock, address, data) equal to the model's: True; hand-overs 1
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 26 clocks or more before the next strobe
+  host path: 0 writes, 35 reads, 0 KEY[0] presses -> 35 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 116 bundles in closed sweeps and 118 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 118 of 118 samples equal
+  takes with items: 1; heard (a block of the take plays in the next sweep, or the sweep word changes): 1
+  GO -> first sweep playing it: 1967 .. 1967 clocks = 1.8883 .. 1.8883 periods, from strobe 2 .. 2 after the GO, over 1 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  test origin from the ROM (N = 1008), G = 12: PCM peak 2002439 = -12.44 dBFS over 118 samples (phase4_l1.md: -12.44 dBFS for N = 1,008, -6.29 for N = 2,048)
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch origin: PASS (13 s)
+cosim_switch music (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 231 transactions (189 port 0, 42 port 3; 0 refused), 59 apply steps, 60 strobes: answers equal to switch_model's: 231/231
+  inbox port: 126 writes presented (clock, address, data) equal to the model's: True; hand-overs 6
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 24 clocks or more before the next strobe
+  host path: 91 writes, 7 reads, 0 KEY[0] presses -> 189 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 2 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 1); refused: 0
+  sound: 157 bundles in closed sweeps and 60 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 60 of 60 samples equal
+  takes with items: 6; heard (a block of the take plays in the next sweep, or the sweep word changes): 6
+  GO -> first sweep playing it: 1623 .. 2023 clocks = 1.5581 .. 1.9421 periods, from strobe 2 .. 2 after the GO, over 6 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch music: PASS (8 s)
+cosim_switch reject (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 398 transactions (377 port 0, 21 port 3; 28 refused), 44 apply steps, 45 strobes: answers equal to switch_model's: 398/398
+  inbox port: 165 writes presented (clock, address, data) equal to the model's: True; hand-overs 4
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 25 clocks or more before the next strobe
+  host path: 179 writes, 19 reads, 0 KEY[0] presses -> 377 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 77 bundles in closed sweeps and 45 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 45 of 45 samples equal
+  takes with items: 4; heard (a block of the take plays in the next sweep, or the sweep word changes): 4
+  GO -> first sweep playing it: 1252 .. 1967 clocks = 1.2019 .. 1.8883 periods, from strobe 2 .. 2 after the GO, over 4 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch reject: PASS (5 s)
+cosim_switch timing (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 995 transactions (974 port 0, 21 port 3; 0 refused), 301 apply steps, 302 strobes: answers equal to switch_model's: 995/995
+  inbox port: 566 writes presented (clock, address, data) equal to the model's: True; hand-overs 62
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 23 clocks or more before the next strobe
+  host path: 487 writes, 0 reads, 0 KEY[0] presses -> 974 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 1188 bundles in closed sweeps and 302 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 302 of 302 samples equal
+  takes with items: 62; heard (a block of the take plays in the next sweep, or the sweep word changes): 62
+  GO -> first sweep playing it: 1043 .. 2084 clocks = 1.0013 .. 2.0006 periods, from strobe 2 .. 2 after the GO, over 62 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-2, -1, 0, 1, 2, 3]
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch timing: PASS (33 s)
+cosim_switch bridge (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 182 transactions (77 port 0, 105 port 3; 0 refused), 43 apply steps, 47 strobes: answers equal to switch_model's: 182/182
+  inbox port: 114 writes presented (clock, address, data) equal to the model's: True; hand-overs 6
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 26 clocks or more before the next strobe
+  host path: 29 writes, 18 reads, 1 KEY[0] presses -> 77 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 5 complete plays of its 21 writes (resets 4, KEY[1] 1, TEST_ORIGIN 0); refused: 0
+  sound: 39 bundles in closed sweeps and 47 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 47 of 47 samples equal
+  takes with items: 6; heard (a block of the take plays in the next sweep, or the sweep word changes): 6
+  GO -> first sweep playing it: 1568 .. 1967 clocks = 1.5053 .. 1.8883 periods, from strobe 2 .. 2 after the GO, over 3 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch bridge: PASS (6 s)
+cosim_switch random (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 3589 transactions (3295 port 0, 294 port 3; 374 refused), 294 apply steps, 295 strobes: answers equal to switch_model's: 3589/3589
+  inbox port: 1249 writes presented (clock, address, data) equal to the model's: True; hand-overs 182
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 23 clocks or more before the next strobe
+  host path: 1478 writes, 319 reads, 20 KEY[0] presses -> 3295 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 14 complete plays of its 21 writes (resets 1, KEY[1] 13, TEST_ORIGIN 0); refused: 25
+  sound: 266 bundles in closed sweeps and 295 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 295 of 295 samples equal
+  takes with items: 92; heard (a block of the take plays in the next sweep, or the sweep word changes): 35
+  GO -> first sweep playing it: 1044 .. 2076 clocks = 1.0022 .. 1.9930 periods, from strobe 2 .. 2 after the GO, over 182 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-2, -1]
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch random: PASS (32 s)
+cosim_switch random (seed 2): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 3439 transactions (3166 port 0, 273 port 3; 367 refused), 291 apply steps, 292 strobes: answers equal to switch_model's: 3439/3439
+  inbox port: 1216 writes presented (clock, address, data) equal to the model's: True; hand-overs 220
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 22 clocks or more before the next strobe
+  host path: 1422 writes, 297 reads, 25 KEY[0] presses -> 3166 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 13 complete plays of its 21 writes (resets 1, KEY[1] 12, TEST_ORIGIN 0); refused: 41
+  sound: 176 bundles in closed sweeps and 292 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 292 of 292 samples equal
+  takes with items: 81; heard (a block of the take plays in the next sweep, or the sweep word changes): 29
+  GO -> first sweep playing it: 1044 .. 2079 clocks = 1.0022 .. 1.9958 periods, from strobe 2 .. 2 after the GO, over 220 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-1]
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch random: PASS (30 s)
+cosim_switch random (seed 3): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 3674 transactions (3380 port 0, 294 port 3; 446 refused), 294 apply steps, 295 strobes: answers equal to switch_model's: 3674/3674
+  inbox port: 1219 writes presented (clock, address, data) equal to the model's: True; hand-overs 225
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 22 clocks or more before the next strobe
+  host path: 1513 writes, 322 reads, 32 KEY[0] presses -> 3380 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 14 complete plays of its 21 writes (resets 1, KEY[1] 13, TEST_ORIGIN 0); refused: 92
+  sound: 262 bundles in closed sweeps and 295 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 295 of 295 samples equal
+  takes with items: 85; heard (a block of the take plays in the next sweep, or the sweep word changes): 31
+  GO -> first sweep playing it: 1051 .. 2073 clocks = 1.0090 .. 1.9901 periods, from strobe 2 .. 2 after the GO, over 225 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch random: PASS (31 s)
+cosim_switch origin (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  switch: 56 transactions (35 port 0, 21 port 3; 0 refused), 117 apply steps, 118 strobes: answers equal to switch_model's: 56/56
+  inbox port: 19 writes presented (clock, address, data) equal to the model's: True; hand-overs 1
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 28 clocks or more before the next strobe
+  host path: 0 writes, 35 reads, 0 KEY[0] presses -> 35 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 116 bundles in closed sweeps and 118 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 118 of 118 samples equal
+  takes with items: 1; heard (a block of the take plays in the next sweep, or the sweep word changes): 1
+  GO -> first sweep playing it: 4036 .. 4036 clocks = 1.9373 .. 1.9373 periods, from strobe 2 .. 2 after the GO, over 1 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  test origin from the ROM (N = 2048), G = 12: PCM peak 4068448 = -6.29 dBFS over 118 samples (phase4_l1.md: -12.44 dBFS for N = 1,008, -6.29 for N = 2,048)
+  strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
+cosim_switch origin: PASS (25 s)
+cosim_switch music (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  switch: 231 transactions (189 port 0, 42 port 3; 0 refused), 58 apply steps, 59 strobes: answers equal to switch_model's: 231/231
+  inbox port: 126 writes presented (clock, address, data) equal to the model's: True; hand-overs 6
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 26 clocks or more before the next strobe
+  host path: 91 writes, 7 reads, 0 KEY[0] presses -> 189 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 2 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 1); refused: 0
+  sound: 156 bundles in closed sweeps and 59 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 59 of 59 samples equal
+  takes with items: 6; heard (a block of the take plays in the next sweep, or the sweep word changes): 6
+  GO -> first sweep playing it: 2771 .. 4106 clocks = 1.3301 .. 1.9709 periods, from strobe 2 .. 2 after the GO, over 6 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
+cosim_switch music: PASS (12 s)
+cosim_switch reject (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  switch: 398 transactions (377 port 0, 21 port 3; 28 refused), 42 apply steps, 43 strobes: answers equal to switch_model's: 398/398
+  inbox port: 165 writes presented (clock, address, data) equal to the model's: True; hand-overs 4
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 27 clocks or more before the next strobe
+  host path: 179 writes, 19 reads, 0 KEY[0] presses -> 377 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 75 bundles in closed sweeps and 43 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 43 of 43 samples equal
+  takes with items: 4; heard (a block of the take plays in the next sweep, or the sweep word changes): 4
+  GO -> first sweep playing it: 2294 .. 4036 clocks = 1.1011 .. 1.9373 periods, from strobe 2 .. 2 after the GO, over 4 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
+cosim_switch reject: PASS (8 s)
+cosim_switch timing (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  switch: 995 transactions (974 port 0, 21 port 3; 0 refused), 302 apply steps, 303 strobes: answers equal to switch_model's: 995/995
+  inbox port: 566 writes presented (clock, address, data) equal to the model's: True; hand-overs 62
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 24 clocks or more before the next strobe
+  host path: 487 writes, 0 reads, 0 KEY[0] presses -> 974 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 1195 bundles in closed sweeps and 303 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 303 of 303 samples equal
+  takes with items: 62; heard (a block of the take plays in the next sweep, or the sweep word changes): 62
+  GO -> first sweep playing it: 2084 .. 4167 clocks = 1.0003 .. 2.0002 periods, from strobe 2 .. 2 after the GO, over 62 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): [-3, -2, -1, 0, 1, 2, 3]
+  strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
+cosim_switch timing: PASS (54 s)
+cosim_switch bridge (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  switch: 182 transactions (77 port 0, 105 port 3; 0 refused), 43 apply steps, 47 strobes: answers equal to switch_model's: 182/182
+  inbox port: 114 writes presented (clock, address, data) equal to the model's: True; hand-overs 6
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 27 clocks or more before the next strobe
+  host path: 29 writes, 18 reads, 1 KEY[0] presses -> 77 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 5 complete plays of its 21 writes (resets 4, KEY[1] 1, TEST_ORIGIN 0); refused: 0
+  sound: 39 bundles in closed sweeps and 47 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 47 of 47 samples equal
+  takes with items: 6; heard (a block of the take plays in the next sweep, or the sweep word changes): 6
+  GO -> first sweep playing it: 3652 .. 4037 clocks = 1.7530 .. 1.9378 periods, from strobe 2 .. 2 after the GO, over 3 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
+cosim_switch bridge: PASS (9 s)
+cosim_switch random (seed 4): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 2048, T_min 2083 (100 MHz budget)
+  switch: 3196 transactions (3049 port 0, 147 port 3; 386 refused), 235 apply steps, 236 strobes: answers equal to switch_model's: 3196/3196
+  inbox port: 981 writes presented (clock, address, data) equal to the model's: True; hand-overs 180
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 22 clocks or more before the next strobe
+  host path: 1363 writes, 299 reads, 24 KEY[0] presses -> 3049 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 7 complete plays of its 21 writes (resets 1, KEY[1] 6, TEST_ORIGIN 0); refused: 20
+  sound: 231 bundles in closed sweeps and 236 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 236 of 236 samples equal
+  takes with items: 53; heard (a block of the take plays in the next sweep, or the sweep word changes): 27
+  GO -> first sweep playing it: 2129 .. 4165 clocks = 1.0219 .. 1.9992 periods, from strobe 2 .. 2 after the GO, over 180 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): [3]
+  strobe interval 2083..2084 clocks; SWEEP_CLOCKS_MAX 2068 (T_min 2083); overrun 0
+cosim_switch random: PASS (41 s)
+cosim_switch origin (seed 1): wpms_system on the 48 kHz grid, host path by the deterministic controller through the ISSP bit protocol — evidence class RTL-SIM; NMAX 1008, T_min 1041 (50 MHz budget)
+  switch: 57 transactions (35 port 0, 22 port 3; 1 refused), 117 apply steps, 118 strobes: answers equal to switch_model's: 57/57
+  inbox port: 19 writes presented (clock, address, data) equal to the model's: True; hand-overs 1
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 26 clocks or more before the next strobe
+  host path: 0 writes, 35 reads, 0 KEY[0] presses -> 35 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 22 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 1
+  sound: 116 bundles in closed sweeps and 118 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 118 of 118 samples equal
+  takes with items: 1; heard (a block of the take plays in the next sweep, or the sweep word changes): 1
+  GO -> first sweep playing it: 1962 .. 1962 clocks = 1.8835 .. 1.8835 periods, from strobe 2 .. 2 after the GO, over 1 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  test origin from the ROM (N = 1008), G = 12: PCM peak 2002439 = -12.44 dBFS over 118 samples (phase4_l1.md: -12.44 dBFS for N = 1,008, -6.29 for N = 2,048)
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+cosim_switch origin: PASS (11 s)
