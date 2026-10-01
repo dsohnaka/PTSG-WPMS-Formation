@@ -1,0 +1,212 @@
+{
+ "case": "origin",
+ "budget": 100,
+ "expected": {
+  "strobe_interval": "each interval T_min or T_min + 1 (f_sys / 48 kHz: 1,041.7 or 2,083.3 clocks)",
+  "g": 0,
+  "t_wake_max": 4,
+  "floor_max": 32,
+  "bcp_max": 10,
+  "length_max": "T_min",
+  "error": "the right code; no packet, no bin, every bank zero after it; the Core halts",
+  "bundles": "every bundle at packet_start equal to the model",
+  "pcm": "every bank equal to the model; the spectrum the model's"
+ },
+ "observed": {
+  "budget": 100,
+  "qualified": false,
+  "strobe_interval": [
+   2083,
+   2084
+  ],
+  "sweeps_with_packets": 63,
+  "g": [],
+  "t_wake": [
+   2
+  ],
+  "window": [
+   28
+  ],
+  "floor": [
+   30
+  ],
+  "k_ok": true,
+  "bcp": [
+   2,
+   3
+  ],
+  "bcp_full_take": null,
+  "full_load_sweeps": 62,
+  "full_load_length": [
+   2063,
+   2063
+  ],
+  "sweep_length_max": 2063,
+  "packets": 63,
+  "errors": [],
+  "model_from": "reset",
+  "bundles": {
+   "compared": 63,
+   "equal": 63,
+   "first_bad": null
+  },
+  "pcm": {
+   "compared": 64,
+   "equal": 64,
+   "first_bad": null
+  },
+  "model_problems": [],
+  "pcm_peak_dbfs": -6.29,
+  "pcm_peak_dbfs_last_go": -6.29,
+  "spectrum_samples": 64,
+  "spectrum_peaks_captured_L": null,
+  "spectrum_peaks_model_L": null,
+  "spectrum_peaks_captured_R": null,
+  "spectrum_peaks_model_R": null,
+  "samples": 133433,
+  "strobes": 64,
+  "signaltap_dry_run": {
+   "qualified": false,
+   "g": [],
+   "t_wake": [
+    2
+   ],
+   "window": [
+    28
+   ],
+   "floor": [
+    30
+   ],
+   "bcp": [
+    2,
+    2
+   ],
+   "bcp_full_take": null,
+   "full_load_length": [
+    2063,
+    2063
+   ],
+   "bundles": {
+    "compared": 2,
+    "equal": 2,
+    "first_bad": null
+   },
+   "pcm": {
+    "compared": 2,
+    "equal": 2,
+    "first_bad": null
+   },
+   "model_from": "reset",
+   "trigger": "C1: the first packet_start after reset",
+   "found": true,
+   "samples": 4096,
+   "same_samples": true,
+   "errors": [],
+   "file": "expected_origin_100.vcd.gz"
+  },
+  "bench": {
+   "i2s_frames": 65,
+   "i2s_mismatch": 0,
+   "adv_writes": 29,
+   "adv_reads": 1,
+   "adv_done": 1,
+   "adv_nack": 0,
+   "adv_0x41": 16,
+   "adv_0x0C": 132,
+   "adv_N": 6144,
+   "video_lines": 60,
+   "hs_bad": 0,
+   "vs_frames": 0,
+   "vs_bad": 0,
+   "de_bad": 0,
+   "tx_clk_phase_bad": 0,
+   "led_heartbeat_toggles": 8,
+   "led_locked": 1,
+   "led_adv_done": 1,
+   "led_hpd": 1,
+   "led_packets": 1,
+   "led_error": 0,
+   "led_halt": 0,
+   "led_nack": 0,
+   "strobe_interval": 2083,
+   "strobe_min": 2083,
+   "strobe_max": 2084,
+   "sweep_clocks_max": 2068,
+   "overrun": 0
+  },
+  "sim_seconds": 13.2,
+  "simulator_warnings": []
+ },
+ "checks": [
+  {
+   "item": 0,
+   "text": "bench: I2S frames 65 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "simulator warnings: 0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "strobe intervals on the taps [2083, 2084]",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "K counts 0, 1, 2 ... in every packet: True",
+   "ok": true
+  },
+  {
+   "item": 2,
+   "text": "T_wake [2] clocks (expected <= 4, nominal 2)",
+   "ok": true
+  },
+  {
+   "item": 3,
+   "text": "window [28] -> floor [30] clocks (expected <= N_MIN 32)",
+   "ok": true
+  },
+  {
+   "item": 4,
+   "text": "BCP word -> inbox_taken [2, 3] clocks (expected <= 10)",
+   "ok": true
+  },
+  {
+   "item": 5,
+   "text": "full-load sweeps 62 (sum of bins = 2048): strobe -> asleep [2063, 2063] clocks (expected <= T_min 2083)",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "sweep length, longest of the run: 2063 (<= 2083)",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "errors: none (expected none)",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "bundles at packet_start equal to the model: 63/63",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "banks equal to the model: 64/64",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "SignalTap dry run (C1: the first packet_start after reset; 4096 samples): written as an export, read back unchanged; bundles 2/2, banks 2/2, full-load sweep [2063, 2063]",
+   "ok": true
+  }
+ ]
+}

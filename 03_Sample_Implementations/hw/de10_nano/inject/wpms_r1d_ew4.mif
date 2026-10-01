@@ -1,0 +1,142 @@
+-- wpms_r1d_ew4.score (Phase 6 injection: the window writes the store directly (negative_tests N1): EW4) — assembled by score_as.py (decode_map.json v0.1)
+DEPTH = 1024;
+WIDTH = 32;
+ADDRESS_RADIX = HEX;
+DATA_RADIX = HEX;
+CONTENT BEGIN
+0 : 00000700;   -- NOP
+1 : 00000002;   -- SLEEP_0: Branch 0
+2 : 00000200;   -- HK: StaySet
+3 : 00000140;   -- [HKD] BCP
+4 : 011A0020;   -- [HKD] SAD 0x11A
+5 : 00002010;   -- [HKD] LDA @PPM
+6 : 02000210;   -- [HKD] ADD #512
+7 : 00000230;   -- [HKD] WJV
+8 : 00000003;   -- JumpInd (indirect: JumpVal)
+9 : 00000002;   -- SLEEP_8: Branch 0
+A : 00010200;   -- POS0: StaySet PKT
+B : 00060020;   -- [PKT] SAD 0x006
+C : 00000120;   -- [PKT] LDM
+D : 000A0020;   -- [PKT] SAD 0x00A
+E : 00002210;   -- [PKT] ADD @PPM
+F : 00060020;   -- [PKT] SAD 0x006
+10 : 00000220;   -- [PKT] STM
+11 : 00000600;   -- ProgEnd
+12 : 00000153;   -- Jump POS1
+13 : 00010201;   -- Stay N_MIN PKT
+14 : 00000002;   -- SLEEP_7: Branch 0
+15 : 00010200;   -- POS1: StaySet PKT
+16 : 00060020;   -- [PKT] SAD 0x006
+17 : 00000120;   -- [PKT] LDM
+18 : 000A0020;   -- [PKT] SAD 0x00A
+19 : 00002210;   -- [PKT] ADD @PPM
+1A : 00060020;   -- [PKT] SAD 0x006
+1B : 00000220;   -- [PKT] STM
+1C : 00000600;   -- ProgEnd
+1D : 00000203;   -- Jump POS2
+1E : 00010201;   -- Stay N_MIN PKT
+1F : 00000002;   -- SLEEP_6: Branch 0
+20 : 00010200;   -- POS2: StaySet PKT
+21 : 00060020;   -- [PKT] SAD 0x006
+22 : 00000120;   -- [PKT] LDM
+23 : 000A0020;   -- [PKT] SAD 0x00A
+24 : 00002210;   -- [PKT] ADD @PPM
+25 : 00060020;   -- [PKT] SAD 0x006
+26 : 00000220;   -- [PKT] STM
+27 : 00000600;   -- ProgEnd
+28 : 000002B3;   -- Jump POS3
+29 : 00010201;   -- Stay N_MIN PKT
+2A : 00000002;   -- SLEEP_5: Branch 0
+2B : 00010200;   -- POS3: StaySet PKT
+2C : 00060020;   -- [PKT] SAD 0x006
+2D : 00000120;   -- [PKT] LDM
+2E : 000A0020;   -- [PKT] SAD 0x00A
+2F : 00002210;   -- [PKT] ADD @PPM
+30 : 00060020;   -- [PKT] SAD 0x006
+31 : 00000220;   -- [PKT] STM
+32 : 00000600;   -- ProgEnd
+33 : 00000363;   -- Jump POS4
+34 : 00010201;   -- Stay N_MIN PKT
+35 : 00000002;   -- SLEEP_4: Branch 0
+36 : 00010200;   -- POS4: StaySet PKT
+37 : 00060020;   -- [PKT] SAD 0x006
+38 : 00000120;   -- [PKT] LDM
+39 : 000A0020;   -- [PKT] SAD 0x00A
+3A : 00002210;   -- [PKT] ADD @PPM
+3B : 00060020;   -- [PKT] SAD 0x006
+3C : 00000220;   -- [PKT] STM
+3D : 00000600;   -- ProgEnd
+3E : 00000413;   -- Jump POS5
+3F : 00010201;   -- Stay N_MIN PKT
+40 : 00000002;   -- SLEEP_3: Branch 0
+41 : 00010200;   -- POS5: StaySet PKT
+42 : 00060020;   -- [PKT] SAD 0x006
+43 : 00000120;   -- [PKT] LDM
+44 : 000A0020;   -- [PKT] SAD 0x00A
+45 : 00002210;   -- [PKT] ADD @PPM
+46 : 00060020;   -- [PKT] SAD 0x006
+47 : 00000220;   -- [PKT] STM
+48 : 00000600;   -- ProgEnd
+49 : 000004C3;   -- Jump POS6
+4A : 00010201;   -- Stay N_MIN PKT
+4B : 00000002;   -- SLEEP_2: Branch 0
+4C : 00010200;   -- POS6: StaySet PKT
+4D : 00060020;   -- [PKT] SAD 0x006
+4E : 00000120;   -- [PKT] LDM
+4F : 000A0020;   -- [PKT] SAD 0x00A
+50 : 00002210;   -- [PKT] ADD @PPM
+51 : 00060020;   -- [PKT] SAD 0x006
+52 : 00000220;   -- [PKT] STM
+53 : 00000600;   -- ProgEnd
+54 : 00000573;   -- Jump POS7
+55 : 00010201;   -- Stay N_MIN PKT
+56 : 00000002;   -- SLEEP_1: Branch 0
+57 : 00010200;   -- POS7: StaySet PKT
+58 : 00060020;   -- [PKT] SAD 0x006
+59 : 00000120;   -- [PKT] LDM
+5A : 000A0020;   -- [PKT] SAD 0x00A
+5B : 00002210;   -- [PKT] ADD @PPM
+5C : 00060020;   -- [PKT] SAD 0x006
+5D : 00000220;   -- [PKT] STM
+5E : 00000600;   -- ProgEnd
+5F : 00000023;   -- Jump HK
+60 : 00010201;   -- Stay N_MIN PKT
+[61..2FF] : 00000000;
+300 : 00000600;   -- TAIL_0: ProgEnd
+301 : 00000013;   -- Jump SLEEP_0
+302 : 000000D1;   -- Stay T_HK
+[303..30F] : 00000000;
+310 : 00000600;   -- TAIL_1: ProgEnd
+311 : 00000563;   -- Jump SLEEP_1
+312 : 000000D1;   -- Stay T_HK
+[313..31F] : 00000000;
+320 : 00000600;   -- TAIL_2: ProgEnd
+321 : 000004B3;   -- Jump SLEEP_2
+322 : 000000D1;   -- Stay T_HK
+[323..32F] : 00000000;
+330 : 00000600;   -- TAIL_3: ProgEnd
+331 : 00000403;   -- Jump SLEEP_3
+332 : 000000D1;   -- Stay T_HK
+[333..33F] : 00000000;
+340 : 00000600;   -- TAIL_4: ProgEnd
+341 : 00000353;   -- Jump SLEEP_4
+342 : 000000D1;   -- Stay T_HK
+[343..34F] : 00000000;
+350 : 00000600;   -- TAIL_5: ProgEnd
+351 : 000002A3;   -- Jump SLEEP_5
+352 : 000000D1;   -- Stay T_HK
+[353..35F] : 00000000;
+360 : 00000600;   -- TAIL_6: ProgEnd
+361 : 000001F3;   -- Jump SLEEP_6
+362 : 000000D1;   -- Stay T_HK
+[363..36F] : 00000000;
+370 : 00000600;   -- TAIL_7: ProgEnd
+371 : 00000143;   -- Jump SLEEP_7
+372 : 000000D1;   -- Stay T_HK
+[373..37F] : 00000000;
+380 : 00000600;   -- TAIL_8: ProgEnd
+381 : 00000093;   -- Jump SLEEP_8
+382 : 000000D1;   -- Stay T_HK
+[383..3FE] : 00000000;
+3FF : 00000600;   -- TRAP: foreground Prog End -> Core HALT (C3-F23/C3-F24); Formation error insertion lands here
+END;

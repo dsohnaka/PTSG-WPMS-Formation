@@ -1,0 +1,208 @@
+{
+ "case": "ew3",
+ "budget": 50,
+ "expected": {
+  "strobe_interval": "each interval T_min or T_min + 1 (f_sys / 48 kHz: 1,041.7 or 2,083.3 clocks)",
+  "g": 0,
+  "t_wake_max": 4,
+  "floor_max": 32,
+  "bcp_max": 10,
+  "length_max": "T_min",
+  "error": "the right code; no packet, no bin, every bank zero after it; the Core halts",
+  "bundles": "every bundle at packet_start equal to the model",
+  "pcm": "every bank equal to the model; the spectrum the model's"
+ },
+ "observed": {
+  "budget": 50,
+  "qualified": false,
+  "strobe_interval": [
+   1041,
+   1042
+  ],
+  "sweeps_with_packets": 1,
+  "g": [],
+  "t_wake": [
+   2
+  ],
+  "window": [
+   5
+  ],
+  "floor": [
+   7
+  ],
+  "k_ok": true,
+  "bcp": [
+   3,
+   3
+  ],
+  "bcp_full_take": null,
+  "full_load_sweeps": 0,
+  "full_load_length": null,
+  "sweep_length_max": 15,
+  "packets": 1,
+  "errors": [
+   {
+    "at": 2083,
+    "n": 2,
+    "code": "EW3",
+    "packets_after": 0,
+    "bins_after": 0,
+    "banks_after": 62,
+    "banks_after_nonzero": 0,
+    "halt_after": 1005,
+    "halted": true
+   }
+  ],
+  "model_from": "reset",
+  "bundles": {
+   "compared": 1,
+   "equal": 1,
+   "first_bad": null
+  },
+  "pcm": {
+   "compared": 2,
+   "equal": 2,
+   "first_bad": null
+  },
+  "model_problems": [],
+  "pcm_peak_dbfs": null,
+  "pcm_peak_dbfs_last_go": null,
+  "spectrum_samples": 2,
+  "spectrum_peaks_captured_L": null,
+  "spectrum_peaks_model_L": null,
+  "spectrum_peaks_captured_R": null,
+  "spectrum_peaks_model_R": null,
+  "samples": 66669,
+  "strobes": 64,
+  "signaltap_dry_run": {
+   "qualified": false,
+   "g": [],
+   "t_wake": [
+    2
+   ],
+   "window": [
+    5
+   ],
+   "floor": [
+    7
+   ],
+   "bcp": null,
+   "bcp_full_take": null,
+   "full_load_length": null,
+   "bundles": {
+    "compared": 1,
+    "equal": 1,
+    "first_bad": null
+   },
+   "pcm": {
+    "compared": 1,
+    "equal": 1,
+    "first_bad": null
+   },
+   "model_from": "reset",
+   "trigger": "C5: error_flag rising",
+   "found": true,
+   "samples": 4096,
+   "same_samples": true,
+   "errors": [
+    {
+     "code": "EW3",
+     "packets_after": 0,
+     "bins_after": 0,
+     "banks_after_nonzero": 0,
+     "halted": true
+    }
+   ],
+   "file": "expected_ew3_50.vcd.gz"
+  },
+  "bench": {
+   "i2s_frames": 64,
+   "i2s_mismatch": 0,
+   "adv_writes": 29,
+   "adv_reads": 1,
+   "adv_done": 1,
+   "adv_nack": 0,
+   "adv_0x41": 16,
+   "adv_0x0C": 132,
+   "adv_N": 6144,
+   "video_lines": 60,
+   "hs_bad": 0,
+   "vs_frames": 0,
+   "vs_bad": 0,
+   "de_bad": 0,
+   "tx_clk_phase_bad": 0,
+   "led_heartbeat_toggles": 8,
+   "led_locked": 1,
+   "led_adv_done": 1,
+   "led_hpd": 1,
+   "led_packets": 1,
+   "led_error": 1,
+   "led_halt": 1,
+   "led_nack": 0,
+   "strobe_interval": 1042,
+   "strobe_min": 1041,
+   "strobe_max": 1042,
+   "sweep_clocks_max": 0,
+   "overrun": 0
+  },
+  "sim_seconds": 6.8,
+  "simulator_warnings": []
+ },
+ "checks": [
+  {
+   "item": 0,
+   "text": "bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "simulator warnings: 0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "strobe intervals on the taps [1041, 1042]",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "K counts 0, 1, 2 ... in every packet: True",
+   "ok": true
+  },
+  {
+   "item": 6,
+   "text": "error_flag: ['EW3'] (expected exactly one, EW3)",
+   "ok": true
+  },
+  {
+   "item": 6,
+   "text": "L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0",
+   "ok": true
+  },
+  {
+   "item": 6,
+   "text": "the Core halts 1005 clocks after the flag",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "bundles at packet_start equal to the model: 1/1",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "banks equal to the model: 2/2 (up to the error)",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW3",
+   "ok": true
+  }
+ ]
+}

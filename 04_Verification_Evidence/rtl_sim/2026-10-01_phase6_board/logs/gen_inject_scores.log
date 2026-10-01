@@ -1,0 +1,21 @@
+  same  wpms_r1d_ew2.score
+  same  inject_ew2.pfasm
+  same  wpms_r1d_ew2.hex
+  same  wpms_r1d_ew2.mif
+  same  wpms_r1d_ew3.score
+  same  inject_ew3.pfasm
+  same  wpms_r1d_ew3.hex
+  same  wpms_r1d_ew3.mif
+  same  wpms_r1d_ew4.score
+  same  inject_ew4.pfasm
+  same  wpms_r1d_ew4.hex
+  same  wpms_r1d_ew4.mif
+  same  wpms_r1d_ew5_1008.score
+  same  inject_ew5_1008.pfasm
+  same  wpms_r1d_ew5_1008.hex
+  same  wpms_r1d_ew5_1008.mif
+  same  wpms_r1d_ew5_2048.score
+  same  inject_ew5_2048.pfasm
+  same  wpms_r1d_ew5_2048.hex
+  same  wpms_r1d_ew5_2048.mif
+gen_inject_scores: PASS (0 different)

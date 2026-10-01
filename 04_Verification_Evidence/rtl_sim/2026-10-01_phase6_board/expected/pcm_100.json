@@ -1,0 +1,149 @@
+{
+ "case": "pcm",
+ "budget": 100,
+ "expected": {
+  "strobe_interval": "each interval T_min or T_min + 1 (f_sys / 48 kHz: 1,041.7 or 2,083.3 clocks)",
+  "g": 0,
+  "t_wake_max": 4,
+  "floor_max": 32,
+  "bcp_max": 10,
+  "length_max": "T_min",
+  "error": "the right code; no packet, no bin, every bank zero after it; the Core halts",
+  "bundles": "every bundle at packet_start equal to the model",
+  "pcm": "every bank equal to the model; the spectrum the model's"
+ },
+ "observed": {
+  "budget": 100,
+  "qualified": null,
+  "errors": [],
+  "model_from": "reset",
+  "bundles": {
+   "compared": 0,
+   "equal": 0,
+   "first_bad": null
+  },
+  "pcm": {
+   "compared": 1146,
+   "equal": 1146,
+   "first_bad": null
+  },
+  "model_problems": [],
+  "pcm_peak_dbfs": -18.03,
+  "pcm_peak_dbfs_last_go": -26.4,
+  "spectrum_samples": 1146,
+  "spectrum_peaks_captured_L": [
+   [
+    524.4,
+    -0.0
+   ],
+   [
+    659.2,
+    0.0
+   ]
+  ],
+  "spectrum_peaks_model_L": [
+   [
+    524.4,
+    -0.0
+   ],
+   [
+    659.2,
+    0.0
+   ]
+  ],
+  "spectrum_peaks_captured_R": [
+   [
+    660.6,
+    0.0
+   ],
+   [
+    782.2,
+    -0.0
+   ]
+  ],
+  "spectrum_peaks_model_R": [
+   [
+    660.6,
+    0.0
+   ],
+   [
+    782.2,
+    -0.0
+   ]
+  ],
+  "bench": {
+   "i2s_frames": 1146,
+   "i2s_mismatch": 0,
+   "adv_writes": 29,
+   "adv_reads": 53,
+   "adv_done": 1,
+   "adv_nack": 0,
+   "adv_0x41": 16,
+   "adv_0x0C": 132,
+   "adv_N": 6144,
+   "video_lines": 1074,
+   "hs_bad": 0,
+   "vs_frames": 0,
+   "vs_bad": 0,
+   "de_bad": 0,
+   "tx_clk_phase_bad": 0,
+   "led_heartbeat_toggles": 143,
+   "led_locked": 1,
+   "led_adv_done": 1,
+   "led_hpd": 1,
+   "led_packets": 1,
+   "led_error": 0,
+   "led_halt": 0,
+   "led_nack": 0,
+   "strobe_interval": 2083,
+   "strobe_min": 2083,
+   "strobe_max": 2084,
+   "sweep_clocks_max": 2068,
+   "overrun": 0
+  },
+  "sim_seconds": 220.8,
+  "simulator_warnings": []
+ },
+ "checks": [
+  {
+   "item": 0,
+   "text": "bench: I2S frames 1146 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "simulator warnings: 0",
+   "ok": true
+  },
+  {
+   "item": 0,
+   "text": "errors: none (expected none)",
+   "ok": true
+  },
+  {
+   "item": 8,
+   "text": "banks equal to the model: 1146/1146",
+   "ok": true
+  },
+  {
+   "item": 8,
+   "text": "spectrum L over 1146 samples (Hz, dB): captured [(524.4, -0.0), (659.2, 0.0)], model [(524.4, -0.0), (659.2, 0.0)]",
+   "ok": true
+  },
+  {
+   "item": 8,
+   "text": "spectrum R over 1146 samples (Hz, dB): captured [(660.6, 0.0), (782.2, -0.0)], model [(660.6, 0.0), (782.2, -0.0)]",
+   "ok": true
+  },
+  {
+   "item": 8,
+   "text": "PCM peak after the GO -26.4 dBFS (the whole run, the origin's first samples included: -18.03 dBFS)",
+   "ok": true
+  }
+ ]
+}
