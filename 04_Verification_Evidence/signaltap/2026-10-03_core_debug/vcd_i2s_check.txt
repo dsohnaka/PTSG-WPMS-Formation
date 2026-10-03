@@ -1,0 +1,13 @@
+vcd_i2s_check: ptsg_core_debug.vcd.gz — 8192 samples of clk_sys (20.000 ns apart) — evidence class SILICON, compared with the model
+  Core: packet Stay (timing_signals[0] high) [1008] clocks in 7 sweeps; sweep period [1042, 1041, 1042, 1042, 1041, 1042, 1042] (mean 1041.714); F_m minus the packet's start [12, 13] clocks
+  I2S: 8 frames decoded (7 with both words); L == R in 7 of 7
+  search (closed form, N = 1008, 2 h after the GO): best rms 2.0 LSB at sweep 39684738 = 826.7654 s after the GO, G = 0 (DIP[1:0] = 00)
+    frame 0: wire L None R -3936602; model -3936602 -3936602  equal
+    frame 1: wire L -4628968 R -4628968; model -4628968 -4628968  equal
+    frame 2: wire L -5241955 R -5241955; model -5241955 -5241955  equal
+    frame 3: wire L -5765179 R -5765179; model -5765179 -5765179  equal
+    frame 4: wire L -6189803 R -6189803; model -6189803 -6189803  equal
+    frame 5: wire L -6508652 R -6508652; model -6508652 -6508652  equal
+    frame 6: wire L -6716390 R -6716390; model -6716390 -6716390  equal
+    frame 7: wire L -6809561 R -6809561; model -6809561 -6809561  equal
+vcd_i2s_check: PASS — 8 of 8 frames equal the model bit for bit
