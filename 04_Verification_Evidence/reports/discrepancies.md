@@ -284,7 +284,7 @@ Rows added in later phases are appended below the Phase 0 set (SD-12 from Phase 
     - RTL-SIM: lockstep against the previous revisions, 0 differences in 8 runs of 400,000 clocks; every late error came with the reference's code and SN.
     - Formal: 13/13 proofs (SAT).
     - Phase 2: 3,923/3,923 cases, 29/29 mutants.
-    - The Phases 3–6 regression follows (`rtl_sim/2026-10-03_sd22_step2/`, `phase6_silicon.md` §11).
+    - Phases 3–6: all checks passed; the 18 board runs and the 34 expected files are identical to the record (`rtl_sim/2026-10-03_sd22_step2/`, `phase6_silicon.md` §11).
   - **Next:** the third fit decides, with clk_sys at 30 % high for the Core's half-cycle path (SD-23).
 - **100 MHz.** Not expected to close even after step 2. Accm's recurrence (multiply, shift, add, one instruction per clock) alone exceeds 10 ns on this device (estimate). 50 MHz stays the target (ruling 2026-09-28).
 - **和文.**

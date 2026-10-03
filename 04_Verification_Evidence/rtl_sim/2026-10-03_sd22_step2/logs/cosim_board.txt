@@ -1,0 +1,239 @@
+cosim_board: the DE10-nano top on the board-level bench (PLLs and ISSP in their SIM branches) — evidence class RTL-SIM
+expected (SILICON_BRIEF Phase 6, written before the runs): strobe_interval each interval T_min or T_min + 1 (f_sys / 48 kHz: 1,041.7 or 2,083.3 clocks); g 0; t_wake_max 4; floor_max 32; bcp_max 10; length_max T_min; error the right code; no packet, no bin, every bank zero after it; the Core halts; bundles every bundle at packet_start equal to the model; pcm every bank equal to the model; the spectrum the model's
+[origin @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (5.6 s simulated)
+  ok   board : bench: I2S frames 65 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 2: T_wake [2] clocks (expected <= 4, nominal 2)
+  ok   item 3: window [28] -> floor [30] clocks (expected <= N_MIN 32)
+  ok   item 4: BCP word -> inbox_taken [2, 3] clocks (expected <= 10)
+  ok   item 5: full-load sweeps 62 (sum of bins = 1008): strobe -> asleep [1023, 1023] clocks (expected <= T_min 1041)
+  ok   board : sweep length, longest of the run: 1023 (<= 1041)
+  ok   board : errors: none (expected none)
+  ok   board : bundles at packet_start equal to the model: 63/63
+  ok   board : banks equal to the model: 64/64
+  ok   board : SignalTap dry run (C1: the first packet_start after reset; 4096 samples): written as an export, read back unchanged; bundles 4/4, banks 4/4, full-load sweep [1023, 1023]
+[first_go @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.4 s simulated)
+  ok   board : bench: I2S frames 47 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 1: g between the packets of a sweep: [0] (expected all 0)
+  ok   item 2: T_wake [2] clocks (expected <= 4, nominal 2)
+  ok   item 3: window [28] -> floor [30] clocks (expected <= N_MIN 32)
+  ok   item 4: BCP word -> inbox_taken [2, 5] clocks (expected <= 10)
+  ok   board : sweep length, longest of the run: 1023 (<= 1041)
+  ok   board : errors: none (expected none)
+  ok   item 7: bundles at packet_start equal to the model: 128/128
+  ok   item 8: banks equal to the model: 47/47
+  ok   item 7: a capture after the GO, the model started from the GO alone (the complete take of strobe 5): bundles 121/121, banks 41/41
+  ok   board : SignalTap dry run (C3: P becoming 3 (the triad's sweep), qualified by packet_start | bank_we; 175 samples, storage-qualified): written as an export, read back unchanged; bundles 128/128, banks 47/47
+[full8 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (5.3 s simulated)
+  ok   board : bench: I2S frames 50 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 1: g between the packets of a sweep: [0] (expected all 0)
+  ok   item 2: T_wake [2] clocks (expected <= 4, nominal 2)
+  ok   item 3: window [28] -> floor [30] clocks (expected <= N_MIN 32)
+  ok   item 4: BCP word -> inbox_taken [2, 10] clocks (expected <= 10)
+  ok   item 4: BCP of the full take-set (8 blocks, full mask, sweep word): 10 clocks (expected <= 10)
+  ok   item 5: full-load sweeps 47 (sum of bins = 1008): strobe -> asleep [1023, 1023] clocks (expected <= T_min 1041)
+  ok   board : sweep length, longest of the run: 1023 (<= 1041)
+  ok   board : errors: none (expected none)
+  ok   item 7: bundles at packet_start equal to the model: 335/335
+  ok   board : banks equal to the model: 49/49
+  ok   item 7: a capture after the GO, the model started from the GO alone (the complete take of strobe 7): bundles 321/321, banks 41/41
+  ok   board : SignalTap dry run (C2: P becoming 8 (the full take-set lands); 4096 samples): written as an export, read back unchanged; bundles 28/28, banks 4/4, BCP of the full take-set 10, full-load sweep [1023, 1023]
+[ew6 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (5.2 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW6'] (expected exactly one, EW6)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 59 of which non-zero 0
+  ok   item 6: the Core halts 1000 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 4/4
+  ok   board : banks equal to the model: 5/5 (up to the error)
+  ok   board : SignalTap dry run (C4: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW6
+[ew2 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.7 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW2'] (expected exactly one, EW2)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 9 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 0/0, banks 0/0, EW2
+[ew3 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.7 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW3'] (expected exactly one, EW3)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 1005 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW3
+[ew4 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.9 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW4'] (expected exactly one, EW4)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 1001 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW4
+[ew5 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (5.1 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [1041, 1042]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW5'] (expected exactly one, EW5)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 11 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 0/0, banks 0/0, EW5
+[pcm @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (98.8 s simulated)
+  ok   board : bench: I2S frames 1147 decoded, mismatches 0; host timeouts 0; strobe interval 1041..1042; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : errors: none (expected none)
+  ok   item 8: banks equal to the model: 1147/1147
+  ok   item 8: spectrum L over 1147 samples (Hz, dB): captured [(524.4, -0.0), (659.2, 0.0)], model [(524.4, -0.0), (659.2, 0.0)]
+  ok   item 8: spectrum R over 1147 samples (Hz, dB): captured [(660.6, 0.0), (782.2, -0.0)], model [(660.6, 0.0), (782.2, -0.0)]
+  ok   item 8: PCM peak after the GO -26.4 dBFS (the whole run, the origin's first samples included: -20.8 dBFS)
+[origin @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (10.3 s simulated)
+  ok   board : bench: I2S frames 65 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 2: T_wake [2] clocks (expected <= 4, nominal 2)
+  ok   item 3: window [28] -> floor [30] clocks (expected <= N_MIN 32)
+  ok   item 4: BCP word -> inbox_taken [2, 3] clocks (expected <= 10)
+  ok   item 5: full-load sweeps 62 (sum of bins = 2048): strobe -> asleep [2063, 2063] clocks (expected <= T_min 2083)
+  ok   board : sweep length, longest of the run: 2063 (<= 2083)
+  ok   board : errors: none (expected none)
+  ok   board : bundles at packet_start equal to the model: 63/63
+  ok   board : banks equal to the model: 64/64
+  ok   board : SignalTap dry run (C1: the first packet_start after reset; 4096 samples): written as an export, read back unchanged; bundles 2/2, banks 2/2, full-load sweep [2063, 2063]
+[first_go @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (6.8 s simulated)
+  ok   board : bench: I2S frames 46 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 1: g between the packets of a sweep: [0] (expected all 0)
+  ok   item 2: T_wake [2] clocks (expected <= 4, nominal 2)
+  ok   item 3: window [28] -> floor [30] clocks (expected <= N_MIN 32)
+  ok   item 4: BCP word -> inbox_taken [2, 5] clocks (expected <= 10)
+  ok   board : sweep length, longest of the run: 2063 (<= 2083)
+  ok   board : errors: none (expected none)
+  ok   item 7: bundles at packet_start equal to the model: 127/127
+  ok   item 8: banks equal to the model: 46/46
+  ok   item 7: a capture after the GO, the model started from the GO alone (the complete take of strobe 4): bundles 121/121, banks 41/41
+  ok   board : SignalTap dry run (C3: P becoming 3 (the triad's sweep), qualified by packet_start | bank_we; 173 samples, storage-qualified): written as an export, read back unchanged; bundles 127/127, banks 46/46
+[full8 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.2 s simulated)
+  ok   board : bench: I2S frames 48 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 1: g between the packets of a sweep: [0] (expected all 0)
+  ok   item 2: T_wake [2] clocks (expected <= 4, nominal 2)
+  ok   item 3: window [28] -> floor [30] clocks (expected <= N_MIN 32)
+  ok   item 4: BCP word -> inbox_taken [2, 10] clocks (expected <= 10)
+  ok   item 4: BCP of the full take-set (8 blocks, full mask, sweep word): 10 clocks (expected <= 10)
+  ok   item 5: full-load sweeps 45 (sum of bins = 2048): strobe -> asleep [2063, 2063] clocks (expected <= T_min 2083)
+  ok   board : sweep length, longest of the run: 2063 (<= 2083)
+  ok   board : errors: none (expected none)
+  ok   item 7: bundles at packet_start equal to the model: 333/333
+  ok   board : banks equal to the model: 47/47
+  ok   item 7: a capture after the GO, the model started from the GO alone (the complete take of strobe 5): bundles 321/321, banks 41/41
+  ok   board : SignalTap dry run (C2: P becoming 8 (the full take-set lands); 4096 samples): written as an export, read back unchanged; bundles 14/14, banks 2/2, BCP of the full take-set 10, full-load sweep [2063, 2063]
+[ew6 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (9.1 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW6'] (expected exactly one, EW6)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 59 of which non-zero 0
+  ok   item 6: the Core halts 2040 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 4/4
+  ok   board : banks equal to the model: 5/5 (up to the error)
+  ok   board : SignalTap dry run (C4: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW6
+[ew2 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.9 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW2'] (expected exactly one, EW2)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 9 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 0/0, banks 0/0, EW2
+[ew3 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.6 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW3'] (expected exactly one, EW3)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 2045 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW3
+[ew4 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.8 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW4'] (expected exactly one, EW4)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 2041 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 1/1, banks 1/1, EW4
+[ew5 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.7 s simulated)
+  ok   board : bench: I2S frames 64 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : strobe intervals on the taps [2083, 2084]
+  ok   board : K counts 0, 1, 2 ... in every packet: True
+  ok   item 6: error_flag: ['EW5'] (expected exactly one, EW5)
+  ok   item 6: L1 silent after it: packets 0, bins 0, banks written 62 of which non-zero 0
+  ok   item 6: the Core halts 11 clocks after the flag
+  ok   board : bundles at packet_start equal to the model: 1/1
+  ok   board : banks equal to the model: 2/2 (up to the error)
+  ok   board : SignalTap dry run (C5: error_flag rising; 4096 samples): written as an export, read back unchanged; bundles 0/0, banks 0/0, EW5
+[pcm @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (174.2 s simulated)
+  ok   board : bench: I2S frames 1146 decoded, mismatches 0; host timeouts 0; strobe interval 2083..2084; overrun 0
+  ok   board : bench: ADV7513 table done 1, NACK 0; video: HS/VS/DE/TX_CLK faults 0/0/0/0
+  ok   board : simulator warnings: 0
+  ok   board : errors: none (expected none)
+  ok   item 8: banks equal to the model: 1146/1146
+  ok   item 8: spectrum L over 1146 samples (Hz, dB): captured [(524.4, -0.0), (659.2, 0.0)], model [(524.4, -0.0), (659.2, 0.0)]
+  ok   item 8: spectrum R over 1146 samples (Hz, dB): captured [(660.6, 0.0), (782.2, -0.0)], model [(660.6, 0.0), (782.2, -0.0)]
+  ok   item 8: PCM peak after the GO -26.4 dBFS (the whole run, the origin's first samples included: -18.03 dBFS)
+cosim_board: PASS (18 runs, 0 failed checks, 210 s)

@@ -1,0 +1,85 @@
+== logs/phase2_regression.txt: 14 differing lines
+   -  iverilog -Wall: 11 '@* sensitive to all words' notes, 0 other lines
+   +  iverilog -Wall: 20 '@* sensitive to all words' notes, 0 other lines
+   -    seed 20260927; 3914 cases in 4 simulator runs (3914 played); generation <t> s, simulation <t> s
+   +    seed 20260927; 3923 cases in 4 simulator runs (3923 played); generation <t> s, simulation <t> s
+   -    total       3914   3914  105519       920
+   -    instructions issued by mnemonic: ADD 9518, BCP 1647, CMT 1, LDA 10892, LDM 14074, MAC 4097, MUL 4232, PSH 1, SAD 24820, SFT 4051, STA 4671, STM 6190, STP 3445, SUB 5736, SWP 4457, WJV 2015, WLV 1943, WSH 3352, WSV 1
+   -  cosim_l2: PASS — 3914/3914 cases bit-identical to the model
+   +    late           9      9      47         5  E8 3, EW2 1, EW5 1
+   +    total       3923   3923  105566       925
+   +  cosim_l2: PASS — 3923/3923 cases bit-identical to the model
+   -  cosim_mutants: 20/20 mutants killed
+   +  cosim_mutants: 29/29 mutants killed
+   -  ESTIMATE (Yosys 0.69, synth_intel_alm cyclonev + abc -lut 6): $lut 4670; MISTRAL_MUL18X18 2; MISTRAL_MUL27X27 2; MISTRAL_ALUT_ARITH 931; MISTRAL_FF 1203; MISTRAL_MLAB 1568; 
+   +  ESTIMATE (Yosys 0.69, synth_intel_alm cyclonev + abc -lut 6): $lut 6565; MISTRAL_MUL18X18 2; MISTRAL_MUL27X27 2; MISTRAL_ALUT_ARITH 683; MISTRAL_FF 1420; MISTRAL_MLAB 1568; 
+== logs/phase3_regression.txt: 2 differing lines
+   -  iverilog -Wall: 11 '@* sensitive' notes, 1 tri0-port note(s), 0 other lines
+   +  iverilog -Wall: 20 '@* sensitive' notes, 1 tri0-port note(s), 0 other lines
+== logs/phase4_regression.txt: 4 differing lines
+   -  iverilog -Wall: 11 '@* sensitive' notes (L2, as Phase 3), 1 tri0-port note(s), 0 other lines
+   +  iverilog -Wall: 20 '@* sensitive' notes (L2, as Phase 3), 1 tri0-port note(s), 0 other lines
+   -  ESTIMATE wpms_adv7513_cfg: $lut 180; MISTRAL_ALUT_ARITH 70; MISTRAL_FF 117; 
+   +  ESTIMATE wpms_adv7513_cfg: $lut 183; MISTRAL_ALUT_ARITH 70; MISTRAL_FF 119; 
+== logs/phase5_regression.txt: 6 differing lines
+   -  iverilog -Wall: 16 lines, 0 from hw/switch
+   +  iverilog -Wall: 25 lines, 0 from hw/switch
+   -  cosim_switch_mutants: 22/22 mutants killed
+   +  cosim_switch_mutants: 23/23 mutants killed
+   -  ESTIMATE wpms_switch: $lut 2938; MISTRAL_ALUT_ARITH 667; MISTRAL_FF 1275; MISTRAL_M10K 3; 
+   +  ESTIMATE wpms_switch: $lut 2695; MISTRAL_ALUT_ARITH 527; MISTRAL_FF 1275; MISTRAL_M10K 3; 
+== logs/run_phase6.txt: 9 differing lines
+   +  run_phase5: ALL PHASE 5 CHECKS PASSED
+   +  run_phase4: ALL PHASE 4 CHECKS PASSED
+   +  run_phase3: ALL PHASE 3 CHECKS PASSED
+   +  run_phase2: ALL PHASE 2 CHECKS PASSED
+   +  [PASS] regression: Phases 2-5 on wpms_system RH002
+   -  iverilog -Wall: 16 lines, 0 from hw/de10_nano
+   +  iverilog -Wall: 25 lines, 0 from hw/de10_nano
+   -  ESTIMATE DE10_Nano_wpms_top: $lut 10245; MISTRAL_ALUT_ARITH 4019; MISTRAL_FF 6479; MISTRAL_M10K 2; MISTRAL_MLAB 1538; MISTRAL_MUL18X18 6; MISTRAL_MUL27X27 16; wpms_bb_altera_pll 3; wpms_bb_altsource_probe 2; wpms_bb_a
+   +  ESTIMATE DE10_Nano_wpms_top: $lut 11224; MISTRAL_ALUT_ARITH 3631; MISTRAL_FF 6686; MISTRAL_M10K 2; MISTRAL_MLAB 1538; MISTRAL_MUL18X18 6; MISTRAL_MUL27X27 16; wpms_bb_altera_pll 3; wpms_bb_altsource_probe 2; wpms_bb_a
+== logs/cosim_board.txt: identical
+== logs/check_host_tcl.txt: identical
+== logs/gen_inject_scores.log: identical
+== logs/make_quartus_project.log: 6 differing lines
+   -make_quartus_project: <build>/quartus: DE10_Nano_wpms.qpf, revisions DE10_Nano_wpms, DE10_Nano_wpms100; 22 Verilog, 2 include, 4 MIF, SDC
+   +make_quartus_project: <build>/quartus: DE10_Nano_wpms.qpf, revisions DE10_Nano_wpms (50 MHz, 30 % high), DE10_Nano_wpms100 (100 MHz, 50 % high); 22 Verilog, 2 include, 4 MIF, SDC
+   -  DE10_Nano_wpms: elaborated with the INTEL branches (Icarus, stand-in primitives): 9 primitives, each with the parameters expected (clk_sys 50.0000000 MHz)
+   -  DE10_Nano_wpms100: elaborated with the INTEL branches (Icarus, stand-in primitives): 9 primitives, each with the parameters expected (clk_sys 100.000000 MHz)
+   +  DE10_Nano_wpms: elaborated with the INTEL branches (Icarus, stand-in primitives): 9 primitives, each with the parameters expected (clk_sys 50.0000000 MHz, 30 % high)
+   +  DE10_Nano_wpms100: elaborated with the INTEL branches (Icarus, stand-in primitives): 9 primitives, each with the parameters expected (clk_sys 100.000000 MHz, 50 % high)
+== logs/compile6.log: 31 differing lines
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:299: warning: @* is sensitive to all 16 words in array 'ib_rd_a'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:301: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:379: warning: @* is sensitive to all 8 words in array 'pmask'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:379: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:380: warning: @* is sensitive to all 8 words in array 'ib_n'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:380: warning: @* is sensitive to all 8 words in array 'st_n'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:469: warning: @* is sensitive to all 8 words in array 'pmask'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:484: warning: @* is sensitive to all 8 words in array 'rtout'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:484: warning: @* is sensitive to all 16 words in array 'ib_rd_c'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:496: warning: @* is sensitive to all 8 words in array 'pmask'.
+   -<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:500: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:358: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:436: warning: @* is sensitive to all 8 words in array 'pmask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:436: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:437: warning: @* is sensitive to all 8 words in array 'ib_n'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:437: warning: @* is sensitive to all 8 words in array 'st_n'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:554: warning: @* is sensitive to all 8 words in array 'pmask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:569: warning: @* is sensitive to all 8 words in array 'rtout'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:569: warning: @* is sensitive to all 16 words in array 'ib_rd_c'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:584: warning: @* is sensitive to all 8 words in array 'pmask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:588: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:590: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:702: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:703: warning: @* is sensitive to all 8 words in array 'pmask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:704: warning: @* is sensitive to all 8 words in array 'cm_mask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:706: warning: @* is sensitive to all 8 words in array 'ib_n'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:708: warning: @* is sensitive to all 8 words in array 'pmask'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:708: warning: @* is sensitive to all 8 words in array 'ib_n'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:708: warning: @* is sensitive to all 8 words in array 'st_n'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:726: warning: @* is sensitive to all 8 words in array 'n_post_n'.
+   +<workspace>/PTSG-WPMS-Formation/03_Sample_Implementations/hw/l2/wpms_formation.v:726: warning: @* is sensitive to all 8 words in array 'n_post_n'.
+== expected/: 34 of 34 identical (the JSON by value, the simulator's run time aside; the VCD byte for byte, $date aside)
+compare_regression: differences listed above
+exit 0
