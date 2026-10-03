@@ -27,10 +27,18 @@
 //      instruction sees the effects of the one issued before it (IF-2); the taps and
 //      the sequencer context are captured with the issue, so K/I/SN/SSS read "as of
 //      the reading instruction's execution clock" (F-F10). Latency 2, throughput 1.
-//      The decode of ADRS is registered with it (RH005): the X clock starts from the
-//      region and the block, not from ADRS.
+//      The decode of ADRS is registered with it (RH005), and the word at the next ADRS is
+//      read one clock ahead (RH006): the X clock starts from the region, the block and
+//      the operand already read.
+//    * E8 of MUL and MAC is decided in the clock after X (RH006, stage W): Accm is
+//      written in X and restored if the result did not fit; the instruction then in X
+//      is squashed, so nothing after the violator executes, as before. A prefetch's
+//      EW2 met in a MUL's or MAC's X clock waits for that decision (an E8 comes first,
+//      as in the model's order). Every error keeps its code and SN; these two are
+//      raised one clock later.
 //    * BCP completes architecturally in its X clock: copied bits, SWEEP.a, the EW5
-//      checks (on the post-copy N) — the next instruction sees the whole copy. The
+//      checks (on the post-copy N; their sum reduced one clock ahead, RH006) — the
+//      next instruction sees the whole copy. The
 //      physical copy runs in the background, one block per clock (slot-major store),
 //      and store reads forward from the inbox while a slot is still pending; a
 //      datapath write to a pending slot cancels its copy. inbox_taken rises at the
@@ -85,6 +93,26 @@
 //                                          balanced tree and its repeat check pairwise. Cycle for cycle the
 //                                          same: a simulation check compares the split enables with the
 //                                          commit they replace in every clock.
+//  006 2026-10-03       Claude Code   Chg : timing, SD-22 step 2 (ruling 2026-10-03; the second fit was
+//                                          short by 7 ns on MUL/MAC @PPM): (a) the E8 check of MUL and
+//                                          MAC moves to the next clock (W): Accm is written in X,
+//                                          restored from a one-clock copy on E8, and the instruction
+//                                          then in X is squashed; E8 is raised one clock later, and so
+//                                          is a prefetch's EW2 met in a MUL's or MAC's X clock (held
+//                                          back so that the E8 keeps its priority: every error keeps
+//                                          its code and SN). (b) The operand is read one clock ahead:
+//                                          the store word (with its pending-slot forwarding) and the
+//                                          inbox view at the next ADRS, from the next pending masks and
+//                                          the writes of this clock, into registers, the instruction in
+//                                          X taken to complete (if it does not, the Formation halts at
+//                                          that edge and the value is never read; behaviour unchanged).
+//                                          Simulation checks compare the pre-read with the direct read
+//                                          in every clock. (c) EW5's sum of N is reduced
+//                                          one clock ahead, from the next values, to two words by
+//                                          carry-save adders (with the bound as a ninth term); in X one
+//                                          add gives its sign. And the idle test of the pending masks
+//                                          takes BCP's commit last. Both exact, and checked in
+//                                          simulation against the direct computation.
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -252,12 +280,17 @@ module wpms_formation #(
     reg  [2:0] region;
     reg  [2:0] a_block;
     wire [3:0] a_slot  = adrs[3:0];
+    wire [9:0] adrs_nx;                                 // ADRS after this clock (below)
+    wire [2:0] a_block_nx;                              // the block after this clock (below)
+    wire [2:0] a_block_sx;                              // the same, the instruction in X taken to complete
+    wire [3:0] s_sx;                                    //   (the operand read ahead, RH006: below)
 
     // ========================================================================
     //  Store: sixteen slot banks x 8 blocks (bank 0 = N, a register file)
     // ========================================================================
     reg  [31:0] st_n [0:7];
-    wire [31:0] st_rd_a [0:15];              // datapath read, block a_block
+    wire [31:0] st_rd_a [0:15];              // datapath read, block a_block (simulation check only)
+    wire [31:0] st_rd_n [0:15];              // pre-read, block a_block_sx (RH006)
     wire [31:0] st_rd_p [0:15];              // prefetch read, block pf_block
     reg  [15:0] st_we;                       // per-bank write enable (this clock)
     reg  [2:0]  st_wa [0:15];
@@ -269,16 +302,19 @@ module wpms_formation #(
             reg [31:0] m [0:7];
             always @(posedge clk) if (st_we[gs]) m[st_wa[gs]] <= st_wd[gs];
             assign st_rd_a[gs] = m[a_block];
+            assign st_rd_n[gs] = m[a_block_sx];
             assign st_rd_p[gs] = m[pf_block];
         end
     endgenerate
     always @(posedge clk) if (st_we[0]) st_n[st_wa[0]] <= st_wd[0];
     assign st_rd_a[0] = st_n[a_block];
+    assign st_rd_n[0] = st_n[a_block_sx];
     assign st_rd_p[0] = st_n[pf_block];
 
     // ---- inbox: banks 0 (register file), 1..12 and 15 (13, 14 not stored) ---
     reg  [31:0] ib_n [0:7];
-    wire [31:0] ib_rd_a [0:15];              // datapath read (view / forwarding), block a_block
+    wire [31:0] ib_rd_a [0:15];              // datapath read, block a_block (simulation check only)
+    wire [31:0] ib_rd_n [0:15];              // pre-read (view / forwarding), block a_block_sx (RH006)
     wire [31:0] ib_rd_c [0:15];              // background copy read, block cp_block
     wire [2:0]  cp_block;
     wire        ibx_slot = ibx_we && !ibx_addr[7];
@@ -288,24 +324,27 @@ module wpms_formation #(
         for (gs = 1; gs < 16; gs = gs + 1) begin : g_inbox
             if (gs == 13 || gs == 14) begin : g_absent
                 assign ib_rd_a[gs] = 32'd0;
+                assign ib_rd_n[gs] = 32'd0;
                 assign ib_rd_c[gs] = 32'd0;
             end else begin : g_bank
                 reg [31:0] m [0:7];
                 always @(posedge clk) if (ibx_slot && ibx_i == gs) m[ibx_b] <= ibx_wdata;
                 assign ib_rd_a[gs] = m[a_block];
+                assign ib_rd_n[gs] = m[a_block_sx];
                 assign ib_rd_c[gs] = m[cp_block];
             end
         end
     endgenerate
     always @(posedge clk) if (ibx_slot && ibx_i == 4'd0) ib_n[ibx_b] <= ibx_wdata;
     assign ib_rd_a[0] = ib_n[a_block];
+    assign ib_rd_n[0] = ib_n[a_block_sx];
     assign ib_rd_c[0] = ib_n[cp_block];
 
-    // ---- the value a pending slot will receive, and the forwarded store read -
-    wire [31:0] rt_a      = {16'd0, rtout[a_block]};
-    wire [31:0] pend_a    = (a_slot == 4'd14) ? rt_a : ib_rd_a[a_slot];
-    wire [15:0] pm_a      = pmask[a_block];
-    wire [31:0] store_a   = pm_a[a_slot] ? pend_a : st_rd_a[a_slot];   // store as the program sees it
+    // ---- the operand, read one clock ahead (RH006): the store as the program sees
+    //      it (a pending slot reads what it will receive) and the inbox view, at
+    //      ADRS and the block of this clock; loaded below from the next values ----
+    reg  [31:0] store_q;                     // = pmask[a_block][a_slot] ? pending value : store word
+    reg  [31:0] inbox_q;                     // = the inbox view at (a_block, a_slot)
 
     // ========================================================================
     //  Reads of the L2 space (Map v0.3 §4; model Machine.read)
@@ -313,9 +352,9 @@ module wpms_formation #(
     reg [31:0] rd_val;
     always @* begin
         case (region)
-            R_STORE:  rd_val = store_a;
-            R_INBOX:  rd_val = (a_slot == 4'hE) ? rt_a : (a_slot == 4'hD) ? 32'd0 : ib_rd_a[a_slot];
-            R_CUR:    rd_val = x_pkt ? store_a : 32'd0;
+            R_STORE:  rd_val = store_q;
+            R_INBOX:  rd_val = inbox_q;
+            R_CUR:    rd_val = x_pkt ? store_q : 32'd0;
             R_COMMIT: rd_val = {1'b0, take[adrs[2:0]], copied[adrs[2:0]], 12'd0, cm_mask[adrs[2:0]]};
             R_SWST:   rd_val = {4'd0, sweep_staged};
             R_SWA:    rd_val = {4'd0, sweep_a};
@@ -436,8 +475,13 @@ module wpms_formation #(
     // is checked. Summing over the one word below raises EW5 in exactly the cases
     // the two checks do (cosim_l2.py hk group; mutant M12).
     wire [27:0]  sweep_new  = do_sweep ? sweep_staged : sweep_a;   // lands only if BCP commits
-    wire signed [35:0] chk_sum = sum_n(sweep_new, n_all);
-    wire         ew5        = (do_sweep && sw_invalid) || (chk_sum > NMAX);
+    wire signed [35:0] chk_sum = sum_n(sweep_new, n_all);         // the direct sum (simulation check)
+    // RH006: the sum minus (NMAX + 1), reduced one clock ahead to two words (ew5_s,
+    // ew5_c, loaded below); its sign is the check chk_sum > NMAX.
+    localparam [35:0] NEG_NMAX1 = -(NMAX + 1);
+    reg  [35:0]  ew5_s, ew5_c;
+    wire [35:0]  ew5_d = ew5_s + ew5_c;
+    wire         ew5;
 
     // ========================================================================
     //  Error of the instruction in X (the first one only; model order)
@@ -448,8 +492,8 @@ module wpms_formation #(
         if (e4) x_err = ERR_E4;
         else case (op)
             OP_LDA, OP_ADD, OP_SUB:  if (uses_ppm_src && rd_e5) x_err = ERR_E5;
-            OP_MUL:  if (uses_ppm_src && rd_e5) x_err = ERR_E5; else if (mul_ovf) x_err = ERR_E8;
-            OP_MAC:  if (uses_ppm_src && rd_e5) x_err = ERR_E5; else if (mac_ovf) x_err = ERR_E8;
+            OP_MUL:  if (uses_ppm_src && rd_e5) x_err = ERR_E5;          // E8: in W (RH006)
+            OP_MAC:  if (uses_ppm_src && rd_e5) x_err = ERR_E5;          // E8: in W (RH006)
             OP_SFT:  if (sft_ovf) x_err = ERR_E8;
             OP_LDM:  if (rd_e5) x_err = ERR_E5;
             OP_STM:  x_err = wr_err;
@@ -466,16 +510,32 @@ module wpms_formation #(
     // it replaces (checked in simulation below); split so that the store, the
     // background copy, the pending masks and ADRS do not wait for the multiplier's
     // overflow, which none of the instructions writing them can raise.
-    wire x_ok0   = x_go && !e4;
-    wire ok_src  = x_ok0 && !(uses_ppm_src && rd_e5);        // LDA ADD SUB; MUL MAC with no E8
+    // RH006: the instruction in X is squashed when the error of the clock before is
+    // decided only now (w_kill: the MUL/MAC's E8, or an EW2 held back behind it).
+    wire w_e8, w_kill;
+    wire x_ok0   = x_go && !e4 && !w_kill;
+    wire ok_src  = x_ok0 && !(uses_ppm_src && rd_e5);        // LDA ADD SUB MUL MAC (E8: in W)
     wire ok_mem  = x_ok0 && (wr_err == 5'd0);                // STM, STA @PPM
     wire ok_stp  = x_ok0 && !temp[31] && !(uses_ppm_src && rd_e5);
     wire ok_bcp  = x_ok0 && !x_pkt && !ew5;                  // BCP
-    wire x_fault = x_go && (x_err != 5'd0);                  // error_flag, error_code, the trap
+    wire x_fault = x_go && !w_kill && (x_err != 5'd0);       // error_flag, error_code, the trap
+
+    // ---- stage W (RH006): the E8 check of the MUL or MAC that wrote Accm last clock ----
+    reg         w_chk;                       // a MUL or MAC wrote Accm in the last clock
+    reg  [33:0] w_hi;                        // its result's bits 64..31 (MUL's sign-extended)
+    reg  [31:0] w_bk;                        // Accm before it
+    reg  [11:0] w_sn;                        // its SN
+    assign w_e8 = w_chk && (w_hi != {34{w_hi[0]}});
+    wire mm_spec = ok_src && ((op == OP_MUL) || (op == OP_MAC));
 
     // prefetch: N outside [N_MIN, NMAX] (EW2)
     assign pf_n    = st_n[pf_block];
     wire   pf_ew2  = pf_req && (($signed(pf_n) < N_MIN) || ($signed(pf_n) > NMAX));
+    // RH006: an EW2 met in the X clock of a MUL/MAC waits one clock (pf_w), so that the
+    // instruction's own E8, decided in W, keeps its priority (the model's order, as before).
+    reg         pf_w;                        // an EW2 held back to W
+    reg  [11:0] pf_w_sn;                     // its SN (the tap of that clock)
+    assign w_kill = w_e8 || pf_w;
     assign pf_ph0  = st_rd_p[6];  assign pf_phd1 = st_rd_p[7];  assign pf_phd2 = st_rd_p[8];
     assign pf_lp   = st_rd_p[2];  assign pf_ls0  = st_rd_p[15]; assign pf_lad1 = st_rd_p[3];
     assign pf_lad2 = st_rd_p[4];  assign pf_rt   = st_rd_p[14];
@@ -516,28 +576,86 @@ module wpms_formation #(
     // to a pending slot cancels its copy (the program's write wins), BCP adds.
     wire bcp_commit = ok_bcp && (op == OP_BCP);
     reg [15:0] pm_next [0:7];
+    reg [15:0] pm_base [0:7];                                   // pm_next but for BCP's additions
+    reg [7:0]  bcp_add;                                         // the blocks BCP adds slots to
     always @* begin : pending_next
         reg [15:0] pn;
         for (bp = 0; bp < 8; bp = bp + 1) begin
             pn = pmask[bp];
             if (cp_go && cp_b == bp[2:0])        pn = 16'd0;
             if (dp_st_we && a_block == bp[2:0])  pn[a_slot] = 1'b0;
+            pm_base[bp] = pn;
+            bcp_add[bp] = new_list[bp] && (mask_slots(cm_mask[bp]) != 16'd0);
             if (bcp_commit && new_list[bp])
                 pn = pn | mask_slots(cm_mask[bp]);
             pm_next[bp] = pn;
         end
     end
-    wire pm_idle_next = ~|{pm_next[7], pm_next[6], pm_next[5], pm_next[4],
-                           pm_next[3], pm_next[2], pm_next[1], pm_next[0]};
+    // idle after this clock: nothing left to copy, and BCP adds nothing. Equal to
+    // ~|pm_next; written so that BCP's commit enters at the last gate (RH006).
+    wire pm_idle_base = ~|{pm_base[7], pm_base[6], pm_base[5], pm_base[4],
+                           pm_base[3], pm_base[2], pm_base[1], pm_base[0]};
+    wire pm_idle_next = pm_idle_base && !(bcp_commit && (bcp_add != 8'd0));
 
     // ---- ADRS after this clock (SAD, LDM, STM write it) and its decode (RH005) ----
     wire [9:0] adrs_sad   = {1'b0, x_imm[8:0]};
     wire [9:0] adrs_inc   = adrs + 10'd1;
     wire       we_sad     = x_ok0 && (op == OP_SAD);
     wire       we_inc     = (x_ok0 && (op == OP_LDM) && !rd_e5) || (ok_mem && (op == OP_STM));
-    wire [9:0] adrs_nx    = we_sad ? adrs_sad : we_inc ? adrs_inc : adrs;
+    assign     adrs_nx    = we_sad ? adrs_sad : we_inc ? adrs_inc : adrs;
     wire [2:0] region_nx  = we_sad ? region_of(adrs_sad) : we_inc ? region_of(adrs_inc) : region;
-    wire [2:0] a_block_nx = (region_nx == R_CUR) ? seq_cur : adrs_nx[6:4];   // x_cur <= seq_cur
+    assign     a_block_nx = (region_nx == R_CUR) ? seq_cur : adrs_nx[6:4];   // x_cur <= seq_cur
+
+    // ---- the operand of the next clock, read now (RH006) ---------------------------
+    // Every term is what the X-stage read of the next clock would see: the store word
+    // after this clock's write, the inbox and RT.OUT after this clock's inbox-port
+    // write, and the slot's pending bit after this clock's copy, cancel and BCP.
+    // The instruction in X is taken to complete (sx_*: no error check in front). When
+    // it does not — an error of its own, or the squash behind a late one — the
+    // Formation halts at this edge, and nothing reads store_q, inbox_q or the EW5
+    // lookahead below until a reset; whenever it runs on, each sx_* equals the signal
+    // it stands for (named on its line).
+    wire        sx_sad   = x_valid && (op == OP_SAD);                            // we_sad
+    wire        sx_inc   = x_valid && ((op == OP_LDM) || (op == OP_STM));        // we_inc
+    wire        sx_st    = x_valid && ((op == OP_STM) || is_store_dst);          // dp_st_we
+    wire        sx_bcp   = x_valid && !x_pkt && (op == OP_BCP);                  // bcp_commit
+    wire        sx_cp    = cp_any && !sx_st;                                     // cp_go
+    wire [9:0]  adrs_sx  = sx_sad ? adrs_sad : sx_inc ? adrs_inc : adrs;
+    wire [2:0]  region_sx = sx_sad ? region_of(adrs_sad) : sx_inc ? region_of(adrs_inc) : region;
+    assign      a_block_sx = (region_sx == R_CUR) ? seq_cur : adrs_sx[6:4];
+    assign      s_sx     = adrs_sx[3:0];
+    wire [15:0] pmA_n    = pmask[a_block_sx];
+    wire [15:0] msA_n    = mask_slots(cm_mask[a_block_sx]);
+    wire        pend_n   = (pmA_n[s_sx] && !(sx_cp && cp_b == a_block_sx)
+                                        && !(sx_st && a_block == a_block_sx && a_slot == s_sx))
+                        || (sx_bcp && new_list[a_block_sx] && msA_n[s_sx]);
+    wire        dpw_n    = sx_st && (a_block == a_block_sx) && (a_slot == s_sx);   // X writes the word now
+    wire        cpw_n    = sx_cp && (cp_b == a_block_sx) && pmA_n[s_sx];          // the copy lands it now
+    wire [31:0] cpv_n    = (s_sx == 4'd14) ? {16'd0, rtout[a_block_sx]} : ib_rd_n[s_sx];   // (cp_b = a_block_sx)
+    wire [31:0] st_val_n = dpw_n ? accm : cpw_n ? cpv_n : st_rd_n[s_sx];
+    wire        ib_fwd_n = ibx_slot && (ibx_i == s_sx) && (ibx_b == a_block_sx) &&
+                           (s_sx != 4'd13) && (s_sx != 4'd14);          // banks 13, 14 not stored
+    wire [31:0] ib_val_n = ib_fwd_n ? ibx_wdata : ib_rd_n[s_sx];
+    wire        rt_fwd_n = ibx_we && (ibx_addr == {5'b10000, a_block_sx});
+    wire [15:0] rt_val_n = rt_fwd_n ? ibx_wdata[15:0] : rtout[a_block_sx];
+    wire [31:0] pend_v_n = (s_sx == 4'd14) ? {16'd0, rt_val_n} : ib_val_n;
+    always @(posedge clk) begin
+        store_q <= pend_n ? pend_v_n : st_val_n;
+        inbox_q <= (s_sx == 4'hE) ? {16'd0, rt_val_n} : (s_sx == 4'hD) ? 32'd0 : ib_val_n;
+    end
+
+    // ---- stage W registers (RH006) ---------------------------------------------------
+    always @(posedge clk) begin
+        if (rst) begin w_chk <= 1'b0; pf_w <= 1'b0; end
+        else begin
+            w_chk <= mm_spec;
+            pf_w  <= pf_ew2 && mm_spec && !error_flag;
+        end
+        w_hi <= (op == OP_MAC) ? mac_r[64:31] : {mul_r[63], mul_r[63:31]};
+        w_bk <= accm;
+        w_sn <= x_sn;
+        pf_w_sn <= tap_sn;
+    end
 
     // ---- the arm bits after this clock's inbox-port write (RH004) ----------------
     reg  [7:0]  armed_nx;
@@ -551,6 +669,82 @@ module wpms_formation #(
             if (ibx_addr[6:0] == 7'h1F) begin armed_nx = ibx_wdata[7:0]; sweep_armed_nx = ibx_wdata[8]; end
         end
     end
+
+    // ---- EW5's sum, reduced one clock ahead (RH006) -------------------------------------
+    // From the values the next clock will hold: the take-set and the copied flags after
+    // this clock's BCP and strobe; COMMIT's slot-0 bit, the inbox's and the store's N
+    // after this clock's writes; the sweep word in effect or staged. Hence each block's
+    // N as BCP will see it (n_post), the nine terms (the N of the first P entries and
+    // -(NMAX + 1)) and, through four levels of carry-save adders, two words whose sum
+    // is the check's. As for the pre-read, the instruction in X is taken to complete
+    // (sx_*): when it does not, the Formation halts and no BCP reads ew5_s and ew5_c.
+    reg  [7:0]  take_n, copied_n;
+    reg         take_sweep_n, sweep_copied_n;
+    always @* begin
+        take_n = take;  copied_n = copied;  take_sweep_n = take_sweep;  sweep_copied_n = sweep_copied;
+        if (sx_bcp) begin copied_n = copied | new_list; sweep_copied_n = sweep_copied | do_sweep; end
+        if (seq_strobe) begin                                   // after execute, as below
+            take_n = armed_nx; take_sweep_n = sweep_armed_nx; copied_n = 8'd0; sweep_copied_n = 1'b0;
+        end
+    end
+    wire [7:0]  new_list_n  = take_n & ~copied_n;
+    wire        do_sweep_n  = take_sweep_n && !sweep_copied_n;
+    wire [27:0] sweep_stg_n = (ibx_we && ibx_addr[7] && ibx_addr[6:0] == 7'h10) ? ibx_wdata[27:0] : sweep_staged;
+    wire [27:0] sweep_a_n   = sx_bcp ? sweep_new : sweep_a;
+    wire [27:0] sweep_new_n = do_sweep_n ? sweep_stg_n : sweep_a_n;
+    reg  [31:0] n_post_n [0:7];
+    integer bq;
+    always @* begin : n_after_bcp_next
+        reg pe0, cm0;
+        reg [31:0] ibn, stn;
+        for (bq = 0; bq < 8; bq = bq + 1) begin
+            cm0 = (ibx_we && ibx_addr[7] && ibx_addr[6:3] == 4'b0001 && ibx_addr[2:0] == bq[2:0])
+                  ? ibx_wdata[0] : cm_mask[bq][0];
+            pe0 = (pmask[bq][0] && !(sx_cp && cp_b == bq[2:0]) && !(sx_st && a_block == bq[2:0] && a_slot == 4'd0))
+               || (sx_bcp && new_list[bq] && cm_mask[bq][0])
+               || (new_list_n[bq] && cm0);
+            ibn = (ibx_slot && ibx_i == 4'd0 && ibx_b == bq[2:0]) ? ibx_wdata : ib_n[bq];
+            stn = (sx_st && a_block == bq[2:0] && a_slot == 4'd0) ? accm :
+                  (sx_cp && cp_b == bq[2:0] && pmask[bq][0])      ? ib_n[bq] : st_n[bq];   // the copy lands it
+            n_post_n[bq] = pe0 ? ibn : stn;
+        end
+    end
+    function [71:0] csa;                                        // a + b + c = s + t (mod 2^36): {s, t}
+        input [35:0] a, b, c;
+        reg [35:0] cy;
+        begin
+            cy  = (a & b) | (a & c) | (b & c);
+            csa = {a ^ b ^ c, cy[34:0], 1'b0};
+        end
+    endfunction
+    reg  [323:0] tm;                                            // nine terms, 36 bits each
+    integer kq;
+    always @* begin : ew5_terms
+        reg [2:0] blk;
+        for (kq = 0; kq < 8; kq = kq + 1) begin
+            blk = sweep_new_n[4 + 3*kq +: 3];
+            tm[36*kq +: 36] = (kq < sweep_new_n[3:0]) ? {{4{n_post_n[blk][31]}}, n_post_n[blk]} : 36'd0;
+        end
+        tm[288 +: 36] = NEG_NMAX1;                              // the bound, as a term
+    end
+    function [71:0] csa9;                                       // nine terms -> two words, the same sum
+        input [323:0] t;
+        reg   [71:0]  c1a, c1b, c1c, c2a, c2b, c3;
+        begin
+            c1a  = csa(t[  0 +: 36], t[ 36 +: 36], t[ 72 +: 36]);
+            c1b  = csa(t[108 +: 36], t[144 +: 36], t[180 +: 36]);
+            c1c  = csa(t[216 +: 36], t[252 +: 36], t[288 +: 36]);
+            c2a  = csa(c1a[71:36], c1a[35:0], c1b[71:36]);
+            c2b  = csa(c1b[35:0],  c1c[71:36], c1c[35:0]);
+            c3   = csa(c2a[71:36], c2a[35:0], c2b[71:36]);
+            csa9 = csa(c3[71:36],  c3[35:0],  c2b[35:0]);
+        end
+    endfunction
+    wire [71:0] cs4 = csa9(tm);
+    always @(posedge clk) begin ew5_s <= cs4[71:36]; ew5_c <= cs4[35:0]; end
+    // EW5: an invalid sweep item, or the sum of N above NMAX (ew5_d = sum - NMAX - 1 >= 0;
+    // the sum of eight signed 32-bit N and the bound never leaves 36 bits)
+    assign ew5 = (do_sweep && sw_invalid) || !ew5_d[35];
 
     // ========================================================================
     //  Sequential state
@@ -592,8 +786,8 @@ module wpms_formation #(
                 OP_STA: if (x_ok0 && x_rid == DST_TEMP) temp <= accm;   // STORE: see dp_st_we
                 OP_ADD: if (ok_src) accm <= accm + src;                 // W-F30: wrap
                 OP_SUB: if (ok_src) accm <= accm - src;
-                OP_MUL: if (ok_src && !mul_ovf) accm <= mul_r[31:0];
-                OP_MAC: if (ok_src && !mac_ovf) accm <= mac_r[31:0];
+                OP_MUL: if (ok_src) accm <= mul_r[31:0];                // E8 checked in W (RH006)
+                OP_MAC: if (ok_src) accm <= mac_r[31:0];
                 OP_SWP: if (x_ok0) begin accm <= temp; temp <= accm; end
                 OP_SFT: if (x_ok0 && !sft_ovf) accm <= sft_r;
                 OP_LDM: if (x_ok0 && !rd_e5) accm <= rd_val;            // ADRS: adrs_nx
@@ -612,7 +806,15 @@ module wpms_formation #(
             if (x_fault) begin
                 error_flag <= 1'b1; error_code <= x_err; error_sn <= x_sn; insert_req_r <= 1'b1;
             end
-            if (pf_ew2 && !error_flag && !x_fault) begin
+            if (w_e8) begin                                       // RH006: the late E8
+                accm <= w_bk;                                     // the scene before the violator
+                if (!error_flag) begin
+                    error_flag <= 1'b1; error_code <= ERR_E8; error_sn <= w_sn; insert_req_r <= 1'b1;
+                end
+            end else if (pf_w && !error_flag) begin               // RH006: the EW2 held back to W
+                error_flag <= 1'b1; error_code <= ERR_EW2; error_sn <= pf_w_sn; insert_req_r <= 1'b1;
+            end
+            if (pf_ew2 && !error_flag && !x_fault && !w_kill && !mm_spec) begin
                 error_flag <= 1'b1; error_code <= ERR_EW2; error_sn <= tap_sn; insert_req_r <= 1'b1;
             end
             if (insert_req_r && insert_ack) insert_req_r <= 1'b0;
@@ -633,13 +835,13 @@ module wpms_formation #(
     // RH005 (SD-22): the split enables equal the one commit they replace. x_ok_split
     // is the enable each op's registers use above; x_commit is RH004's (also traced
     // by wpms_formation_tb.v).
-    wire x_commit = x_go && (x_err == 5'd0);
+    wire x_commit = x_go && !w_kill && (x_err == 5'd0);         // RH006: with the squash
     reg  x_ok_split;
     always @* begin
         case (op)
             OP_LDA, OP_ADD, OP_SUB: x_ok_split = ok_src;
-            OP_MUL:  x_ok_split = ok_src && !mul_ovf;
-            OP_MAC:  x_ok_split = ok_src && !mac_ovf;
+            OP_MUL:  x_ok_split = ok_src;                          // RH006: E8 in W
+            OP_MAC:  x_ok_split = ok_src;
             OP_SFT:  x_ok_split = x_ok0 && !sft_ovf;
             OP_LDM:  x_ok_split = x_ok0 && !rd_e5;
             OP_STM:  x_ok_split = ok_mem;
@@ -651,6 +853,54 @@ module wpms_formation #(
     end
     always @(posedge clk) if (!rst && x_valid && (x_ok_split !== x_commit))
         $display("%t wpms_formation: ERROR split enable %b against x_err %0d (op %0d)", $time, x_ok_split, x_err, op);
+
+    // RH006: the pre-read equals the direct read of RH005 whenever an instruction is
+    // in X and the Formation runs (the only shortcut, a failed BCP, halts it).
+    wire [31:0] rt_a_d    = {16'd0, rtout[a_block]};
+    wire [31:0] pend_a_d  = (a_slot == 4'd14) ? rt_a_d : ib_rd_a[a_slot];
+    wire [15:0] pm_a_d    = pmask[a_block];
+    wire [31:0] store_a_d = pm_a_d[a_slot] ? pend_a_d : st_rd_a[a_slot];
+    wire [31:0] inbox_a_d = (a_slot == 4'hE) ? rt_a_d : (a_slot == 4'hD) ? 32'd0 : ib_rd_a[a_slot];
+    always @(posedge clk) if (!rst && x_go && (store_q !== store_a_d || inbox_q !== inbox_a_d))
+        $display("%t wpms_formation: ERROR pre-read %h %h against the direct read %h %h (block %0d slot %0d)",
+                 $time, store_q, inbox_q, store_a_d, inbox_a_d, a_block, a_slot);
+    // RH006: the reduced sum equals the direct sum minus NMAX + 1 whenever the Formation runs
+    always @(posedge clk) if (!rst && x_go && (ew5_d !== (chk_sum - (NMAX + 1))))
+        $display("%t wpms_formation: ERROR EW5 lookahead %h against the direct sum %h", $time, ew5_d, chk_sum);
+    // RH006: the late E8 is RH005's E8 (mul_ovf / mac_ovf in X), one clock later
+    reg w_ovf_ref;
+    always @(posedge clk) w_ovf_ref <= (op == OP_MAC) ? mac_ovf : mul_ovf;
+    always @(posedge clk) if (!rst && w_chk && (w_e8 !== w_ovf_ref))
+        $display("%t wpms_formation: ERROR late E8 %b against the overflow seen in X %b", $time, w_e8, w_ovf_ref);
+    // RH006: the idle test written with BCP's commit last equals RH005's
+    wire pm_idle_d = ~|{pm_next[7], pm_next[6], pm_next[5], pm_next[4], pm_next[3], pm_next[2], pm_next[1], pm_next[0]};
+    always @(posedge clk) if (!rst && (pm_idle_next !== pm_idle_d))
+        $display("%t wpms_formation: ERROR idle test %b against %b", $time, pm_idle_next, pm_idle_d);
+    // The same four checks as wires, for the proof (tools/equiv_formal.py: one clock from any state)
+    wire chk_pre  = !x_go  || (store_q == store_a_d && inbox_q == inbox_a_d);
+    wire chk_ew5  = !x_go  || (ew5_d == chk_sum - (NMAX + 1));
+    wire chk_e8   = !w_chk || (w_e8 == w_ovf_ref);
+    wire chk_idle = (pm_idle_next == pm_idle_d);
+    // chk_ew5 for the proof in three steps, each one a plain claim: the terms reduced at
+    // the last edge are the direct terms now (chk_tm); the registers hold csa9 of them
+    // and the bound (chk_csa); the direct sum is the tree of those terms (chk_tree). With
+    // equiv_formal's arithmetic claim (csa9's two words add up to the tree minus
+    // NMAX + 1, for any eight sign-extended terms), they give chk_ew5.
+    reg  [287:0] tm_q;
+    always @(posedge clk) tm_q <= tm[287:0];
+    reg  [287:0] tm_d;
+    integer kd;
+    always @* begin : direct_terms
+        reg [2:0] blk;
+        for (kd = 0; kd < 8; kd = kd + 1) begin
+            blk = sweep_new[4 + 3*kd +: 3];
+            tm_d[36*kd +: 36] = (kd < sweep_new[3:0]) ? {{4{n_all[32*blk + 31]}}, n_all[32*blk +: 32]} : 36'd0;
+        end
+    end
+    wire chk_tm   = !x_go || (tm_q == tm_d);
+    wire chk_csa  = ({ew5_s, ew5_c} == csa9({NEG_NMAX1, tm_q}));
+    wire chk_tree = (chk_sum == ((tm_d[  0 +: 36] + tm_d[ 36 +: 36]) + (tm_d[ 72 +: 36] + tm_d[108 +: 36]))
+                              + ((tm_d[144 +: 36] + tm_d[180 +: 36]) + (tm_d[216 +: 36] + tm_d[252 +: 36])));
 
     // The input switch must not write a block whose copy is still pending (it is
     // frozen while armed, customer Ch.5 §5.4.2); the sequencer must not prefetch

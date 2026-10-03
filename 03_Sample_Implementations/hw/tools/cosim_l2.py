@@ -16,6 +16,10 @@
 #   prefetch  the prefetch port: N window [N_MIN, NMAX] (EW2) and the bundle order
 #   timing    directed cases traced clock by clock (the report's clock table)
 #   random    random contract sequences: BCP mid-program, strobes, idle gaps, taps
+#   late      directed cases for what SD-22 step 2 changed (Formation RH006): the
+#             instruction right behind an overflowing MUL/MAC (squashed), a prefetch's
+#             EW2 in a MUL's X clock (with and without its E8), a read right after BCP
+#             of a slot it made pending, a strobe in the clock BCP is issued
 #
 # EXPECTED VALUES come from the model, run one instruction at a time. The model
 # records errors and continues; the hardware halts at the first one. So for an
@@ -30,6 +34,11 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF Phase 2).
+# 002 2026-10-03       Claude Code   Chg : the simulator's ERROR lines count with its warnings (the
+#                                          Formation's own checks, RH005/RH006, print ERROR).
+# 003 2026-10-03       Claude Code   Add : group late (SD-22 step 2), generated after every other group
+#                                          (their seed stream and cases are unchanged); step J, an issue
+#                                          with a strobe in the same clock (wpms_formation_tb.v RH003).
 # ============================================================================
 import argparse, json, math, os, random, subprocess, sys, tempfile, time
 from concurrent.futures import ThreadPoolExecutor
@@ -209,6 +218,7 @@ class Case:
         elif k == "S": m.strobe()
         elif k == "Q": m.ctx(*st[1:])
         elif k == "I": return m.issue(st[1])
+        elif k == "J": m.strobe(); return m.issue(st[1])
         elif k == "P": m.prefetch(st[1])
         elif k == "K": m.ack()
         return None
@@ -217,6 +227,7 @@ class Case:
     def strobe(self): self._step(("S",))
     def ctx(self, pkt=0, cur=0, q=0, k=0, i=0, sn=0, sss=0): self._step(("Q", pkt, cur, q, k, i, sn, sss))
     def ins(self, item): return self._step(("I", item))
+    def ins_strobe(self, item): return self._step(("J", item))  # issued in the strobe's clock: after it
     def prog(self, items, gap=None):
         for n, it in enumerate(items):
             if gap and n:
@@ -240,6 +251,7 @@ def expect(case):
         elif k == "S": m.strobe()
         elif k == "Q": m.ctx(*st[1:])
         elif k == "I": m.issue(st[1])
+        elif k == "J": m.strobe(); m.issue(st[1])
         elif k == "P": out.append(("F", m.prefetch(st[1])))
         elif k == "K": m.ack()
         elif k == "D": out.append(("D", m.scene()))
@@ -586,6 +598,61 @@ def gen_timing(rng):
     return cases
 
 
+# ---- late: what SD-22 step 2 changed (Formation RH006) ----------------------------
+def gen_late(rng):
+    """Directed; draws nothing from rng, so the groups before it keep their cases."""
+    cases = []
+    big = 0x40000000                                           # its square leaves 32 bits: E8
+    for mn, behind in (("MUL", "STA TEMP"), ("MAC", "STM")):
+        c = Case("late", f"L1 {mn} @PPM overflows; {behind} right behind it is not executed"); c.want_err = "E8"
+        c.store[0x10] = big; c.store[0x11] = big; c.store[0x12] = 5
+        c.regs["temp"] = big if mn == "MAC" else 7
+        c.ctx(pkt=0, sn=0x2A1)
+        c.prog([ins("SAD", "0x10"), ins("LDA", "@PPM"), ins("SAD", "0x11"), ins(mn, "@PPM"),
+                ins(*behind.split()), ins("SAD", "0x12"), ins("LDA", "@PPM")])
+        c.idle(2); c.ack(); c.idle(1); c.dump(); cases.append(c)
+    c = Case("late", "L2 a prefetch's EW2 in a MUL's X clock (the MUL fits): the MUL lands, then EW2")
+    c.want_err = "EW2"
+    c.store[0x10] = 3; c.store[0x11] = 5; c.store[0x20] = 16      # block 2: N = 16 < N_MIN
+    c.ctx(pkt=0, sn=0x2A2)
+    c.prog([ins("SAD", "0x10"), ins("LDA", "@PPM"), ins("SAD", "0x11"), ins("MUL", "@PPM")])
+    c.prefetch(2); c.ins(ins("STA", "TEMP")); c.ins(ins("SAD", "0x05")); c.idle(2); c.ack(); c.idle(1); c.dump()
+    cases.append(c)
+    c = Case("late", "L3 a prefetch's EW2 in the X clock of an overflowing MUL: E8 first, as the model")
+    c.want_err = "E8"
+    c.store[0x10] = big; c.store[0x11] = big; c.store[0x20] = 16
+    c.ctx(pkt=0, sn=0x2A3)
+    c.prog([ins("SAD", "0x10"), ins("LDA", "@PPM"), ins("SAD", "0x11"), ins("MUL", "@PPM")])
+    c.prefetch(2); c.ins(ins("STA", "TEMP")); c.idle(2); c.ack(); c.idle(1); c.dump(); cases.append(c)
+    for b, slot in ((3, 5), (6, 14), (1, 0)):
+        c = Case("late", f"L4 BCP, then at once a read of slot {slot} of block {b} it made pending")
+        for k in range(8):
+            c.store[k * 16:k * 16 + 16] = [64] + [0x1000 * k + i for i in range(1, 16)]
+            c.inbox[k] = [96] + [0x7000 * (k + 1) + i for i in range(1, 16)]
+            c.sw(0x80 + k, 0x4321 + k)                             # RTOUT
+        c.sw(0x88 + b, 0x1FFFF | (1 << 30)); c.sw(0x91, 0); c.strobe()
+        c.ctx(pkt=0, sn=0x2A4)
+        c.prog([ins("SAD", f"0x{b * 16 + slot:03X}"), ins("BCP"), ins("LDA", "@PPM"), ins("STA", "TEMP"),
+                ins("LDM"), ins("ADD", "@PPM")])                     # Temp keeps what the read right after BCP saw
+        c.idle(2); c.dump(); cases.append(c)
+    # L5: a strobe in BCP's issue clock; its take-set, not the one before it, decides EW5
+    # (inbox N 1,100 for every block, store N 50; the sweep word lists blocks 0 and 1)
+    for name, before, at, want in (
+            ("it takes blocks 0, 1 and the sweep word (2 x 1,100 > NMAX): EW5", False, True, "EW5"),
+            ("it takes nothing; the take before it (0, 1, the sweep word) would raise EW5", True, False, None)):
+        c = Case("late", f"L5 strobe in the clock BCP is issued: {name}"); c.want_err = want
+        for k in range(8):
+            c.store[k * 16] = 50; c.inbox[k][0] = 1100
+        c.sw(0x90, T.make_sweep([0, 1]))
+        for k in (0, 1): c.sw(0x88 + k, 0x00001 | ((1 << 30) if before else 0))
+        c.sw(0x91, (1 << 30) if before else 0); c.strobe()      # the take before
+        for k in (0, 1): c.sw(0x88 + k, 0x00001 | ((1 << 30) if at else 0))
+        c.sw(0x91, (1 << 30) if at else 0)
+        c.ctx(pkt=0, sn=0x2A5); c.ins(ins("LDA", "#1")); c.ins_strobe(ins("BCP")); c.ins(ins("LDA", "#2"))
+        c.idle(16); c.dump(); cases.append(c)
+    return cases
+
+
 # ---- random contract sequences ---------------------------------------------------
 MN_W = dict(LDA=10, STA=6, ADD=8, SUB=6, MUL=5, MAC=5, SWP=4, SFT=5, SAD=16, LDM=12, STM=9, WLV=2, WJV=2, WSH=3, STP=4, BCP=2)
 SRC_W = [("#", 4), ("@PPM", 7), ("TEMP", 3), ("K", 1), ("I", 1), ("SN", 1), ("SSS", 1)]
@@ -726,7 +793,7 @@ def emit(cases, first_id):
                 out.append(f"X {st[1]:x} {u32(st[2]):x}")
                 if st[1] < 0x80 and (st[1] & 15) not in (13, 14): shadow[st[1] >> 4][st[1] & 15] = u32(st[2])
             elif k == "Q": out.append("Q " + " ".join(f"{v:x}" for v in st[1:]))
-            elif k == "I": out.append(f"I {st[1]['word']:08x}")
+            elif k in ("I", "J"): out.append(f"{k} {st[1]['word']:08x}")
             elif k in ("N", "P", "V"): out.append(f"{k} {st[1]:x}")
             else: out.append(k)
         out.append("E")
@@ -829,7 +896,7 @@ def main():
     groups = [("packet", lambda: gen_packet(rng, 60)), ("hk", lambda: gen_hk(rng, 300)), ("fwd", lambda: gen_fwd(rng, 120)),
               ("exp", lambda: gen_exp(rng)), ("neg", lambda: gen_neg(rng)), ("e4", lambda: gen_e4(rng)),
               ("prefetch", lambda: gen_prefetch(rng)), ("timing", lambda: gen_timing(rng)),
-              ("random", lambda: gen_random(rng, a.random))]
+              ("random", lambda: gen_random(rng, a.random)), ("late", lambda: gen_late(rng))]
     only = set(a.only.split(",")) if a.only else None
     cases = []
     for g, fn in groups:
@@ -850,7 +917,7 @@ def main():
     simlog = []
     for out, log in runs:
         r, t = parse_results(out); res.update(r); trace.update(t); simlog.append(log)
-    warnings = [l for log in simlog for l in log.splitlines() if "WARNING" in l or "INVARIANT" in l]
+    warnings = [l for log in simlog for l in log.splitlines() if "WARNING" in l or "INVARIANT" in l or "ERROR" in l]
     played = sum(int(l.split()[1]) for log in simlog for l in log.splitlines() if l.startswith("wpms_formation_tb:") and "cases played" in l)
 
     stats, fails, err_hist, n_ins = {}, [], {}, {}
@@ -860,7 +927,7 @@ def main():
         exp, mfinal = expect(case)
         hw = res.get(case.cid, [])
         probs = compare(case, hw, exp)
-        if case.want_err is not None or case.group in ("neg", "e4", "prefetch"):
+        if case.want_err is not None or case.group in ("neg", "e4", "prefetch", "late"):
             got = ERR_NAME.get(exp[-1][1]["code"]) if exp and exp[-1][0] == "D" else None
             if got != case.want_err:
                 probs.append(f"the model's first error is {got}, the case was written to provoke {case.want_err}")

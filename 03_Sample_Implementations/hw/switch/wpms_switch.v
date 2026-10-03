@@ -61,6 +61,14 @@
 //                                          2026-10-03): the GO check's sum of N as a balanced tree and its
 //                                          PR-1 repeat check pairwise, instead of one chained loop (the
 //                                          switch's longest path in the first fit's reading, depth 99).
+//  003 2026-10-03       Claude Code   Chg : timing, behaviour unchanged (SD-22 step 2, ruling 2026-10-03; the
+//                                          second fit was short by 2.6 ns from EXEC's address through the
+//                                          GO check to n_fu_v): the items a GO fires and the blocks it lands
+//                                          are read from x_a[9], x_a[4], x_a[2:0], x_d[1:0] and x_p3 directly,
+//                                          without the address decode and the frozen bits (the three places
+//                                          that use them check those first); the sum of N against NMAX by
+//                                          carry-save adders and one sign. Simulation checks compare both
+//                                          with RH002's text in every clock.
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -211,28 +219,30 @@ module wpms_switch #(
     wire         x_slot_ok = x_inbox && xi != 4'hD && xi != 4'hE;
     wire         x_sweep  = x_mod && (xo == 8'h90);
     wire         x_swcmt  = x_mod && (xo == 8'h91);
-    wire         x_go     = x_glob && (xo == 8'h08) && x_we && (x_d[1:0] != 2'b00);
-    wire         x_nowb   = x_commit && x_we && x_d[31] && !frozen[xb];
-    wire         x_nows   = x_swcmt  && x_we && x_d[31] && !frozen[8];
     wire         x_inrange = ($signed(x_d) >= N_MIN) && ($signed(x_d) <= NMAX);
 
-    // ---- the items a GO fires ---------------------------------------------------------------------
-    reg  [8:0] go_items;
-    always @* begin
-        go_items = 9'd0;
-        if (x_go)        go_items = x_d[1] ? arm : (arm & (x_p3 ? arm_p3 : ~arm_p3));
-        else if (x_nowb) go_items[xb] = 1'b1;
-        else if (x_nows) go_items[8]  = 1'b1;
-    end
+    // ---- the items a GO fires (RH003: read from the fields themselves) ------------------------
+    // go_items, go_bad and the state the GO would leave are used in three places only,
+    // each after its own conditions (a write; bit 31 or GO's bits; the item not frozen):
+    //   a GO            0x008          x_a[9] = 0
+    //   go-now, block   0x288-0x28F    x_a[9] = 1, x_a[4] = 0, the block in x_a[2:0]
+    //   go-now, sweep   0x291          x_a[9] = 1, x_a[4] = 1
+    // so x_a[9] and x_a[4] alone tell them apart, and the frozen bits and the address
+    // decode stay off the check's path (SD-22 step 2). Elsewhere these values are unused.
+    wire [8:0]   go_set   = x_d[1] ? arm : (arm & (x_p3 ? arm_p3 : ~arm_p3));   // GO, GO_ALL
+    wire [7:0]   go_blk   = 8'd1 << x_a[2:0];
+    wire [8:0]   go_items = !x_a[9] ? go_set : x_a[4] ? 9'h100 : {1'b0, go_blk};
+    wire [7:0]   cm0      = {cmask_v[119], cmask_v[102], cmask_v[85], cmask_v[68],    // COMMIT's bit 0
+                             cmask_v[51],  cmask_v[34],  cmask_v[17], cmask_v[0]};    // (slot N) per block
+    // the blocks whose staged N the GO lands: fired with COMMIT bit 0 (a go-now: its own bit 0)
+    wire [7:0]   go_land  = !x_a[9] ? (go_set[7:0] & cm0) : x_a[4] ? 8'd0 : (go_blk & {8{x_d[0]}});
 
     // ---- the state the GO would leave, and its check (PR-1, PR-2, §5.4.4) --------------------
     reg  [95:0] n_nx_v;  reg [7:0] nv_nx;
-    reg         mb;
     integer     vb;
     always @* begin
         for (vb = 0; vb < 8; vb = vb + 1) begin
-            mb = (x_nowb && xb == vb) ? x_d[0] : cmask_v[17*vb];        // mask bit 0 = slot N
-            if (go_items[vb] && mb) begin
+            if (go_land[vb]) begin
                 n_nx_v[12*vb +: 12] = n_st_v[12*vb +: 12];  nv_nx[vb] = nv_st[vb];
             end else begin
                 n_nx_v[12*vb +: 12] = n_fu_v[12*vb +: 12];  nv_nx[vb] = nv_fu[vb];
@@ -240,29 +250,44 @@ module wpms_switch #(
         end
     end
     wire [27:0] sw_nx = go_items[8] ? sw_st : sw_fu;
-    // The first P entries of that sweep word, checked all at once and summed as a
-    // balanced tree (RH002, SD-22; the chained loop it replaces gives the same
-    // verdict: eight 12-bit terms never overflow 15 bits).
-    reg         go_bad;
-    reg  [14:0] go_sum;
-    reg  [119:0] gt;                      // entry q's N, 15 bits; 0 when q >= P
+    // The first P entries of that sweep word, checked all at once (RH002). RH003: their
+    // sum of N minus (NMAX + 1), reduced by carry-save adders to two words and added once;
+    // its sign is the check sum <= NMAX. Eight 12-bit N stay below 2^15, so 16 bits hold
+    // the sum with the bound.
+    localparam [15:0] NEG_NMAX1 = -(NMAX + 1);
+    reg         go_pr;                    // P > 8, a block twice (PR-1) or an N not valid (PR-2)
+    reg  [127:0] gt;                      // entry q's N, 16 bits; 0 when q >= P
     reg  [2:0]  bq, br;
     integer     q, r;
     always @* begin
-        go_bad = (sw_nx[3:0] > 4'd8);
+        go_pr = (sw_nx[3:0] > 4'd8);
         for (q = 0; q < 8; q = q + 1) begin
             bq = sw_nx[4 + 3*q +: 3];
-            gt[15*q +: 15] = (q < sw_nx[3:0]) ? {3'd0, n_nx_v[12*bq +: 12]} : 15'd0;
-            if (q < sw_nx[3:0] && !nv_nx[bq]) go_bad = 1'b1;                     // PR-2
+            gt[16*q +: 16] = (q < sw_nx[3:0]) ? {4'd0, n_nx_v[12*bq +: 12]} : 16'd0;
+            if (q < sw_nx[3:0] && !nv_nx[bq]) go_pr = 1'b1;                      // PR-2
             for (r = 0; r < q; r = r + 1) begin
                 br = sw_nx[4 + 3*r +: 3];
-                if (q < sw_nx[3:0] && br == bq) go_bad = 1'b1;                   // PR-1: a block twice
+                if (q < sw_nx[3:0] && br == bq) go_pr = 1'b1;                    // PR-1: a block twice
             end
         end
-        go_sum = ((gt[  0 +: 15] + gt[ 15 +: 15]) + (gt[ 30 +: 15] + gt[ 45 +: 15]))
-               + ((gt[ 60 +: 15] + gt[ 75 +: 15]) + (gt[ 90 +: 15] + gt[105 +: 15]));
-        if (go_sum > NMAX) go_bad = 1'b1;
     end
+    function [31:0] csa16;                                    // a + b + c = s + t (mod 2^16): {s, t}
+        input [15:0] a, b, c;
+        reg   [15:0] cy;
+        begin
+            cy    = (a & b) | (a & c) | (b & c);
+            csa16 = {a ^ b ^ c, cy[14:0], 1'b0};
+        end
+    endfunction
+    wire [31:0] gc1a = csa16(gt[  0 +: 16], gt[ 16 +: 16], gt[ 32 +: 16]);
+    wire [31:0] gc1b = csa16(gt[ 48 +: 16], gt[ 64 +: 16], gt[ 80 +: 16]);
+    wire [31:0] gc1c = csa16(gt[ 96 +: 16], gt[112 +: 16], NEG_NMAX1);
+    wire [31:0] gc2a = csa16(gc1a[31:16], gc1a[15:0], gc1b[31:16]);
+    wire [31:0] gc2b = csa16(gc1b[15:0],  gc1c[31:16], gc1c[15:0]);
+    wire [31:0] gc3  = csa16(gc2a[31:16], gc2a[15:0], gc2b[31:16]);
+    wire [31:0] gc4  = csa16(gc3[31:16],  gc3[15:0],  gc2b[15:0]);
+    wire [15:0] go_low = gc4[31:16] + gc4[15:0];              // sum - (NMAX + 1), two's complement
+    wire        go_bad = go_pr || !go_low[15];                // ... >= 0: the sum is above NMAX
 
     // ---- reads ----------------------------------------------------------------------------------
     wire signed [49:0] l26 = insp_L >>> 4;
@@ -543,6 +568,33 @@ module wpms_switch #(
     // lawfully be armed and fired again).
     always @(posedge clk) if (!rst && strobe && ft_open && inbox_taken && (fa_nx & ft) != 9'd0)
         $display("%t wpms_switch: ERROR a strobe met copied items still armed (fa %03h ft %03h)", $time, fa_nx, ft);
+
+    // RH003 (SD-22 step 2): RH002's text for the items a GO fires, the blocks it lands and
+    // the sum, beside the restructured logic. Where they are used (a GO, a go-now of a
+    // block or of the sweep word), the items and the landed blocks must agree; the sign of
+    // the reduced sum must give the comparison with NMAX in every clock.
+    wire         x_go     = x_glob && (xo == 8'h08) && x_we && (x_d[1:0] != 2'b00);
+    wire         x_nowb   = x_commit && x_we && x_d[31] && !frozen[xb];
+    wire         x_nows   = x_swcmt  && x_we && x_d[31] && !frozen[8];
+    reg  [8:0]   go_items_d;
+    reg  [7:0]   go_land_d;
+    integer      vd;
+    always @* begin
+        go_items_d = 9'd0;
+        if (x_go)        go_items_d = x_d[1] ? arm : (arm & (x_p3 ? arm_p3 : ~arm_p3));
+        else if (x_nowb) go_items_d[xb] = 1'b1;
+        else if (x_nows) go_items_d[8]  = 1'b1;
+        for (vd = 0; vd < 8; vd = vd + 1)
+            go_land_d[vd] = go_items_d[vd] && ((x_nowb && xb == vd) ? x_d[0] : cmask_v[17*vd]);
+    end
+    wire [14:0]  go_sum = ((gt[  0 +: 15] + gt[ 16 +: 15]) + (gt[ 32 +: 15] + gt[ 48 +: 15]))
+                        + ((gt[ 64 +: 15] + gt[ 80 +: 15]) + (gt[ 96 +: 15] + gt[112 +: 15]));
+    always @(posedge clk) if (!rst && (x_go || x_nowb || x_nows) &&
+                              (go_items !== go_items_d || go_land !== go_land_d))
+        $display("%t wpms_switch: ERROR GO items %03h landed %02h against RH002's %03h %02h",
+                 $time, go_items, go_land, go_items_d, go_land_d);
+    always @(posedge clk) if (!rst && ((go_sum > NMAX) !== !go_low[15]))
+        $display("%t wpms_switch: ERROR GO sum %0d: the reduced check says %b", $time, go_sum, !go_low[15]);
 `endif
 
 endmodule

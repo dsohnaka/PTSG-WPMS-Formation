@@ -14,6 +14,12 @@
 # 002 2026-10-03       Claude Code   Chg : M3, M6, M11, M20 follow wpms_formation RH005 (the same defects
 #                                          in the restructured text); Add : M21-M23, defects of what RH005
 #                                          added (the registered decode, the split enables).
+# 003 2026-10-03       Claude Code   Chg : M1, M6, M12, M19, M23 follow wpms_formation RH006 (the same defects
+#                                          in the step-2 text: the pre-read, the EW5 lookahead, the late E8);
+#                                          Add : M24-M29, defects of what RH006 added (the squash, the
+#                                          pre-read's forwarding of a store write and of BCP's new pending
+#                                          slots, the lookahead's strobe, the EW2 held back behind a MUL,
+#                                          the registered decode beside the pre-read's own).
 # ============================================================================
 import argparse, os, re, shutil, subprocess, sys
 
@@ -23,8 +29,8 @@ L2 = os.path.normpath(os.path.join(HERE, "..", "l2"))
 # (id, the defect, text in wpms_formation.v, replacement)
 MUTANTS = [
     ("M1", "store reads ignore pending slots (no forwarding from the inbox)",
-     "wire [31:0] store_a   = pm_a[a_slot] ? pend_a : st_rd_a[a_slot];",
-     "wire [31:0] store_a   = st_rd_a[a_slot];"),
+     "store_q <= pend_n ? pend_v_n : st_val_n;",
+     "store_q <= st_val_n;"),
     ("M2", "a datapath write to a pending slot does not cancel its copy",
      "if (dp_st_we && a_block == bp[2:0])  pn[a_slot] = 1'b0;",
      "if (1'b0)  pn[a_slot] = 1'b0;"),
@@ -38,8 +44,8 @@ MUTANTS = [
      "K_NONE:  e4 = (x_rid != 4'd0) || (x_imm != 16'd0);",
      "K_NONE:  e4 = (x_rid != 4'd0);"),
     ("M6", "the CUR alias follows ADRS instead of order[q]",
-     "wire [2:0] a_block_nx = (region_nx == R_CUR) ? seq_cur : adrs_nx[6:4];",
-     "wire [2:0] a_block_nx = adrs_nx[6:4];"),
+     "assign      a_block_sx = (region_sx == R_CUR) ? seq_cur : adrs_sx[6:4];",
+     "assign      a_block_sx = adrs_sx[6:4];"),
     ("M7", "MAC realigns with a logical shift",
      "wire signed [64:0] mac_sh = mac_pe >>> shv;",
      "wire signed [64:0] mac_sh = mac_pe >> shv;"),
@@ -56,8 +62,8 @@ MUTANTS = [
      "wire dp_st_we = ok_mem && ((op == OP_STM) || is_store_dst) &&",
      "wire dp_st_we = x_go && ((op == OP_STM) || is_store_dst) &&"),
     ("M12", "BCP checks the sweep's sum N on the pre-copy N",
-     "n_post[bn] = pe[0] ? ib_n[bn] : st_n[bn];",
-     "n_post[bn] = st_n[bn];"),
+     "n_post_n[bq] = pe0 ? ibn : stn;",
+     "n_post_n[bq] = stn;"),
     ("M13", "STP reads its source before the EW6 check (E5 wins over EW6)",
      "OP_STP:  if (temp[31]) x_err = ERR_EW6;                      // checked before the read\n                     else if (uses_ppm_src && rd_e5) x_err = ERR_E5;",
      "OP_STP:  if (uses_ppm_src && rd_e5) x_err = ERR_E5;\n                     else if (temp[31]) x_err = ERR_EW6;"),
@@ -77,8 +83,8 @@ MUTANTS = [
      "R_STAT:   rd_val = {23'd0, !x_pkt, sweep_a[3:0], x_q};",
      "R_STAT:   rd_val = {23'd0, x_pkt, sweep_a[3:0], x_q};"),
     ("M19", "no backstop: sum N checked only when a sweep item is taken",
-     "wire         ew5        = (do_sweep && sw_invalid) || (chk_sum > NMAX);",
-     "wire         ew5        = (do_sweep && sw_invalid) || (do_sweep && chk_sum > NMAX);"),
+     "assign ew5 = (do_sweep && sw_invalid) || !ew5_d[35];",
+     "assign ew5 = (do_sweep && sw_invalid) || (do_sweep && !ew5_d[35]);"),
     ("M20", "a repeated block in the sweep item is not refused",
      "if (k < w[3:0] && w[4 + 3*j +: 3] == w[4 + 3*k +: 3]) sweep_invalid = 1'b1;",
      "if (1'b0) sweep_invalid = 1'b1;"),
@@ -88,9 +94,27 @@ MUTANTS = [
     ("M22", "BCP's split enable ignores EW5 (the refused BCP still copies)",
      "wire ok_bcp  = x_ok0 && !x_pkt && !ew5;",
      "wire ok_bcp  = x_ok0 && !x_pkt;"),
-    ("M23", "MUL's Accm enable ignores E8 (the overflowing MUL still writes Accm)",
-     "OP_MUL: if (ok_src && !mul_ovf) accm <= mul_r[31:0];",
-     "OP_MUL: if (ok_src) accm <= mul_r[31:0];"),
+    ("M23", "the late E8 leaves the overflowed product in Accm (no restore)",
+     "accm <= w_bk;                                     // the scene before the violator",
+     "accm <= accm;                                     // the scene before the violator"),
+    ("M24", "the instruction behind an overflowing MUL/MAC still executes (no squash)",
+     "wire x_ok0   = x_go && !e4 && !w_kill;",
+     "wire x_ok0   = x_go && !e4;"),
+    ("M25", "the operand pre-read misses this clock's store write (read after write)",
+     "wire [31:0] st_val_n = dpw_n ? accm : cpw_n ? cpv_n : st_rd_n[s_sx];",
+     "wire [31:0] st_val_n = cpw_n ? cpv_n : st_rd_n[s_sx];"),
+    ("M26", "the operand pre-read misses the slots BCP makes pending",
+     "                        || (sx_bcp && new_list[a_block_sx] && msA_n[s_sx]);",
+     "                        || 1'b0;"),
+    ("M27", "EW5's lookahead ignores a strobe in BCP's previous clock (the take before it)",
+     "if (seq_strobe) begin                                   // after execute, as below",
+     "if (1'b0) begin                                   // after execute, as below"),
+    ("M28", "a prefetch's EW2 in a MUL's X clock is raised at once (the MUL's E8 loses its priority)",
+     "if (pf_ew2 && !error_flag && !x_fault && !w_kill && !mm_spec) begin",
+     "if (pf_ew2 && !error_flag && !x_fault && !w_kill) begin"),
+    ("M29", "the registered decode's CUR alias follows ADRS (writes to CUR land in the wrong block)",
+     "assign     a_block_nx = (region_nx == R_CUR) ? seq_cur : adrs_nx[6:4];",
+     "assign     a_block_nx = adrs_nx[6:4];"),
 ]
 
 

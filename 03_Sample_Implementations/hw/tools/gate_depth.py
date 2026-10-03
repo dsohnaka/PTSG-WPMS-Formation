@@ -10,7 +10,12 @@
 # The previous revision (from a git commit) and the working file are read the
 # same way, so the two columns compare like with like.
 #
-#   python3 gate_depth.py [--ref COMMIT] [--top N] [--out DIR]
+#   python3 gate_depth.py [--ref COMMIT] [--lut] [--top N] [--out DIR]
+#
+# --lut maps the gates into 6-input LUTs first (Yosys's ABC, abc -lut 6) and
+# counts LUT levels: nearer what the Fitter places, though an adder or the
+# multiplier, which Quartus puts in carry chains and DSP blocks, comes out as
+# deep LUT chains here.
 #
 # A gate level is not a nanosecond: a DSP block, a carry chain and a long
 # route are each worth very different numbers of levels. The Quartus timing
@@ -19,6 +24,7 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-03       Claude Code   Add : First version (SD-22 step 1).
+# 002 2026-10-03       Claude Code   Add : --lut, the depth in 6-input LUTs (SD-22 step 2).
 # ============================================================================
 import argparse, json, os, re, shutil, subprocess, sys
 from collections import defaultdict
@@ -38,17 +44,18 @@ def git_show(commit, rel):
     return r.stdout
 
 
-def synth(yosys, d, top, vfiles):
-    """Generic gates, flattened; the netlist as JSON (yowasp's sandbox sees the run directory only)."""
+def synth(yosys, d, top, vfiles, lut=False):
+    """Generic gates (or 6-input LUTs), flattened; the netlist as JSON (yowasp's sandbox sees the run
+    directory only)."""
     script = (f"read_verilog -sv -DSYNTHESIS {' '.join(vfiles)}; synth -top {top} -flatten -noabc; "
-              f"opt_clean; write_json {top}.json")
+              f"{'abc -lut 6; ' if lut else ''}opt_clean; write_json {top}.json")
     r = subprocess.run([yosys, "-q", "-p", script], capture_output=True, text=True, cwd=d)
     if r.returncode:
         raise SystemExit(f"yosys failed in {d}:\n{r.stdout}{r.stderr}")
     return os.path.join(d, f"{top}.json")
 
 
-def depth_by_register(path, top):
+def depth_by_register(path, top, lut=False):
     m = json.load(open(path))["modules"][top]
     cells = m["cells"]
     name = {}                                   # bit -> its name (a visible one first)
@@ -84,7 +91,8 @@ def depth_by_register(path, top):
             todo = [ib for ib in ins if ib not in depth]
             if todo:
                 stack.extend(todo); continue
-            depth[b] = 1 + max([depth[ib] for ib in ins], default=0)
+            w = (1 if c["type"] == "$lut" else 0) if lut else 1      # --lut: LUT levels only
+            depth[b] = w + max([depth[ib] for ib in ins], default=0)
             stack.pop()
         return depth.get(b0, 0) if not isinstance(b0, str) else 0
 
@@ -107,10 +115,12 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ref", default=REF_COMMIT)
     ap.add_argument("--top", type=int, default=24, help="rows per module")
+    ap.add_argument("--lut", action="store_true", help="count 6-input LUT levels (abc -lut 6) instead of gates")
     ap.add_argument("--yosys", default=shutil.which("yosys") or "yowasp-yosys")
     ap.add_argument("--out", default=os.path.join(HW, "l2", "build", "gate_depth"))
     a = ap.parse_args()
-    print(f"gate_depth: gate levels in front of each register group — previous revision (commit {a.ref}) "
+    unit = "6-input LUT levels (abc -lut 6)" if a.lut else "gate levels"
+    print(f"gate_depth: {unit} in front of each register group — previous revision (commit {a.ref}) "
           f"against the working file; {a.yosys} synth -flatten -noabc — evidence class ESTIMATE")
     for top, rel, extra in MODULES:
         cols = []
@@ -123,10 +133,10 @@ def main():
                 open(os.path.join(d, os.path.basename(r)), "w").write(text)
                 if r.endswith(".v"):
                     files.append(os.path.basename(r))
-            cols.append(depth_by_register(synth(a.yosys, d, top, files), top))
+            cols.append(depth_by_register(synth(a.yosys, d, top, files, a.lut), top, a.lut))
         (old, n_old), (new, n_new) = cols
         keys = sorted(set(old) | set(new), key=lambda k: (-max(old.get(k, 0), new.get(k, 0)), k))
-        print(f"\n{top}: longest {max(old.values())} -> {max(new.values())} levels")
+        print(f"\n{top}: longest {max(old.values())} -> {max(new.values())} {'LUT ' if a.lut else ''}levels")
         print(f"  {'register group':44s} {'bits':>6s} {'old':>5s} {'new':>5s}")
         for k in keys[:a.top]:
             print(f"  {k[:44]:44s} {n_new.get(k, n_old.get(k, 0)):6d} {old.get(k, '-')!s:>5s} {new.get(k, '-')!s:>5s}")
