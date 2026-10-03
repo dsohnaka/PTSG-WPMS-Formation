@@ -1,0 +1,25 @@
+cosim_switch_mutants: one defect per scratch copy — evidence class RTL-SIM
+  W1  KILLED    a GO's hand-over carries only its own items (earlier fired items dropped)  ->  FAIL transaction at 34399 port 0 W 291 40000000: RTL 00000000 rej 1 / model 00000000 rej 0
+  W2  KILLED    GO_ALL fires only the issuing port's items  ->  FAIL simulator:            660230000 wpms_switch: ERROR GO items 001 landed 01 against RH002's 101 01
+  W3  KILLED    inbox slots writable while their block is armed (no freeze)  ->  FAIL transaction at 3536 port 0 W 211 00000007: RTL 00000000 rej 0 / model 00000000 rej 1
+  W4  KILLED    the sum of N checked against NMAX + 64  ->  FAIL simulator:            184230000 wpms_switch: ERROR GO sum 1040: the reduced check says 0
+  W5  KILLED    PR-1 not checked (a block twice in the sweep word)  ->  FAIL Formation error EW5 at clock 9443
+  W6  KILLED    PR-2 range closed below NMAX (N = NMAX refused)  ->  FAIL transaction at 116 port 3 W 008 00000002: RTL 00000000 rej 1 / model 00000000 rej 0
+  W7  KILLED    APPLIED_SAMPLE one sweep early  ->  FAIL transaction at 15656 port 0 R 00B 00000000: RTL 0000000D rej 0 / model 0000000E rej 0
+  W8  KILLED    the apply step clears every fired item, not the take's  ->  FAIL Formation error EW5 at clock 108303
+  W9  KILLED    the take mirror ignores a write presented in the strobe clock  ->  FAIL inbox-port writes differ from the model's at #181: RTL (65826, 159, 0) / model (64784, 159, 0) (566 vs 566)
+  W10 KILLED    the Formation's take ignores an arm write in the strobe clock (RH004 undone)  ->  FAIL sweep at strobe 66666: 4 bundles latched, not the Reference's 4
+  W11 KILLED    the bridge takes the fields as soon as it sees the toggle (no settling)  ->  FAIL host write 040 00008298 (probe 00000000 rej 0) does not match port 0 [('X', 2164, 0, 1, 17, 0, 0, 0, 0), ('X', 2169, 0, 0, 17, 0, 0, 0,
+  W12 KILLED    a design reset forgets the editor's toggles (stale replay)  ->  FAIL host read 009 (probe 00000001) does not match port 0 [('X', 2561, 0, 1, 19, 0, 0, 0, 0)]
+  W13 KILLED    the ROM's end marker not recognised  ->  FAIL port 3 at 121: not the ROM's list
+  W14 KILLED    go-now forwards the mask without the arm bit (never handed over)  ->  FAIL inbox-port writes differ from the model's at #163: RTL (12707, 138, 544) / model (12707, 138, 1073742368) (164 vs 165)
+  W15 KILLED    RTOUT forwarded to the neighbouring block  ->  FAIL inbox-port writes differ from the model's at #14: RTL (87, 129, 3) / model (87, 128, 3) (126 vs 126)
+  W16 KILLED    a refused GO leaves its items armed  ->  FAIL transaction at 6776 port 0 R 28A 00000000: RTL 40019FFF rej 0 / model 00019FFF rej 0
+  W17 KILLED    an empty take never publishes APPLIED  ->  FAIL transaction at 12566 port 0 R 00B 00000000: RTL 00000008 rej 0 / model 00000009 rej 0
+  W18 KILLED    INBOX reads one slot off  ->  FAIL transaction at 3436 port 0 R 200 00000000: RTL 00000000 rej 0 / model 000003F0 rej 0
+  W19 KILLED    COMMIT reads 'armed' only before the GO (fired items read unarmed)  ->  FAIL transaction at 2243 port 0 R 288 80001C00: RTL 00001C00 rej 0 / model 40001C00 rej 0
+  W20 KILLED    the take never carries its GO_SEQ (APPLIED_SEQ stuck)  ->  FAIL transaction at 12566 port 0 R 00B 00000000: RTL 00000000 rej 0 / model 00000009 rej 0
+  W21 KILLED    MG_RATE written into MG_TARGET  ->  FAIL transaction at 34381 port 0 R 011 000D6629: RTL 0000366D rej 0 / model 000D6629 rej 0
+  W22 KILLED    the ROM may restart itself (TEST_ORIGIN from port 3 accepted)  ->  FAIL transaction at 116 port 3 W 01C 00000001: RTL 00000000 rej 0 / model 00000000 rej 1
+  W23 KILLED    a go-now of a block lands its staged N whatever COMMIT bit 0 says  ->  FAIL simulator:            254130000 wpms_switch: ERROR GO items 004 landed 04 against RH002's 004 00
+cosim_switch_mutants: 23/23 mutants killed

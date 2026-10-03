@@ -549,7 +549,7 @@ The first three are what step 2 was planned for (§10.4). The fourth is new.
 | **Lockstep.** Formation RH006 beside RH005, and switch RH003 beside RH002, both from commit 8815e35. NMAX 1,008 and 2,048, seeds 1 and 2, 400,000 clocks per run. Compared in every clock: every output, every register and the touched signals. The Formation's two late errors are allowed for: the same code and SN, one clock later | RTL-SIM | **0 differences in 8 runs** (3.2 M clocks). Each Formation run had 1,101–1,188 late E8s of MUL/MAC and 768–854 held-back EW2s, each with the reference's code and SN, in about 317,000 instructions covering every op and every error code. Each switch run made about 8,700 GOs and 1,870 go-nows, refused for every cause |
 | **Formal.** The switch's GO path and check (NMAX 1,008 and 2,048). The Formation's pre-read, late E8 and EW5 lookahead (four claims), one clock from any state; its idle test and split enables, for every state and input. Three negative controls | formal (SAT) | **13/13 proved**; the controls come back SAT, as they must (`logs/equiv_formal.txt`) |
 | **Phase 2.** `cosim_l2` against the golden model, with the new group `late` | RTL-SIM | **3,923/3,923** bit-identical; the summary equals the record but for `late` (9 cases). Mutants **29/29**. M1–M20 are caught at the recorded counts except M6, which is now split into M6 (the read ahead) and M29 (the registered decode) |
-| **Phases 3–6.** The recipes rerun (`run_phase6.sh`, REGRESSION=1) and compared with the 2026-10-01 record | RTL-SIM | running; follows in the next commit |
+| **Phases 3–6.** The recipes rerun (`run_phase6.sh`, REGRESSION=1) and compared with the 2026-10-01 record | RTL-SIM | **ALL CHECKS PASSED.** The 18 board runs (`cosim_board.txt`) and all 34 expected files are identical to the record, the 16 captures byte for byte. The other differences are explained: the group `late` and the new mutants, the resource ESTIMATE lines, the count of one Icarus note, and the 30 % in the project's summary |
 
 **What the checks found along the way** (each run below is the final one, after the change it prompted):
 1. The first lockstep runs differed in `x_err`, `rd_val` and `ew5` in clocks where nothing executes. Those are values computed from inputs that are never used: a halted Formation, or the squashed clock. They are now compared only while an instruction executes.
@@ -644,7 +644,14 @@ The architect programmed the board with the second fit's bitstream (to be confir
 - **What it shows.** The whole chain plays the test origin from the ROM on silicon: the Core, the Formation, the sequencer, L1, I2S and the ADV7513's HDMI audio. The ADV7513's configuration had been checked only against its data sheet until now.
 - **What it does not show:** timing margin. This bitstream misses clk_sys by 6.976 ns at the slow corner. This board runs it at room temperature, but nothing is guaranteed at 85 °C or on a slower part. SD-22 continues, and the SignalTap captures C1–C5 wait for a timing-closed build.
 
+**The SignalTap capture `ptsg_core_debug` (the same day).** The architect captured the Core's `state_num`, `timing_signals`, `stay_cnt` and the I2S pins: 8,192 samples of clk_sys (`signaltap/2026-10-03_core_debug/`, analysed by the new `hw/tools/vcd_i2s_check.py`). SILICON, compared with the model:
+- **The packet Stay** is 1,008 clocks in every sweep. **The sweep period** is 1,041 or 1,042 clocks (mean 1,041.71 = 50 MHz / 48 kHz), and the packet's Stay Set comes 12–13 clocks before the left channel begins: the sweeps are locked to the audio frames.
+- **The I2S words equal the model bit for bit:** 8 frames, L = R. The point was found by the closed form: 39,684,738 sweeps after the GO (13 min 46.8 s), G = 0 (2.0 LSB rms; the next best fit 1,005).
+- **The phases are right after 40 million sweeps.** The packet's window program updates PH0, PHD1 and PHD2 in the store every sweep (LDM, ADD @PPM, STM). None of those updates failed on this not-timing-closed build at room temperature. The worst path, MUL/MAC @PPM, is not used by the test origin.
+- **G = 0 means DIP[1:0] = 00:** 72 dB above G = 12, so the output clips at the top of every beat over about 85 % of each cycle. SW[1:0] = 11 gives the designed level.
+
 **和文.**
 - 第 2 回フィットのビットストリーム（要確認）で、試験原点の音が HDMI 経由で出た。報告は「約 1 kHz、250 ms 周期の振幅変調、ゆっくりした変化、きわめて安定」。
 - 期待値（ROM の整数から報告後に導出）：997.97 Hz の搬送波、包絡の零点は 253.62 ms ごと、255.65 s 周期。定性的に一致する。
 - Core から HDMI 音声までの全経路がシリコン上で動くことを示す。タイミングの余裕は示さない。
+- 同日の SignalTap 取得（`ptsg_core_debug`）では、I2S の 8 フレームがモデルとビット単位で一致した（GO から 39,684,738 掃引目、G = 0）。位相の更新は約 4,000 万掃引のあいだ一度も誤っていない。掃引はオーディオのフレームにロックしている。DIP[1:0] は 00 で、設計の音量は SW[1:0] = 11。
