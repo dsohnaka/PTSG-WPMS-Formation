@@ -89,6 +89,8 @@ Evidence class: RTL-SIM (traces T1–T5, `observation.md` §3.3). t = the Core c
 | any instruction that errors | t | t + 1: flag, code, SN; nothing committed | — | `insert_req` from t + 2 until acknowledged; halted until reset | — |
 | prefetch (sequencer port, not an instruction) | — | N and the bundle combinational in the request clock; EW2 at its edge | — | must not overlap `bcp_busy` (asserted in simulation) | T_pf = 1 |
 
+*Note 2026-10-03 (SD-22 step 2, Formation RH006).* An E8 of MUL or MAC, and a prefetch's EW2 met in a MUL's or MAC's X clock, are now raised one clock later, with the same code and SN: flag, code and SN in t + 2, `insert_req` from t + 3. Accm holds the product in t + 2 only, and the instruction then in X is squashed. Every other row is unchanged (`phase6_silicon.md` §11.3). / *2026-10-03 追記（SD-22 段階 2）。* MUL/MAC の E8 と、その X クロックに重なったプリフェッチの EW2 は、同じコードと SN のまま 1 クロック遅れて上がる（t + 2、`insert_req` は t + 3 から）。ほかの行は変わらない。
+
 Consequences, by reading (Phase 3 measures them with the Core): a 25-instruction window occupies the Formation for 26 clocks, the last STM landing one clock after its issue — while the Core executes Prog End, far from the next latch; the housekeeping Stay (T_HK = 13 from Stay Set) holds BCP at Stay Set + 1, its full copy landing by Stay Set + 10, `inbox_taken` from Stay Set + 11, the first-bundle prefetch at Stay Set + 11 — inside T_HK with one clock to spare. / 帰結（読解、Phase 3 で Core と実測）: 25 命令の窓は Formation を 26 クロック占め、最後の STM は発行の1クロック後（Core は Prog End 中）。HK Stay（Stay Set から 13）では BCP が Stay Set + 1、全コピー着地が + 10、`inbox_taken` と最初のプリフェッチが + 11 で、T_HK に1クロック余る。
 
 ### 3.3 Cosimulation / 協調シミュレーション

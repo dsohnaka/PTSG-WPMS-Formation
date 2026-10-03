@@ -1,0 +1,23 @@
+equiv_formal: SD-22 step 2; old logic from commit 8815e35, new from the working files; yowasp-yosys — evidence class formal (SAT)
+  [PROVED] switch GO path, where it is used: items, N, validity, sweep word (RH003 = RH002), NMAX 1008  (71,156 variables, 204,764 clauses; CaDiCaL 97 s)
+  [PROVED] switch GO path, where it is used: items, N, validity, sweep word (RH003 = RH002), NMAX 2048  (71,181 variables, 204,829 clauses; CaDiCaL 101 s)
+  [PROVED] switch GO check of that state: P, PR-1, PR-2, sum of N (carry-save = tree), NMAX 1008  (37,062 variables, 106,198 clauses; CaDiCaL 90 s)
+  [PROVED] switch GO check of that state: P, PR-1, PR-2, sum of N (carry-save = tree), NMAX 2048  (37,087 variables, 106,263 clauses; CaDiCaL 75 s)
+  [PROVED] Formation: the operand read ahead = the direct read, one clock from any state  (935,395 variables, 2,544,423 clauses; CaDiCaL 26 s)
+  [PROVED] Formation: the late E8 = the overflow seen in X, one clock from any state  (935,395 variables, 2,544,423 clauses; CaDiCaL 5 s)
+  [PROVED] Formation EW5 (1/4): the terms reduced last clock = the direct terms, one clock from any state  (935,395 variables, 2,544,423 clauses; CaDiCaL 20 s)
+  [PROVED] Formation EW5 (2/4): the registers hold csa9 of those terms and the bound, one clock from any state  (935,395 variables, 2,544,423 clauses; CaDiCaL 14 s)
+  [PROVED] Formation EW5 (3/4): the direct sum = the tree of the direct terms, every state  (454,315 variables, 1,227,845 clauses; CaDiCaL 1 s)
+  [PROVED] Formation EW5 (4/4): csa9's two words = the tree - (NMAX + 1), any eight terms, NMAX 1008  (13,277 variables, 35,073 clauses; CaDiCaL 791 s)
+  [PROVED] Formation EW5 (4/4): csa9's two words = the tree - (NMAX + 1), any eight terms, NMAX 2048  (13,302 variables, 35,138 clauses; CaDiCaL 765 s)
+  [PROVED] Formation: the idle test (BCP's commit last) = RH005's, every state and input  (454,390 variables, 1,227,851 clauses; CaDiCaL 1 s)
+  [PROVED] Formation: split enables = the commit (with the squash), every state and input  (497,401 variables, 1,356,911 clauses; CaDiCaL 1 s)
+  [COUNTEREXAMPLE FOUND] negative control: the switch's check with the bound off by one (must be SAT)  (37,056 variables, 106,182 clauses; CaDiCaL 0 s)
+  [COUNTEREXAMPLE FOUND] negative control: the pre-read without BCP's new pending slots, M26 (must be SAT)  (933,027 variables, 2,537,903 clauses; CaDiCaL 7 s)
+  [COUNTEREXAMPLE FOUND] negative control: the EW5 lookahead blind to a strobe, M27 (must be SAT)  (935,285 variables, 2,544,129 clauses; CaDiCaL 2 s)
+equiv_formal: PASS — every check proved
+
+real	35m9.076s
+user	34m9.272s
+sys	0m38.148s
+exit 0

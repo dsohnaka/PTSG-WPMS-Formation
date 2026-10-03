@@ -1,0 +1,18 @@
+resource_split: where the Formation's LUTs go in SD-22 step 2 — evidence class ESTIMATE (Yosys 0.69, not Quartus)
+Each line: read_verilog -DSYNTHESIS wpms_formation.v; synth_intel_alm -family cyclonev -top wpms_formation
+-run begin:map_luts; abc -lut 6; opt -fast; clean; stat (the flow of run_phase2.sh's ESTIMATE line).
+The variants are scratch copies of RH006 with one part taken out, for size only (not equivalent designs).
+
+RH005 (commit 8815e35)              : $lut 4535; MISTRAL_ALUT_ARITH 684; MISTRAL_FF 1214; MISTRAL_MLAB 1568; MISTRAL_MUL27X27 2; MISTRAL_MUL18X18 2
+RH006 (this revision)               : $lut 6565; MISTRAL_ALUT_ARITH 683; MISTRAL_FF 1420; MISTRAL_MLAB 1568; MISTRAL_MUL27X27 2; MISTRAL_MUL18X18 2
+RH006, EW5 from the direct sum      : $lut 4764; MISTRAL_ALUT_ARITH 684; MISTRAL_FF 1350; MISTRAL_MLAB 1568; MISTRAL_MUL27X27 2; MISTRAL_MUL18X18 2
+    (assign ew5 = (do_sweep && sw_invalid) || (chk_sum > NMAX); the lookahead then drives nothing)
+RH006, the lookahead's N of today   : $lut 5219; MISTRAL_ALUT_ARITH 683; MISTRAL_FF 1420; MISTRAL_MLAB 1568; MISTRAL_MUL27X27 2; MISTRAL_MUL18X18 2
+    (n_post_n[bq] = n_post[bq]: the N after this clock's writes not computed)
+RH006, a plain sum for the CSAs     : $lut 6110; MISTRAL_ALUT_ARITH 647; MISTRAL_FF 1351; MISTRAL_MLAB 1568; MISTRAL_MUL27X27 2; MISTRAL_MUL18X18 2
+    (ew5_s <= tm[0] + ... + tm[8]; ew5_c <= 0)
+RH006, the X clock reads directly   : $lut 6322; MISTRAL_ALUT_ARITH 683; MISTRAL_FF 1364; MISTRAL_MLAB 1568; MISTRAL_MUL27X27 2; MISTRAL_MUL18X18 2
+    (rd_val from the store and inbox at a_block, a_slot, as in RH005; store_q, inbox_q drive nothing)
+
+RH005 -> RH006: +2,030 LUTs. The EW5 lookahead about 1,800 of them (6,565 - 4,764), of which the N of
+all eight blocks after this clock's writes about 1,350 (6,565 - 5,219); the pre-read about 250 (6,565 - 6,322).

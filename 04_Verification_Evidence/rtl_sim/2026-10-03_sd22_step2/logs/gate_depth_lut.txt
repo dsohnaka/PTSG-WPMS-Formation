@@ -1,0 +1,68 @@
+gate_depth: 6-input LUT levels (abc -lut 6) in front of each register group — previous revision (commit 8815e35) against the working file; yowasp-yosys synth -flatten -noabc — evidence class ESTIMATE
+
+wpms_formation: longest 44 -> 40 LUT levels
+  register group                                 bits   old   new
+  error_code                                        5    44    15
+  error_flag                                        1    44    14
+  error_sn                                         12    44    16
+  insert_req_r                                      1    44    15
+  accm                                             32    43    34
+  w_hi                                             34     -    40
+  taken_due                                         1    36    16
+  inbox_taken                                       1    35    15
+  pmask[]                                         128    30    13
+  copied                                            8    28    11
+  sweep_a                                          28    28    11
+  sweep_copied                                      1    28    11
+  ew5_c                                            34     -    23
+  ew5_s                                            33     -    23
+  store_q                                          32     -    22
+  inbox_q                                          32     -    21
+  $abc$72263$fsm$oldstate\region[]                  3    15     -
+  rd_e5                                             1    14     -
+  g_store[].m[]                                  3840    12    11
+  region                                            3    12     8
+  st_n[]                                          256    12    11
+  a_block                                           3    11    10
+  $\cm_mask$rdreg[]$q                               3    10     9
+  a_slot                                            4     9     8
+  adrs                                              6     9     8
+  jumpval                                          12     8     7
+  loopval                                          12     8     7
+  pf_w                                              1     -     8
+  s_temp                                           32     8     7
+  shv                                               5     8     7
+
+wpms_switch: longest 16 -> 13 LUT levels
+  register group                                 bits   old   new
+  arm                                               9    16    13
+  fired                                             9    16    13
+  go_seq                                           32    16    13
+  ibx_addr                                          8    16    13
+  ibx_wdata                                        32    16    13
+  ibx_we                                            1    16    13
+  n_fu_v                                           96    16    13
+  nv_fu                                             8    16    13
+  reject0                                          32    16    13
+  sw_fu                                            28    16    13
+  cmask_v                                         128    15    12
+  d_rej                                             1    15    12
+  ibx_hand                                          1    15    12
+  sample_n                                         32    15    13
+  cm0                                               8     -    12
+  d_rdata                                          32     9     9
+  shadow[]                                       4096     8     9
+  applied_sample                                   32     8     7
+  n_take                                           32     8     7
+  arm_p3                                            9     6     7
+  n_st_v                                           96     6     7
+  nv_st                                             8     6     7
+  rtout_v                                         128     6     7
+  clip_clear                                        2     5     6
+  rom_start                                         1     5     6
+  sweep_clocks_max                                 12     6     5
+  applied_seq                                      32     5     5
+  g_ctrl                                            5     4     5
+  insp_mod                                          4     4     5
+  insp_pos                                         12     4     5
+exit 0

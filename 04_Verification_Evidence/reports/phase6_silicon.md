@@ -485,3 +485,166 @@ A gate level is not a nanosecond, so the second fit is the measure. My estimate 
   - Phase 2 は記録と同一（ミュータント 20 件の検出数も同じ、新規 3 件も検出）。
 - **長い連鎖の終点（概算）。** ストア約 4,100 FF の前の連鎖は 136 段から 33 段に縮んだ。残る最長は実在の MUL/MAC @PPM 経路（エラー登録 112 段、Accm 106 段）。
 - **次。** 第 2 回フィットで判定する。収束しなければ段階 2（E8 判定を次クロックへ、Accm は投機的に書いて控えから復元、後続命令を打ち消す）へ直ちに進む。
+
+## 11. SD-22 step 2 and SD-23 (2026-10-03): the third fit's RTL / 段階 2 と SD-23：第 3 回フィットの RTL
+
+**Ruling 2026-10-03:** if step 1 does not close timing, step 2 follows without a new round of questions. The second fit did not close: clk_sys −6.976 ns, TNS −1,509 ns (`quartus/2026-10-03_DE10_Nano_wpms_fit2/`).
+
+### 11.1 What the second fit showed / 第 2 回フィットの結果
+
+STA, slow 1100 mV 85 °C. `report_setup_paths.tcl`: 799 failing endpoints, TNS −1,398 ns. They fall into four groups by where their worst paths start:
+
+| Group | Endpoints | Worst | Path |
+|---|---|---|---|
+| The switch's GO check | 469 | −2.605 ns | `x_a → xb → frozen[xb] →` the items fired `→ n_nx_v →` the entry mux `→` the sum (three adders) `→ go_bad → fire_now →` enables of `n_fu_v`, `cmask_v`, `reject0/3`, `go_seq`, `sw_fu`, `ibx_*` (fan-out 173) |
+| MUL/MAC @PPM | 49 | −6.805 ns | the forwarded store read → 32 × 32 product (DSP and carry chain) → shift → add → overflow compare → Accm's enable, the error registers |
+| BCP's EW5 | 168 | −4.812 ns | the take-set → `n_post` → the sum of N (three adders) → the compare → `bcp_commit` (fan-out 131) → the pending masks → `inbox_taken` |
+| The Core's imem half-cycle path | 113 | −2.028 ns | the M10K, on clk_sys's falling edge → 10 LUT levels of the Core's next-state logic → `state_num` at the next rising edge: 10.70 ns in a 10 ns half period (**SD-23**) |
+
+The first three are what step 2 was planned for (§10.4). The fourth is new.
+
+### 11.2 What changed / 変更点
+
+**Formation RH006** (`hw/l2/wpms_formation.v`):
+- **(a) E8 of MUL and MAC in the clock after X (stage W).**
+  - MUL and MAC write Accm in X. In W, the product's high bits (`w_hi`, registered) are checked. On E8, Accm is restored from a one-clock copy (`w_bk`), E8 is raised with the violator's SN, and the instruction then in X is squashed (`w_kill`).
+  - A prefetch's EW2 met in a MUL's or MAC's X clock is held back one clock (`pf_w`). So the MUL's own E8, decided in W, keeps its priority, as in the model's order. Every error keeps its code and its SN.
+- **(b) The operand read one clock ahead.** The store word as the program sees it (a pending slot reads what it will receive) and the inbox view are read at the next ADRS, from the next pending masks and this clock's writes, into `store_q` and `inbox_q`. The X clock starts from them.
+  - The instruction in X is taken to complete (`sx_*`), so no error check stands in front of the read. When it does not complete, the Formation halts at that very edge and the value is never read.
+- **(c) EW5's sum reduced one clock ahead.**
+  - The nine terms (the eight N of the next sweep word, as BCP will see them, and −(NMAX + 1)) go through four levels of carry-save adders (`csa9`) into `ew5_s` and `ew5_c`. In X, one add gives the sign.
+  - The pending masks' idle test takes BCP's commit at the last gate.
+
+**Switch RH003** (`hw/switch/wpms_switch.v`):
+- The items a GO fires and the blocks whose N it lands are read from `x_a[9]`, `x_a[4]`, `x_a[2:0]`, `x_d[1:0]` and `x_p3` directly. They no longer pass through the address decode and the frozen bits: the three places that use them (a GO; a go-now of a block; a go-now of the sweep word) check those conditions first.
+- The sum of N against NMAX uses carry-save adders and one sign.
+
+**The board (SD-23):** clk_sys is 30 % high in the 50 MHz revision (`SYS_DUTY`; `wpms_pll` RH002, the board top RH002, `make_quartus_project.py` RH003). The imem's read gets 14 ns; the address side, `state_num` straight into the M10K's address register, gets 6 ns. The Core and its wrapper are untouched; TimeQuest analyzes the real waveform. `--sys-duty 50` restores the clock of the first two fits. The architect's ruling is requested (`discrepancies.md`, SD-23).
+
+**Tests that followed:**
+- `wpms_formation_tb.v` RH003: the error index of the late E8; command J, an issue with the strobe in the same clock.
+- `cosim_l2.py` RH003: group `late`, nine directed cases. They cover the instruction behind an overflowing MUL/MAC, EW2 in a MUL's X clock with and without its E8, a read of a slot right after BCP made it pending, and a strobe in the clock BCP is issued (both ways).
+- `cosim_mutants.py` RH003: M1, M6, M12, M19 and M23 follow the new text; M24–M29 are new.
+- `cosim_switch_mutants.py` RH003: W2, W4 and W5 follow the new text; W23 is new.
+- `equiv_lockstep.py` RH002, `equiv_formal.py` RH002, `gate_depth.py` RH002 (`--lut`).
+
+### 11.3 What the program and the system see / プログラムとシステムから見えるもの
+
+- **Unchanged:** every value, every store word, and the clock of every instruction that completes.
+- **Changed on purpose, two cases:**
+  - an E8 of MUL or MAC;
+  - an EW2 met in a MUL's or MAC's X clock.
+
+  Each is raised one clock later, with the same code and SN. Accm ends as before the violator, and nothing after the violator executes.
+- **What follows from that, in those two cases only:**
+  - The trap request and L1's silence come one clock later.
+  - The Core never stalls on the issue port (`ext_op_ready` = 1), so it may issue one more instruction before it takes the insertion. The Formation drops that instruction: it is squashed, or the Formation is already halted.
+  - In Phase 2's clock table these two rows move by one clock.
+- In the Phases 3–6 runs no E8 occurs, so their records repeat (§11.4).
+
+### 11.4 How it was checked / 検証
+
+| Check | Class | Result |
+|---|---|---|
+| **Lockstep.** Formation RH006 beside RH005, and switch RH003 beside RH002, both from commit 8815e35. NMAX 1,008 and 2,048, seeds 1 and 2, 400,000 clocks per run. Compared in every clock: every output, every register and the touched signals. The Formation's two late errors are allowed for: the same code and SN, one clock later | RTL-SIM | **0 differences in 8 runs** (3.2 M clocks). Each Formation run had 1,101–1,188 late E8s of MUL/MAC and 768–854 held-back EW2s, each with the reference's code and SN, in about 317,000 instructions covering every op and every error code. Each switch run made about 8,700 GOs and 1,870 go-nows, refused for every cause |
+| **Formal.** The switch's GO path and check (NMAX 1,008 and 2,048). The Formation's pre-read, late E8 and EW5 lookahead (four claims), one clock from any state; its idle test and split enables, for every state and input. Three negative controls | formal (SAT) | **13/13 proved**; the controls come back SAT, as they must (`logs/equiv_formal.txt`) |
+| **Phase 2.** `cosim_l2` against the golden model, with the new group `late` | RTL-SIM | **3,923/3,923** bit-identical; the summary equals the record but for `late` (9 cases). Mutants **29/29**. M1–M20 are caught at the recorded counts except M6, which is now split into M6 (the read ahead) and M29 (the registered decode) |
+| **Phases 3–6.** The recipes rerun (`run_phase6.sh`, REGRESSION=1) and compared with the 2026-10-01 record | RTL-SIM | running; follows in the next commit |
+
+**What the checks found along the way** (each run below is the final one, after the change it prompted):
+1. The first lockstep runs differed in `x_err`, `rd_val` and `ew5` in clocks where nothing executes. Those are values computed from inputs that are never used: a halted Formation, or the squashed clock. They are now compared only while an instruction executes.
+2. The first mutant run: M27 survived. No Phase 2 case put a strobe in the clock a BCP is issued; the testbench could not. M24 and M26 were caught only by the RTL's self-checks. Hence command J and group `late`. Now every one of M24–M28 fails a case of `late`.
+3. As first written, an EW2 in an overflowing MUL's X clock was reported instead of the MUL's E8. That is not the model's order (the model has the MUL execute first). Hence the held-back EW2 (`pf_w`): every error keeps its code and SN.
+4. The first pre-read had the error checks of the instruction in X in front of its address: 24 LUT levels (ESTIMATE). It now takes that instruction as completing, which is exact because one that does not complete halts the Formation at that edge.
+5. Yosys's own SAT solver did not finish a carry-save sum against an adder tree: 10 minutes on 5,500 variables, a known hard case. The problems are now written as CNF and solved by CaDiCaL. The EW5 claim is split into four smaller claims.
+
+### 11.5 Where the chains end now (ESTIMATE) / 長い連鎖の終点（概算）
+
+Gate levels (`gate_depth.py`, Yosys `synth -noabc`) and 6-input LUT levels (`gate_depth.py --lut`, Yosys's ABC) in front of each register group, step 1 (Formation RH005, switch RH002) → step 2 (RH006, RH003). The multiplier counts here as gates or LUTs; Quartus puts it in DSP blocks and a carry chain, so Accm and `w_hi`, which lie behind the product, read deeper than they are.
+
+| Register group | Bits | Gates | 6-LUT levels |
+|---|---|---|---|
+| `error_flag`, `error_code`, `error_sn`, `insert_req_r` | 19 | 112 → **50** | 44 → **14–16** |
+| Accm | 32 | 106 → 81 | 43 → 34 |
+| `w_hi` (new: the product's high bits, checked in W) | 34 | – → 82 | – → 40 |
+| `taken_due`, `inbox_taken` | 2 | 65–66 → **42–43** | 35–36 → **15–16** |
+| the pending masks | 128 | 56 → **40** | 30 → **13** |
+| SWEEP.a, copied | 37 | 54 → **38** | 28 → **11** |
+| `ew5_s`, `ew5_c` (new: EW5's sum, one clock ahead) | 67 | – → 43–44 | – → 23 |
+| `store_q`, `inbox_q` (new: the operand, one clock ahead) | 64 | – → 34–39 | – → 21–22 |
+| the store (`g_store`, `st_n`) | 4,096 | 33 → 34 | 12 → 11 |
+| switch: `arm` … `ibx_*` (the GO check's results) | ≈ 400 | 77 → **67** | 16 → **13** |
+
+- What the second fit measured, against step 1's counts:
+  - the EW5 path into `inbox_taken`, 35 LUT levels by this count, was 16 logic levels for Quartus, 24.2 ns. Its three adders are LUT chains here and carry chains there;
+  - the switch's path, 16 LUT levels by this count, was 16 logic levels for Quartus too, at 21.9 ns, with a fan-out of 173 at its end;
+  - the store read with forwarding: 7 logic levels, 7.9 ns.
+- So the count does not translate into nanoseconds, least of all for the new paths, which have no adder. ABC maps the whole design deeper than its parts: the carry-save tree, 3 LUT levels when mapped alone, ends 8–9 levels after its terms in the design.
+- Counted as the Fitter builds them, with the second fit's delays (1.1–1.4 ns per logic level with its routing; about 19.4 ns of data delay allowed):
+  - `store_q`: the opcode (2 levels), the next block (2, with ADRS + 1 on a carry chain), the read (4), the forwarding (2). About 10 levels, 12.5 ns, slack about +7 ns.
+  - The EW5 lookahead: the next take-set, pending bits and N (about 6 levels), the term mux (2), four carry-save levels. About 12 levels, 15 ns, slack about +4.5 ns.
+  - The EW5 check in X: one add on a carry chain, the sign, `bcp_commit`, then the second fit's 6.3 ns from `bcp_commit` to `inbox_taken`. About 13.5 ns, slack about +6 ns.
+- The lookahead has the least margin. If it fails, the fallback is to register after the second carry-save level (four words). That gives the lookahead about +6.5 ns and the check in X about +3.4 ns. It is not done now, because it would lower the worst of the three.
+- Resources (ESTIMATE, Yosys `synth_intel_alm`, the Formation alone): 4,535 → 6,565 LUTs, 1,214 → 1,420 registers; M10K/MLAB and DSP unchanged. Synthesizing RH006 without each part shows where the +2,030 LUTs go:
+  - the EW5 lookahead, about 1,800: N of all eight blocks after this clock's writes (about 1,350), the term muxes and the carry-save adders;
+  - the pre-read, about 250.
+
+
+### 11.6 The third fit: expected before the compile / 第 3 回フィット：コンパイル前の期待値
+
+| # | Expected | Basis |
+|---|---|---|
+| H1 | **clk_sys closes** at the slow corner. The four groups of the second fit leave the failing list | the paths below |
+| H2 | MUL/MAC into Accm: `store_q` (a register) → `m_b` → DSP → carry chain → shift → add → Accm, about 15 ns. The overflow compare, the store read and Accm's enable are no longer on it (the second fit's components: 7.9 + 1.9 + 3.3 ns) | fit 2's path, `observation.md` G2 |
+| H3 | The switch's GO check: about 4 ns shorter at the front (the decode, the frozen bits and the items fired: 6.5 ns in the second fit, now about 2.5) and about 2 ns in the sum. Slack about +3 ns | fit 2's path, G4 |
+| H4 | BCP's EW5: the sum is two registers and one add: `bcp_commit` about 9 ns after the clock instead of 22 | fit 2's path |
+| H5 | The Core's imem path: 14 ns for the read side. With the second fit's 10.70 ns of data and −1.25 ns of skew, about +2 ns | SD-23 |
+| H6 | The new paths, each below 20 ns: the operand read ahead (`store_q`, about 10 logic levels, 12.5 ns) and the EW5 lookahead (`ew5_s`, `ew5_c`: about 12 levels, 15 ns, the least margin, about +4.5 ns); the EW5 check in X about 13.5 ns. Yosys's LUT count (21–23 levels) overstates them | §11.5 |
+| H7 | Hold met. The Formation about 1,000–2,000 ALMs larger than in the second fit (Yosys: +2,030 LUTs, +206 registers, about 1,800 of the LUTs in the EW5 lookahead); the whole design about 12,000–13,000 ALMs, under a third of the device | estimate, §11.5 |
+
+### 11.7 What I need / お願い
+
+- **The third fit.** Rerun `make_quartus_project.py` (it writes `SYS_DUTY 30` into `DE10_Nano_wpms.qsf`) and compile `DE10_Nano_wpms`. Please send:
+  - the *Multicorner Timing Analysis Summary*;
+  - if clk_sys still fails, `setup_clk_sys_groups.txt` and `setup_clk_sys_keys.rpt` from `report_setup_paths.tcl`;
+  - the Fitter's *Resource Utilization by Entity*, for the ledger;
+  - the duty cycle the Fitter set for clk_sys, from its PLL report (30 % expected; SD-23).
+- **A ruling on SD-23:** keep clk_sys at 30 % high, or the Core's documented migration (EDGE "POS" + a fetch stage, Layer 1).
+- **If clk_sys closes:** Phase 6 continues with SignalTap and the captures.
+
+**和文.**
+- **第 2 回フィットの結果。** 失敗 799 端点は四群に分かれた。
+  - スイッチの GO 検査（−2.6 ns）
+  - MUL/MAC @PPM（−6.8 ns）
+  - BCP の EW5（−4.8 ns）
+  - Core の imem 半周期経路（−2.0 ns、新しい項目 SD-23）
+- **段階 2（2026-10-03 の裁定どおり、改めて伺わずに実施）。**
+  - Formation RH006：
+    - MUL/MAC の E8 を次のクロック（W）で判定する。Accm は控えから戻し、後続の命令は打ち消す。その X クロックに重なったプリフェッチの EW2 も 1 クロック待たせ、どのエラーもコードと SN は従来どおりにした。
+    - 次の ADRS のオペランドを 1 クロック先に読む。X の命令は完了するとみなす。完了しなければ同じエッジで停止するので、厳密に同じになる。
+    - EW5 の N の和を 1 クロック先にキャリーセーブ加算で 2 語にまとめる。
+  - スイッチ RH003：GO 検査の入口をアドレス解読と凍結ビットを通さずにレジスタから作り、和をキャリーセーブ加算と符号判定にした。
+- **SD-23。** Core と imem には触れず、50 MHz 版の clk_sys をデューティ 30 % にする。読出し側は 14 ns、アドレス側は 6 ns になる。裁定をお願いしたい（`--sys-duty 50` で元に戻る）。
+- **意図した変更は 2 つだけ。**
+  - MUL/MAC の E8
+  - その X クロックの EW2
+
+  どちらも 1 クロック遅れて、同じコードと SN で上がる。ほかは段階 1 の記録と同じ（§11.4）。
+- **お願い。** 第 3 回フィットのタイミング要約（収束しなければ集計とキー経路）、資源の Entity 別報告、Fitter が clk_sys に設定したデューティ比（PLL の報告、30 % の見込み）、SD-23 の裁定。
+
+## 12. The first sound (2026-10-03) / 初音
+
+The architect programmed the board with the second fit's bitstream (to be confirmed). They connected an HDMI audio extractor, an oscilloscope and a loudspeaker, and reported "a waveform based on a 1 kHz sine, amplitude-modulated with a period of 250 ms, with slow changes, very stable". The record is in `signaltap/2026-10-03_first_sound/observation.md`. Evidence class: SILICON, qualitative.
+
+- **Expected** (derived after the report from the ROM's integers, Ch.3 §3.10).
+  - The test origin is 1,008 partials, equal in amplitude and in phase at the GO, from 996.000 to 999.939 Hz, 3.912 mHz apart.
+  - Their sum is a 997.97 Hz carrier times the envelope \|sin(πN·df·t) / sin(π·df·t)\|. The envelope has nulls every 253.62 ms and a 255.65 s cycle.
+  - It is loudest right after the GO; about 60 dB lower at 2 min 8 s; loud again at 4 min 15.7 s.
+- **Verdict:** consistent, qualitatively.
+- **What it shows.** The whole chain plays the test origin from the ROM on silicon: the Core, the Formation, the sequencer, L1, I2S and the ADV7513's HDMI audio. The ADV7513's configuration had been checked only against its data sheet until now.
+- **What it does not show:** timing margin. This bitstream misses clk_sys by 6.976 ns at the slow corner. This board runs it at room temperature, but nothing is guaranteed at 85 °C or on a slower part. SD-22 continues, and the SignalTap captures C1–C5 wait for a timing-closed build.
+
+**和文.**
+- 第 2 回フィットのビットストリーム（要確認）で、試験原点の音が HDMI 経由で出た。報告は「約 1 kHz、250 ms 周期の振幅変調、ゆっくりした変化、きわめて安定」。
+- 期待値（ROM の整数から報告後に導出）：997.97 Hz の搬送波、包絡の零点は 253.62 ms ごと、255.65 s 周期。定性的に一致する。
+- Core から HDMI 音声までの全経路がシリコン上で動くことを示す。タイミングの余裕は示さない。
