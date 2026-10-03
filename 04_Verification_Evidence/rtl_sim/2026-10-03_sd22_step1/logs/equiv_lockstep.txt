@@ -1,0 +1,54 @@
+equiv_lockstep: previous revisions from commit e3d4985; 400000 clocks per run — evidence class RTL-SIM
+[PASS] formation NMAX 1008 seed 1
+    equiv_formation NMAX 1008 seed 1: 400000 clocks, 0 mismatches
+      X clocks 318299; resets 5914; strobes 10157; prefetches 3203; inbox-port writes 99812
+      executed without error: LDA 52720 STA 17775 ADD 16221 SUB 10792 MUL 17518 MAC 13108 SWP 14149 SFT 13419
+                              SAD 40493 LDM 20783 STM 17088 WLV 5599 WJV 5387 WSH 11212 STP 7603 BCP 7643
+      errors 5898: E4 540 E5 1295 E8 1666 EW2 395 EW3 769 EW4 723 EW5 233 EW6 277
+      store writes 23939; copy clocks 2063; BCP commits 7643 (1540 with blocks to copy); inbox_taken rises 3677
+      region at X: store 139421 inbox 19667 CUR 110938 COMMIT 16937 SWST 2428 SWA 2432 STAT 2415 none 24061
+[PASS] formation NMAX 1008 seed 2
+    equiv_formation NMAX 1008 seed 2: 400000 clocks, 0 mismatches
+      X clocks 317765; resets 5953; strobes 10032; prefetches 3006; inbox-port writes 100091
+      executed without error: LDA 52817 STA 17862 ADD 16362 SUB 10995 MUL 17190 MAC 12987 SWP 14167 SFT 13317
+                              SAD 40095 LDM 20608 STM 16930 WLV 5383 WJV 5548 WSH 11041 STP 7687 BCP 7751
+      errors 5930: E4 574 E5 1283 E8 1672 EW2 401 EW3 781 EW4 712 EW5 228 EW6 279
+      store writes 23671; copy clocks 1928; BCP commits 7751 (1500 with blocks to copy); inbox_taken rises 3709
+      region at X: store 141718 inbox 19924 CUR 107703 COMMIT 17820 SWST 2190 SWA 2334 STAT 2417 none 23659
+[PASS] formation NMAX 2048 seed 1
+    equiv_formation NMAX 2048 seed 1: 400000 clocks, 0 mismatches
+      X clocks 317865; resets 6003; strobes 10100; prefetches 3436; inbox-port writes 99664
+      executed without error: LDA 52691 STA 17732 ADD 16254 SUB 10676 MUL 17397 MAC 12915 SWP 13918 SFT 13318
+                              SAD 40378 LDM 20747 STM 16950 WLV 5605 WJV 5522 WSH 11040 STP 7517 BCP 7603
+      errors 5987: E4 555 E5 1324 E8 1663 EW2 375 EW3 773 EW4 786 EW5 226 EW6 285
+      store writes 23774; copy clocks 1997; BCP commits 7603 (1523 with blocks to copy); inbox_taken rises 3763
+      region at X: store 141177 inbox 19540 CUR 109141 COMMIT 17114 SWST 2202 SWA 2330 STAT 2539 none 23822
+[PASS] formation NMAX 2048 seed 2
+    equiv_formation NMAX 2048 seed 2: 400000 clocks, 0 mismatches
+      X clocks 317876; resets 6006; strobes 9865; prefetches 3259; inbox-port writes 99916
+      executed without error: LDA 52673 STA 17917 ADD 16294 SUB 10988 MUL 17274 MAC 13022 SWP 13996 SFT 13366
+                              SAD 40046 LDM 20737 STM 17005 WLV 5416 WJV 5443 WSH 11202 STP 7486 BCP 7636
+      errors 5991: E4 618 E5 1358 E8 1684 EW2 394 EW3 747 EW4 701 EW5 221 EW6 268
+      store writes 23916; copy clocks 1915; BCP commits 7636 (1487 with blocks to copy); inbox_taken rises 3707
+      region at X: store 141795 inbox 18635 CUR 108619 COMMIT 17736 SWST 2111 SWA 2364 STAT 2535 none 24081
+[PASS] switch NMAX 1008 seed 1
+    equiv_switch NMAX 1008 seed 1: 400000 clocks, 0 mismatches
+      transactions 71282 (refused 16937); resets 13; strobes 1479; apply steps 1489; hand-overs 9153
+      GO/GO_ALL 8643 (refused 822); go-now 1860 (refused 528)
+      refusals by cause (a GO can have several): P > 8 140, a block twice 423, N invalid 1337, sum > NMAX 1263
+[PASS] switch NMAX 1008 seed 2
+    equiv_switch NMAX 1008 seed 2: 400000 clocks, 0 mismatches
+      transactions 71712 (refused 17071); resets 10; strobes 1467; apply steps 1477; hand-overs 9157
+      GO/GO_ALL 8722 (refused 889); go-now 1880 (refused 556)
+      refusals by cause (a GO can have several): P > 8 159, a block twice 436, N invalid 1439, sum > NMAX 1347
+[PASS] switch NMAX 2048 seed 1
+    equiv_switch NMAX 2048 seed 1: 400000 clocks, 0 mismatches
+      transactions 71282 (refused 16937); resets 13; strobes 1479; apply steps 1489; hand-overs 9153
+      GO/GO_ALL 8643 (refused 822); go-now 1860 (refused 528)
+      refusals by cause (a GO can have several): P > 8 140, a block twice 423, N invalid 1337, sum > NMAX 1218
+[PASS] switch NMAX 2048 seed 2
+    equiv_switch NMAX 2048 seed 2: 400000 clocks, 0 mismatches
+      transactions 71712 (refused 17071); resets 10; strobes 1467; apply steps 1477; hand-overs 9157
+      GO/GO_ALL 8722 (refused 889); go-now 1880 (refused 556)
+      refusals by cause (a GO can have several): P > 8 159, a block twice 436, N invalid 1439, sum > NMAX 1293
+equiv_lockstep: PASS — cycle for cycle the same in every run

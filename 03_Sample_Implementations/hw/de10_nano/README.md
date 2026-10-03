@@ -12,6 +12,7 @@
 | `wpms_pll.v` | One Cyclone V PLL, `altera_pll` instantiated directly (as the Core's 100 MHz top). |
 | `DE10_Nano_wpms.sdc` | The constraints of both revisions (header: what is constrained and why). |
 | `make_quartus_project.py` | Writes the Quartus project (flat, git-ignored) to `build/quartus/`; `--check` tests it without Quartus. |
+| `report_setup_paths.tcl` | After a compile: every failing clk_sys setup endpoint, grouped by register, and the worst path into each register class (`quartus_sta -t`; SD-22). |
 | `run_phase6.sh` | Every check that can run before the board (regression, images, scripts, project, board-level RTL-SIM). |
 | `inject/` | The EW2–EW5 injection images (score + window source + `.hex` + `.mif`), from `hw/tools/gen_inject_scores.py`. |
 | `sim/` | The board-level bench (`DE10_Nano_wpms_tb.v`), the behavioural PLL (`wpms_pll_sim.v`), stand-ins of the Intel primitives for the elaboration check (`vendor_stubs.v`). Never given to Quartus. |
@@ -34,6 +35,10 @@ Open `build/quartus/DE10_Nano_wpms.qpf` in Quartus Prime Lite 23.1std.1. Two rev
 Command line: `quartus_sh --flow compile DE10_Nano_wpms -c DE10_Nano_wpms` (or `-c DE10_Nano_wpms100`).
 
 **Timing (TimeQuest):** the SDC prints one info message listing the clocks it found (clk_sys, clk_aud, the pixel clocks, the forwarded one). A critical warning means it did not find the 180° pixel clock and the HDMI pixel bus is unconstrained — please send me the message. At 100 MHz the expected critical path is the imem half-cycle path (EDGE "NEG", 5 ns each way). It is not waived; if it fails, the 50 MHz revision is the effective target (rulings 2026-09-28/29). The HDMI pixel bus is checked against `hdmi_tx_clk` (t_VSU 1.8 ns, t_VHLD 1.3 ns, +0.2 ns board); the I2S lines are cut (162.8 ns of margin by construction, SDC header).
+
+**After a compile, if clk_sys fails (SD-22):** copy `report_setup_paths.tcl` into `build/quartus/` (`make_quartus_project.py` also copies it) and run `quartus_sta -t report_setup_paths.tcl` there, or `source` it from the Timing Analyzer's Tcl console with the project open. It writes `output_files/setup_clk_sys_groups.txt`: every failing endpoint, grouped by register, with the worst slack, TNS, logic levels and start point of each group. Send that file first. `setup_clk_sys_keys.rpt` (the worst path into each register class) and `setup_clk_sys_worst10.rpt` show the cells.
+
+clk_sys が満たさないときは、`report_setup_paths.tcl` を `build/quartus/` で `quartus_sta -t` で実行してください。失敗した終点をレジスタ別に集計した `setup_clk_sys_groups.txt` を、まずお送りください。
 
 **What was checked here without Quartus:** `make_quartus_project.py --check` runs both `.qsf` files and the `.sdc` under a plain tclsh against stand-ins. It checks: 52 pins equal to the golden top's, every file present, five clock groups covering all twelve clocks, `hdmi_tx_clk` taken from the 180° counter. It also elaborates the project's Verilog with Icarus, the INTEL branches taken and the primitives stood in, and checks every PLL, memory and ISSP parameter; `--mutants` breaks the project seven ways and requires each to be caught. **Not checked:** Quartus itself. The first compile will say whether `altera_pll` accepts the strings, whether the fitter places three fractional PLLs on these clock pins, and what timing closes.
 
@@ -137,3 +142,4 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 
 ## Revision history / 改訂履歴
 - 2026-10-01 — first version (Phase 6). / 初版。
+- 2026-10-03 — `report_setup_paths.tcl` and how to run it (§1; SD-22). / 失敗経路の集計スクリプトと実行方法（§1、SD-22）。

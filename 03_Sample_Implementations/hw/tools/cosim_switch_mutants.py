@@ -11,6 +11,7 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF Phase 5).
+# 002 2026-10-03       Claude Code   Chg : W5 follows wpms_switch RH002 (the PR-1 check, now pairwise).
 # ============================================================================
 import argparse, os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +32,7 @@ MUTANTS = [
     ("W4", "switch", "wpms_switch.v", "the sum of N checked against NMAX + 64",
      "if (go_sum > NMAX) go_bad = 1'b1;", "if (go_sum > NMAX + 64) go_bad = 1'b1;", "reject"),
     ("W5", "switch", "wpms_switch.v", "PR-1 not checked (a block twice in the sweep word)",
-     "if (seen[blk] || !nv_nx[blk]) go_bad = 1'b1;", "if (!nv_nx[blk]) go_bad = 1'b1;", "reject"),
+     "if (q < sw_nx[3:0] && br == bq) go_bad = 1'b1;", "if (1'b0) go_bad = 1'b1;", "reject"),
     ("W6", "switch", "wpms_switch.v", "PR-2 range closed below NMAX (N = NMAX refused)",
      "wire         x_inrange = ($signed(x_d) >= N_MIN) && ($signed(x_d) <= NMAX);",
      "wire         x_inrange = ($signed(x_d) >= N_MIN) && ($signed(x_d) < NMAX);", "origin"),

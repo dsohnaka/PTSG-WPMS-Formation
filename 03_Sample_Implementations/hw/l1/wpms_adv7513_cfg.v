@@ -42,6 +42,10 @@
 //                                          stream's, which standard I2S does not carry (guide p. 71-72).
 //                                          Found by checking the table against the guide's pages;
 //                                          basis marks updated ([G nn], pages of the guide).
+//  003 2026-10-03       Claude Code   Fix : nack had two drivers (the top FSM cleared it at reset, the
+//                                          transaction engine set it): Quartus error 10028. The engine
+//                                          now raises a one-clock nack_ev; the top FSM alone owns the
+//                                          sticky nack (set one clock later). Icarus accepted the old form.
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -121,6 +125,7 @@ module wpms_adv7513_cfg #(
     reg  [5:0]  idx;
     reg  [7:0]  b_reg, b_dat;
     reg         busy;
+    reg         nack_ev;    // one clock: a byte was not acknowledged (to the top FSM)
 
     // the transaction's ops: write = S, dev, reg, data, P ; read = S, dev, reg, S, dev|1, R, P
     function [10:0] op_of;       // {op, byte}
@@ -153,6 +158,7 @@ module wpms_adv7513_cfg #(
             idx <= 6'd0;  is_read <= 1'b1;  b_reg <= 8'h42;  b_dat <= 8'h00;
         end else begin
             start_tx <= 1'b0;
+            if (nack_ev) nack <= 1'b1;                           // sticky
             case (top)
             T_WAIT: if (wait_cnt != 0) wait_cnt <= wait_cnt - 1;
                     else if (!busy && !start_tx) begin
@@ -187,10 +193,13 @@ module wpms_adv7513_cfg #(
         if (rst) begin
             busy <= 1'b0;  scl_o <= 1'b1;  sda_o <= 1'b1;  qcnt <= 16'd0;
             op <= O_END;  q <= 2'd0;  bitn <= 4'd0;  step <= 3'd0;  rdata <= 8'd0;  shreg <= 8'd0;
+            nack_ev <= 1'b0;
         end else if (start_tx) begin
+            nack_ev <= 1'b0;
             busy <= 1'b1;  step <= 3'd0;  q <= 2'd0;  bitn <= 4'd0;  qcnt <= 16'd0;
             op <= O_START;
         end else if (busy) begin
+            nack_ev <= 1'b0;
             // clock stretching: while SCL is released but held low by the slave, time stands still
             if (scl_o && !scl_in) qcnt <= 16'd0;
             else qcnt <= qtick ? 16'd0 : qcnt + 16'd1;
@@ -219,7 +228,7 @@ module wpms_adv7513_cfg #(
                                   else              rdata <= {rdata[6:0], sda_in};
                                   bitn <= bitn + 4'd1;
                               end else begin
-                                  if (op == O_BYTE && sda_in) nack <= 1'b1;   // not acknowledged
+                                  if (op == O_BYTE && sda_in) nack_ev <= 1'b1;   // not acknowledged
                                   step <= step + 3'd1;
                                   {op, shreg} <= op_of(is_read, step + 3'd1, b_reg, b_dat);
                                   bitn <= 4'd0;
@@ -235,6 +244,7 @@ module wpms_adv7513_cfg #(
                 default: busy <= 1'b0;
                 endcase
             end
-        end
+        end else
+            nack_ev <= 1'b0;
     end
 endmodule

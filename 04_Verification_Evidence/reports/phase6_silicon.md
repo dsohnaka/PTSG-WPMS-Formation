@@ -229,6 +229,10 @@ None new in this part; SD-01 … SD-21 stand as ruled. The board run may add som
 
 本パートで新たな食い違いはない。SD-01〜SD-21 は裁定どおり。実機で見つかれば、修正せず 1 行ずつ追加する。
 
+**Added 2026-10-03:** **SD-22**, clk_sys does not close at 50 MHz (§9). It is open, for the architect's ruling; no fix is applied until then.
+
+**2026-10-03 追加:** **SD-22**（clk_sys が 50 MHz で収束しない、§9）。アーキテクトの裁定待ちで、それまで修正はしない。
+
 ## 6. Questions for the architect / アーキテクトへの質問
 
 1. **Compile.**
@@ -264,3 +268,220 @@ None new in this part; SD-01 … SD-21 stand as ruled. The board run may add som
 For scale: the 5CSEBA6 has about 41,500 ALMs, 112 DSP blocks and some 500 M10K (the Fitter's summary states the exact totals). The SILICON ledger replaces this table once the Fitter has run.
 
 **概算**（Yosys、Quartus ではない）：ボード全体で LUT 10,245、算術 ALUT 4,019、FF 6,479、MLAB 1,538、DSP 22、M10K 2（ブラックボックスの M10K 6 を除く）。Fitter の結果が出れば SILICON の台帳に置き換える。
+
+## 8. After the first Quartus compile (2026-10-03) / 初回 Quartus コンパイル後
+
+The architect's first compile (Quartus Prime Lite 23.1std.1, revision `DE10_Nano_wpms`) stopped in Analysis & Synthesis with 3 errors:
+- 10028 "Can't resolve multiple constant drivers for net `nack`" at `wpms_adv7513_cfg.v`(186);
+- 10029 "Constant driver" at (149);
+- 12152 "Can't elaborate user hierarchy `wpms_adv7513_cfg:u_cfg`".
+
+**Cause.** In the configurator (Phase 4), the sticky `nack` was cleared at reset by the top FSM's always block and set by the transaction engine's. Icarus accepts two procedural drivers of a `reg`; Quartus does not. No other register of the design has two drivers (a scan of every always block of the RTL given to Quartus).
+
+**Fix: `wpms_adv7513_cfg.v` RH003.** The engine raises a one-clock `nack_ev`; the top FSM alone owns `nack` and sets it one clock later. Checked:
+- Phase 4's ADV7513 bench: PASS (29 writes, then 58 after the hot-plug, nack 0);
+- a bench with no I2C slave: `nack` rises at the first unacknowledged byte, stays, and clears on reset;
+- the board-level bench, origin at both budgets: PASS (table done, NACK 0);
+- `make_quartus_project.py --check --mutants`: PASS.
+
+The other messages in the screenshot are warnings, not errors:
+- 10230 at `wpms_exp2_table.hex`: each value is written with 8 hex digits for a 31-bit word. Every value is below 2^31, so nothing is lost.
+- 10030 "rom.data_a/waddr_a/we_a … no driver": the exp2 table inferred as a ROM.
+- 10036 "`cur` assigned a value but never read".
+
+初回コンパイルの 3 エラーは、ADV7513 設定器（Phase 4）の `nack` を 2 つの always ブロックが駆動していたことによる（Icarus は許すが Quartus は許さない）。RH003 で駆動元を 1 つにし、単体試験・スレーブ不在試験・基板ベンチ・プロジェクト検査で確認した。ほかに二重駆動のレジスタはない。残りの表示は警告で、exp2 表の値はすべて 31 ビットに収まる。
+
+## 9. The first fit (2026-10-03): resources and timing / 初回フィット：資源とタイミング
+
+After RH003 the compile went through:
+- Quartus Prime Lite 23.1std.1, revision `DE10_Nano_wpms` (50 MHz), about ten minutes;
+- Analysis & Synthesis, the Fitter and TimeQuest all completed;
+- the three PLLs (two of them fractional) were accepted and placed.
+
+The architect's two reports are kept with the ledger and an observation in `quartus/2026-10-03_DE10_Nano_wpms_fit1/`. They are *Multicorner Timing Analysis Summary* and *Resource Utilization by Entity*.
+
+### 9.1 Resource ledger (SILICON, the Fitter) / 資源台帳
+
+The Core's format (`resource_ledger.py`):
+
+| Date | Revision | ALMs needed (full trim) | Core proper (entity-only) | Comb. ALUTs |
+|---|---|---|---|---|
+| 2026-10-03 | DE10_Nano_wpms (50 MHz): Core RH031p, Formation RH004, cfg RH003 | 457.7 | 414.3 | 773 (725) |
+
+The WPMS entities (total, entity-only in parentheses where it differs; the full table is in `ledger.md`):
+
+| Entity | ALMs | Registers | M10K | DSP |
+|---|---|---|---|---|
+| board top (all) | 11,052.8 | 15,318 | 22 | 23 |
+| Formation | 6,788.7 | 9,716 | 9 | 3 |
+| input switch | 1,692.2 (1,644.2) | 1,493 | 4 (its ROM 3) | 0 |
+| L1 module | 831.7 (582.4) | 1,552 | 5 | 20 |
+| PTSG-Core RH031p | 457.7 (414.3) | 303 | 4 (imem) | 0 |
+| output stage | 336.7 | 283 | 0 | 0 |
+| sequencer | 181.3 | 364 | 0 | 0 |
+| ADV7513 configurator | 140.5 | 145 | 0 | 0 |
+| ISSP ×4, host bridge, JTAG hub | 385.9 | 738 | 0 | 0 |
+
+**Readings.**
+- **The whole design is about a quarter of the device's ALMs**, a fifth of its DSP blocks and a few percent of its M10K. SignalTap is not in yet: its 4 K-deep instance (about 203 M10K, §6) fits beside it.
+- **The Formation is 61 % of the design.** Its store, inbox and their forwarding muxes are registers. The datapath reads the store asynchronously, in the X clock, and an M10K cannot do that.
+- **The nine M10K under the Formation are the prefetch's copies** of the nine banks it reads: N, LP, LAD1, LAD2, PH0, PHD1, PHD2, RT and LS0. Their read address, `pf_block`, is a register, and Quartus absorbed it. The datapath's own port stays in registers.
+- **Against the ESTIMATE (§7):**
+  - Yosys's 10,245 LUTs + 4,019 arithmetic ALUTs = 14,264, against the Fitter's 14,312 combinational ALUTs;
+  - DSP 22 against 23;
+  - Yosys had put memories in MLABs, where Quartus used registers and M10K.
+
+### 9.2 Timing (STA, slow corner 1100 mV 85 °C) / タイミング
+
+| Clock | Setup slack (ns) | Hold slack (ns) |
+|---|---|---|
+| **clk_sys** (`u_pll_sys` output counter, 50 MHz) | **−14.307** (TNS −65,525.293) | +0.033 |
+| FPGA_CLK1_50 | +12.962 | +0.167 |
+| hdmi_tx_clk (the forwarded pixel clock) | +2.975 | +2.968 |
+| pixel (`u_pll_pix` counter 0) | +6.516 | +0.195 |
+| MCLK (`u_pll_aud`) | +74.428 | +0.298 |
+| altera_reserved_tck | +3.395 | +0.167 |
+
+Recovery +35.228 and removal +0.423 (tck only); minimum pulse width met everywhere.
+- **What meets:** the SDC's work.
+  - hdmi_tx_clk exists, so the 180° counter was found.
+  - The HDMI pixel bus meets t_VSU / t_VHLD with about 3 ns each way.
+  - MCLK and the pixel clock are far from their limits.
+- **What fails:** clk_sys alone, by 14.3 ns in a 20 ns period. The worst path is about 34 ns.
+
+### 9.3 Why clk_sys fails / clk_sys が満たさない理由
+
+By reading the RTL, with the gate depth of each module: Yosys 0.69, `synth -flatten -noabc; ltp -noff`, gates before LUT mapping, a multiplier as one cell. The details are in `discrepancies.md`, SD-22.
+
+- **The Formation's X clock is one long chain (depth 146).**
+  - It runs: address decode → forwarded store read → 32 × 32 MUL/MAC → shift by SHV → add → overflow → error priority → the one `x_commit`.
+  - From there it fans out to the store's write enables (≈ 4,100 flip-flops), the background copy and its pending masks, and on to `inbox_taken`.
+  - The Phase 2 clock table puts all of it in one clock, and the 2026-09-28 ruling deferred pipelining.
+- **The tail from the multiplier into the store, the copy and the masks is structural only.** STM, STA @PPM and BCP are the only instructions that reach those registers, and none of their errors depends on the multiplier. A single `x_commit` serves every instruction, so the netlist makes them wait anyway.
+- **What is long for real:**
+  - MUL @PPM into Accm;
+  - BCP's EW5, whose sum of eight N is written as a chain;
+  - the switch's GO check (depth 99), also a chained sum of N.
+- **Everything else is short:** L1 42, output stage 52, sequencer 12.
+
+### 9.4 What was expected / 事前の見込み
+
+- **Written before the compile:**
+  - README §1 and §3.4: "at 100 MHz the expected critical path is the imem half-cycle path";
+  - Phase 2 §6 Q4: three Formation paths are long for one clock "at 100 MHz".
+- **Neither said that 50 MHz might fail. It does, by 14 ns.** The Phase 2 reading named the right paths, but did not see that they exceed even 20 ns. Phase 6's README then carried the wrong one (the imem) forward.
+- The observation of this fit records that as a miss.
+
+### 9.5 Proposed disposition and what I need / 提案と必要なもの
+
+SD-22's two steps, each followed by Phases 2–6 and a new fit:
+1. **Behaviour unchanged** (no clock added; the recorded runs must repeat cycle for cycle):
+   - per-register enables;
+   - the address decode registered with ADRS;
+   - adder trees for the sums of N (Formation RH005, switch RH002).
+2. **Only if 1 does not close:** a write-back clock for Accm, Temp and the store, E8 checked there, with forwarding. BCP and the copy keep their clocks. It is a pipeline, so the 2026-09-28 ruling must be lifted.
+
+What I need from the architect:
+- **(a) The failing-path report.**
+  - Copy `hw/de10_nano/report_setup_paths.tcl` into `build/quartus/`. Rerunning `make_quartus_project.py` also copies it and leaves the compiled database alone.
+  - Run `quartus_sta -t report_setup_paths.tcl` there. It also works from the Timing Analyzer's Tcl console with the project open: `source report_setup_paths.tcl`.
+  - Send `output_files/setup_clk_sys_groups.txt` first (small). `setup_clk_sys_keys.rpt` and `setup_clk_sys_worst10.rpt` show the cells.
+- **(b) A ruling.** Step 1 now? And step 2, if needed, without a new round?
+
+The 100 MHz revision need not be compiled: it is not expected to close even after step 2 (SD-22).
+
+**和文.**
+- **コンパイル。** RH003 の後、コンパイルは約 10 分で最後まで通った。PLL 3 基（うち 2 基は分数モード）も受理・配置された。
+- **資源（SILICON）。**
+  - 全体で 11,053 ALM（デバイスの約 4 分の 1）、DSP 23、M10K 22。
+  - Formation が 6,789 ALM で全体の 61 %。データパスのストア読出しが非同期のため、ストアとインボックスはレジスタで実装される。
+  - Core（RH031p）は 457.7（本体 414.3）ALM。
+- **タイミング。** clk_sys だけが −14.3 ns で満たさない。HDMI 画素バス、MCLK、画素クロック、JTAG は満たす。
+- **原因。**
+  - Formation の X クロックが、アドレス解読から乗算・桁あふれ・コミットを経て、ストア書込み許可と背景コピーまでの一本の長い連鎖になっている。
+  - そのうち乗算器からストア側への部分は構造上だけのもの。
+  - 実在する長経路は MUL @PPM、BCP の EW5、スイッチの GO 検査。
+- **事前の見込み。** 50 MHz が通らないとは予想しておらず、見込み違いとして記録する。
+- **提案。**
+  - まず動作不変の再構成。足りなければ書戻しクロック（パイプライン化。2026-09-28 の裁定の解除が必要）。
+  - 失敗経路の集計（`report_setup_paths.tcl`）の実行と、提案への裁定をお願いしたい。
+
+## 10. SD-22 step 1 (2026-10-03): the long paths restructured, behaviour unchanged / 段階 1：動作不変の再構成
+
+**Ruling 2026-10-03 (architect):** step 1 now. If step 1 does not close timing, step 2 follows without a new round of questions.
+
+### 10.1 What changed / 変更点
+
+**Formation RH005** (`hw/l2/wpms_formation.v`). No clock is added to anything.
+- **(a) Each register's enable comes from the errors its own instructions can raise.** RH004 derived every enable from one commit, `x_go && x_err == 0`, computed for every instruction.
+  - The store's write enable now comes from STM's and STA @PPM's errors: E4, E5, EW3, EW4.
+  - BCP's effects (the pending masks, `inbox_taken`, copied, SWEEP.a) come from E4, EW4 and EW5.
+  - ADRS (SAD, LDM, STM) and Accm, Temp, SHV, LoopVal and JumpVal each use their own op's conditions.
+  - The error path (`error_flag`, code, SN, the trap) keeps the full priority.
+  - In simulation, a check compares in every clock the enable each op uses with RH004's commit.
+- **(b) The address decode is registered.** `region` and `a_block` are registers, loaded at the edge that loads ADRS (from `adrs_nx`) and x_cur (from `seq_cur`). The X clock starts from them, not from ADRS.
+- **(c) EW5's sum of N is a balanced tree,** three adder levels instead of eight. Its repeat check is pairwise instead of a running mask.
+
+**Switch RH002** (`hw/switch/wpms_switch.v`): the GO check's sum of N is a tree, and PR-1's repeat check is pairwise.
+
+**Tests that followed the text** (same intent):
+- `wpms_formation_tb.v` RH002: the backdoor that sets ADRS also sets its registered decode.
+- `cosim_mutants.py` RH002:
+  - M3, M6, M11 and M20 are the same defects in the new text;
+  - M21–M23 are new: the registered region missing ADRS's post-increment, BCP's enable ignoring EW5, and MUL's Accm enable ignoring E8.
+- `cosim_switch_mutants.py` RH002: W5 follows the pairwise PR-1.
+
+**New tools:**
+- `equiv_lockstep.py` — the previous revision beside the current one, compared in every clock (RTL-SIM);
+- `equiv_formal.py` — the restructured logic proved equal (SAT, Yosys);
+- `gate_depth.py` — the gate levels in front of each register group (ESTIMATE).
+
+### 10.2 Nothing changed: the evidence / 動作が変わらないことの証拠
+
+| Check | Class | Result |
+|---|---|---|
+| **Lockstep.** Formation RH005 beside RH004, and switch RH002 beside RH001, both taken from commit e3d4985. NMAX 1,008 and 2,048, seeds 1 and 2, 400,000 clocks per run. Compared in every clock: every output, every register (the Formation's 128 store words, 104 inbox words, the masks; the switch's whole state) and the restructured signals | RTL-SIM | **0 differences in 8 runs** (3.2 M clocks). Each Formation run executed about 318,000 instructions — all 16 ops, every error code (E4, E5, E8, EW2–EW6, about 230 EW5) — with about 1,500 BCPs that copy and 2,000 copy clocks. Each switch run made about 8,700 GOs and 1,870 go-nows, refused for every cause (P > 8, a block twice, N out of range, sum > NMAX) |
+| **Formal.** The switch's GO check (`go_bad`, `go_sum`) at both NMAX; the Formation's EW5 sum (tree against chain) and repeat check; the Formation's split enables equal to RH004's commit for every state and input (the overflow flags and EW5 cut free) | formal (SAT) | **5/5 proved** (`logs/equiv_formal.txt`) |
+| **Phase 2.** `cosim_l2` against the golden model | RTL-SIM | **3,914/3,914** bit-identical; the summary equals the recorded one, traced clocks included (durations aside). Mutants **23/23**; M1–M20 caught at exactly the recorded counts |
+| **Phases 3–6.** The recipes rerun (`run_phase6.sh`, REGRESSION=1) and compared with the 2026-10-01 record (`compare_regression.py`) | RTL-SIM | **ALL CHECKS PASSED.** Phase 3's log and the 18 board runs (`cosim_board.txt`) are identical to the record. All 34 expected files are identical: the 18 JSON by value, the 16 captures byte for byte. The only other differences are explained: the resource ESTIMATE lines, the new mutants, and the moved line numbers of the same compiler notes |
+
+### 10.3 Where the long chains end now (ESTIMATE) / 長い連鎖の終点
+
+`gate_depth.py` (Yosys `synth -flatten -noabc`). Gate levels in front of each register group, RH004 → RH005:
+
+| Register group | Bits | RH004 | RH005 |
+|---|---|---|---|
+| `taken_due`, `inbox_taken` | 2 | 146, 145 | 66, 65 |
+| the store (`g_store`, `st_n`) | 4,096 | 136 | **33** |
+| the pending masks | 128 | 136 | 56 |
+| `error_flag`, `error_code`, `error_sn`, the trap | 19 | 129 | **112** |
+| Accm | 32 | 127 | **106** |
+| ADRS, Temp, SHV, LoopVal, JumpVal | 71 | 127 | 23–27 |
+| SWEEP.a, copied | 37 | 127 | 54 |
+| switch: `arm` … `ibx_*` (the GO check's results) | ≈ 400 | 99 | 77 |
+
+In RH004, the chain more than 125 levels deep reached about 4,400 registers. Now the chains deeper than 100 levels reach about 50: the real MUL/MAC @PPM path through the overflow, in front of the error registers and Accm.
+
+A gate level is not a nanosecond, so the second fit is the measure. My estimate is that MUL/MAC @PPM is close to 20 ns on this speed grade; if it does not close, that path is what step 2 removes.
+
+### 10.4 Next / 次に
+
+- **The second fit.** Please compile `DE10_Nano_wpms` as before (`make_quartus_project.py`, then Quartus). Send the *Multicorner Timing Analysis Summary*, and, if clk_sys still fails, `setup_clk_sys_groups.txt` from `report_setup_paths.tcl`.
+- **If clk_sys closes:** Phase 6 continues with SignalTap and the captures.
+- **If not:** step 2 at once, as ruled. Planned in its smallest form:
+  - the E8 check of MUL and MAC moves to the next clock;
+  - Accm is written in X and restored from a one-clock copy if that check fails, and the instruction behind is squashed;
+  - the store, Temp, BCP and the copy keep their clocks, because MUL and MAC write only Accm;
+  - EW2 keeps its clock. Only E8 is raised one clock later (and, when a prefetch's EW2 falls in the same clock, EW2 is the code reported).
+
+**和文.**
+- **変更（2026-10-03 の裁定どおり段階 1）。**
+  - Formation RH005：各レジスタの書込み許可をその命令自身のエラー条件から作り、アドレス解読をレジスタ化し、EW5 の N の和を加算木に、重複検査を総当たりの並列比較にした。
+  - スイッチ RH002：GO 検査の和を加算木に、PR-1 の重複検査を並列比較にした。
+- **動作が変わらないことの証拠。**
+  - 旧版と並べた毎クロック比較（320 万クロック、全出力・全レジスタ）で差は 0。
+  - Phase 2〜6 の回帰も記録と同一（ボード 18 本と期待キャプチャ 16 本はバイト単位で一致）。
+  - SAT で書き換えた論理の等価を 5 件すべて証明した。
+  - Phase 2 は記録と同一（ミュータント 20 件の検出数も同じ、新規 3 件も検出）。
+- **長い連鎖の終点（概算）。** ストア約 4,100 FF の前の連鎖は 136 段から 33 段に縮んだ。残る最長は実在の MUL/MAC @PPM 経路（エラー登録 112 段、Accm 106 段）。
+- **次。** 第 2 回フィットで判定する。収束しなければ段階 2（E8 判定を次クロックへ、Accm は投機的に書いて控えから復元、後続命令を打ち消す）へ直ちに進む。

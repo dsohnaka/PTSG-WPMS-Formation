@@ -1,0 +1,7 @@
+equiv_formal: old logic from commit e3d4985, new from the working files; yowasp-yosys — evidence class formal (SAT)
+  [PROVED] switch GO check (go_bad, go_sum), NMAX 1008  (37,397 variables, 107,782 clauses)
+  [PROVED] switch GO check (go_bad, go_sum), NMAX 2048  (37,387 variables, 107,752 clauses)
+  [PROVED] Formation EW5: the sum of N (tree against chain)  (120,754 variables, 349,672 clauses)
+  [PROVED] Formation EW5: the repeat check (pairwise against running mask)  (120,754 variables, 349,672 clauses)
+  [PROVED] Formation: split enables = RH004's commit, every state and input  (291,845 variables, 776,774 clauses)
+equiv_formal: PASS — every check proved

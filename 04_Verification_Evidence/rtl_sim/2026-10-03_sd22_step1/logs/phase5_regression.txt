@@ -1,0 +1,34 @@
+run_phase5: 2026-10-03T07:20:59Z — Icarus Verilog version 12.0 (stable) (); Python 3.11.15
+  run_phase4: ALL PHASE 4 CHECKS PASSED
+  run_phase3: ALL PHASE 3 CHECKS PASSED
+  run_phase2: ALL PHASE 2 CHECKS PASSED
+  [PASS] regression: Phases 2, 3 and 4 on the Formation's RH004 and the ADV7513 table's RH002
+  [PASS] ROM images wpms_rom_origin_{1008,2048}.{hex,mif} regenerate identically (Ch.3 §3.10, Ch.5 §5.8)
+  iverilog -Wall: 16 lines, 0 from hw/switch
+  [PASS] wpms_system + bench compile; nothing to say about hw/switch
+  [origin 50 1] origin: PASS (7 s)
+  [music 50 1] music: PASS (4 s)
+  [reject 50 1] reject: PASS (3 s)
+  [timing 50 1] timing: PASS (19 s)
+  [bridge 50 1] bridge: PASS (3 s)
+  [random 50 1] random: PASS (18 s)
+  [random 50 2] random: PASS (17 s)
+  [random 50 3] random: PASS (18 s)
+  [origin 100 1] origin: PASS (14 s)
+  [music 100 1] music: PASS (7 s)
+  [reject 100 1] reject: PASS (5 s)
+  [timing 100 1] timing: PASS (34 s)
+  [bridge 100 1] bridge: PASS (6 s)
+  [random 100 4] random: PASS (27 s)
+  [origin_rom] origin: PASS (7 s)
+  [PASS] cosim_switch: the switch, the host path, the ROM and the sound agree with the models in every run
+  check_host_tcl: PASS
+  [PASS] the host scripts under tclsh against the ISSP stand-ins: the demo sends exactly its steps
+  cosim_switch_mutants: 22/22 mutants killed
+  [PASS] every mutant of the switch, the bridge and RH004 is killed
+  ESTIMATE wpms_switch: $lut 2739; MISTRAL_ALUT_ARITH 527; MISTRAL_FF 1275; MISTRAL_M10K 3; 
+  ESTIMATE wpms_host_bridge: $lut 28; MISTRAL_ALUT_ARITH 4; MISTRAL_FF 186; 
+  ESTIMATE wpms_key_pulse: $lut 9; MISTRAL_ALUT_ARITH 19; MISTRAL_FF 23; 
+  cosim_switch evidence: PASS (0 s)
+  [PASS] evidence run (reset, the ROM, one host GO) with its VCD
+run_phase5: ALL PHASE 5 CHECKS PASSED

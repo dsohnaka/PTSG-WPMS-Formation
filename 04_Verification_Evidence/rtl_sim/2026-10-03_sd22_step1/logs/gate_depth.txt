@@ -1,0 +1,55 @@
+gate_depth: gate levels in front of each register group — previous revision (commit e3d4985) against the working file; yowasp-yosys synth -flatten -noabc — evidence class ESTIMATE
+
+wpms_formation: longest 146 -> 112 levels
+  register group                                 bits   old   new
+  taken_due                                         1   146    66
+  inbox_taken                                       1   145    65
+  g_store[].m[]                                  3840   136    33
+  pmask[]                                         128   136    56
+  st_n[]                                          256   136    33
+  error_code                                        5   129   112
+  error_flag                                        1   129   112
+  error_sn                                         12   129   112
+  insert_req_r                                      1   129   112
+  $\cm_mask$rdreg[]$q                               3   128    28
+  a_slot                                            4   127    27
+  accm                                             32   127   106
+  adrs                                              6   127    27
+  copied                                            8   127    54
+  jumpval                                          12   127    23
+  loopval                                          12   127    23
+  s_temp                                           32   127    26
+  shv                                               5   127    23
+  sweep_a                                          28   127    54
+  sweep_copied                                      1   127    54
+  region                                           10     -    35
+  rd_e5                                             1     -    33
+  a_block                                           3     -    31
+  armed                                             8    13    13
+
+wpms_switch: longest 99 -> 77 levels
+  register group                                 bits   old   new
+  arm                                               9    99    77
+  fired                                             9    95    73
+  reject0                                          32    95    73
+  ibx_we                                            1    94    72
+  go_seq                                           32    93    71
+  n_fu_v                                           96    93    71
+  nv_fu                                             8    93    71
+  sw_fu                                            28    93    71
+  ibx_hand                                          1    92    70
+  d_rej                                             1    91    69
+  ibx_addr                                          8    89    67
+  ibx_wdata                                        32    89    67
+  cmask_v                                         136    87    65
+  n_st_v                                           96    50    50
+  rtout_v                                         128    43    43
+  nv_st                                             8    26    26
+  d_rdata                                          32    24    24
+  arm_p3                                            9    19    19
+  sweep_clocks_max                                 12    17    17
+  fa                                                9    14    14
+  ft                                                9    14    14
+  shadow[]                                       4096    12    12
+  sample_n                                         32    11    11
+  sw_st                                            28    11    11
