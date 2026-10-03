@@ -11,6 +11,7 @@
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-10-01       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 6).
+//  002 2026-10-03       Claude Code   Chg : altera_pll also prints its duty cycles (SD-23).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -38,10 +39,11 @@ module altera_pll #(
     assign outclk = {number_of_clocks{1'b0}};
     assign locked = 1'b0;
     assign fboutclk = 1'b0;
-    initial $display("STUB altera_pll %m | fractional=%0s | ref=%0s | mode=%0s | n=%0d | out0=%0s | phase0=%0s | out1=%0s | phase1=%0s",
+    initial $display("STUB altera_pll %m | fractional=%0s | ref=%0s | mode=%0s | n=%0d | out0=%0s | phase0=%0s | duty0=%0d | out1=%0s | phase1=%0s | duty1=%0d",
                      fractional_vco_multiplier, reference_clock_frequency, operation_mode, number_of_clocks,
-                     output_clock_frequency0, phase_shift0,
-                     number_of_clocks > 1 ? output_clock_frequency1 : "-", number_of_clocks > 1 ? phase_shift1 : "-");
+                     output_clock_frequency0, phase_shift0, duty_cycle0,
+                     number_of_clocks > 1 ? output_clock_frequency1 : "-", number_of_clocks > 1 ? phase_shift1 : "-",
+                     duty_cycle1);
 endmodule
 
 module altsyncram #(

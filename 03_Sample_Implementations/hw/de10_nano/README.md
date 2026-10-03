@@ -8,8 +8,8 @@
 
 | File | What it is |
 |---|---|
-| `DE10_Nano_wpms_top.v` | The board top. Pins of the Terasic golden top; three PLLs (`clk_sys` 50 or 100 MHz, MCLK 12.288 MHz, pixel 74.25 MHz at 0° and 180°); resets (power-on, PLL lock, SW[2], JTAG); the ADV7513 configurator, the 720p60 video carrier, I2S + MCLK; the LEDs; ISSP instance **BRD**; the tap registers `tap_ctl` / `tap_dat` for SignalTap. One parameter: `SYS_MHZ` (50 or 100). |
-| `wpms_pll.v` | One Cyclone V PLL, `altera_pll` instantiated directly (as the Core's 100 MHz top). |
+| `DE10_Nano_wpms_top.v` | The board top. Pins of the Terasic golden top; three PLLs (`clk_sys` 50 or 100 MHz, MCLK 12.288 MHz, pixel 74.25 MHz at 0° and 180°); resets (power-on, PLL lock, SW[2], JTAG); the ADV7513 configurator, the 720p60 video carrier, I2S + MCLK; the LEDs; ISSP instance **BRD**; the tap registers `tap_ctl` / `tap_dat` for SignalTap. Two parameters, set by the revision: `SYS_MHZ` (50 or 100) and `SYS_DUTY`, clk_sys's time high in percent (SD-23). |
+| `wpms_pll.v` | One Cyclone V PLL, `altera_pll` instantiated directly (as the Core's 100 MHz top); `DUTY0`, the first output's duty cycle. |
 | `DE10_Nano_wpms.sdc` | The constraints of both revisions (header: what is constrained and why). |
 | `make_quartus_project.py` | Writes the Quartus project (flat, git-ignored) to `build/quartus/`; `--check` tests it without Quartus. |
 | `report_setup_paths.tcl` | After a compile: every failing clk_sys setup endpoint, grouped by register, and the worst path into each register class (`quartus_sta -t`; SD-22). |
@@ -27,10 +27,12 @@ python3 hw/de10_nano/make_quartus_project.py            # -> hw/de10_nano/build/
 
 Open `build/quartus/DE10_Nano_wpms.qpf` in Quartus Prime Lite 23.1std.1. Two revisions (Project ▸ Revisions, or the toolbar's list):
 
-| Revision | `SYS_MHZ` | clk_sys | NMAX | Test origin N | T_min (clocks per 48 kHz sample) |
-|---|---|---|---|---|---|
-| `DE10_Nano_wpms` (first) | 50 | 50 MHz | 1,008 | 1,008 | 1,041 |
-| `DE10_Nano_wpms100` | 100 | 100 MHz | 2,048 | 2,048 | 2,083 |
+| Revision | `SYS_MHZ` | `SYS_DUTY` | clk_sys | NMAX | Test origin N | T_min (clocks per 48 kHz sample) |
+|---|---|---|---|---|---|---|
+| `DE10_Nano_wpms` (first) | 50 | 30 | 50 MHz, high 6 ns | 1,008 | 1,008 | 1,041 |
+| `DE10_Nano_wpms100` | 100 | 50 | 100 MHz | 2,048 | 2,048 | 2,083 |
+
+**clk_sys's duty cycle (SD-23).** The Core's imem (`ptsg_imem`, EDGE "NEG") reads on clk_sys's falling edge, and the Core's registers take the word at the next rising edge. At 50 % that is 10 ns, which the second fit missed by 2.0 ns. From the third fit on, the 50 MHz revision runs clk_sys 30 % high: the read side gets 14 ns, the address side (`state_num`, a register straight into the M10K) 6 ns. The Core and its wrapper are untouched, and TimeQuest analyzes the real waveform. `make_quartus_project.py --sys-duty 50` builds the 50 MHz revision as the first two fits had it. The architect's ruling is requested (`reports/discrepancies.md`, SD-23).
 
 Command line: `quartus_sh --flow compile DE10_Nano_wpms -c DE10_Nano_wpms` (or `-c DE10_Nano_wpms100`).
 
@@ -143,3 +145,4 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 ## Revision history / 改訂履歴
 - 2026-10-01 — first version (Phase 6). / 初版。
 - 2026-10-03 — `report_setup_paths.tcl` and how to run it (§1; SD-22). / 失敗経路の集計スクリプトと実行方法（§1、SD-22）。
+- 2026-10-03 — clk_sys's duty cycle per revision, `SYS_DUTY` and `--sys-duty` (§1; SD-23). / リビジョンごとの clk_sys デューティ比（§1、SD-23）。

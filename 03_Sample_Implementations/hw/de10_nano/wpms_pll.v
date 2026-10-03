@@ -13,12 +13,17 @@
 //                    clock shifted by half a period
 //  FRACTIONAL = "true" lets the VCO multiplier be fractional (12.288 MHz from
 //  50 MHz has no small integer ratio); "false" for the integer ratios.
+//  DUTY0: OUT0's duty cycle in percent (the time high); 50 unless a revision
+//  says otherwise (clk_sys, SD-23: the Core's imem reads on the falling edge).
+//  The SIM branch keeps 50 %: in RTL simulation an edge's position within the
+//  period changes nothing.
 //  VENDOR "INTEL" instantiates altera_pll; "SIM" instantiates wpms_pll_sim
 //  (de10_nano/sim/wpms_pll_sim.v, the board-level bench only — it holds the
 //  delays and is never given to Quartus).
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-10-01       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 6).
+//  002 2026-10-03       Claude Code   Add : DUTY0, OUT0's duty cycle (SD-23).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -28,6 +33,7 @@ module wpms_pll #(
     parameter integer NCLK       = 1,                  // 1 or 2 outputs
     parameter         OUT0       = "50.000000 MHz",
     parameter         PHASE0     = "0 ps",
+    parameter integer DUTY0      = 50,                 // OUT0's time high, percent
     parameter         OUT1       = "0 MHz",
     parameter         PHASE1     = "0 ps",
     parameter integer SIM_HALF0_PS = 10000,            // SIM: half period of outclk0
@@ -51,7 +57,7 @@ module wpms_pll #(
                     .number_of_clocks          (2),
                     .output_clock_frequency0   (OUT0),
                     .phase_shift0              (PHASE0),
-                    .duty_cycle0               (50),
+                    .duty_cycle0               (DUTY0),
                     .output_clock_frequency1   (OUT1),
                     .phase_shift1              (PHASE1),
                     .duty_cycle1               (50),
@@ -73,7 +79,7 @@ module wpms_pll #(
                     .number_of_clocks          (1),
                     .output_clock_frequency0   (OUT0),
                     .phase_shift0              (PHASE0),
-                    .duty_cycle0               (50),
+                    .duty_cycle0               (DUTY0),
                     .pll_type                  ("General"),
                     .pll_subtype               ("General")
                 ) u_pll (
