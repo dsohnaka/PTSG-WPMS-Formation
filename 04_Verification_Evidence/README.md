@@ -1,8 +1,8 @@
 # Layer 4 — Verification Evidence / 第4層——検証エビデンス
 
-**CC0.** Where this profile's claims meet DE10-nano (Cyclone V SoC 5CSEBA6U23I7). The profile's numbers so far are instruction counts derived from the master's rows, oracle runs (Layer 3), and — since 2026-09-27 — RTL simulation of the Core the profile runs on. Every number carries its class: **ORACLE** (Python model), **RTL-SIM** (Icarus/ModelSim), **SILICON** (DE10-nano, SignalTap → VCD). No SILICON entry exists yet.
+**CC0.** Where this profile's claims meet DE10-nano (Cyclone V SoC 5CSEBA6U23I7). The profile's numbers so far are instruction counts derived from the master's rows, oracle runs (Layer 3), and — since 2026-09-27 — RTL simulation of the Core the profile runs on. Every number carries its class: **ORACLE** (Python model), **RTL-SIM** (Icarus/ModelSim), **SILICON** (DE10-nano: SignalTap → VCD, and the Fitter's numbers for the device). Timing from Quartus's static analysis of a fitted design is marked **STA**. The first SILICON entry is the resource ledger of the first fit (2026-10-03); no capture exists yet.
 
-**CC0。** 本プロファイルの主張が DE10-nano と出会う場所。これまでの数値は、マスターの行から導いた命令数、オラクル実行（第3層）、そして 2026-09-27 からはプロファイルが載る Core の RTL シミュレーション。数値はすべて証拠クラスを伴う: **ORACLE**・**RTL-SIM**・**SILICON**。SILICON の記載はまだない。
+**CC0。** 本プロファイルの主張が DE10-nano と出会う場所。これまでの数値は、マスターの行から導いた命令数、オラクル実行（第3層）、そして 2026-09-27 からはプロファイルが載る Core の RTL シミュレーション。数値はすべて証拠クラスを伴う: **ORACLE**・**RTL-SIM**・**SILICON**（SignalTap の取得と、Fitter によるデバイス上の数値）。配置配線後の静的タイミング解析の値は **STA** と記す。最初の SILICON の記載は初回フィットの資源台帳（2026-10-03）で、取得はまだない。
 
 ## Entries / 記載
 
@@ -20,7 +20,8 @@
 | 2026-10-01 | `signaltap/phase6_pending/` — the observation templates of captures C1–C5, the Expected column (the brief's bounds, the RTL-SIM values) written before any capture | — | pending |
 | 2026-10-01 | `reports/customer_note_sd19_host_path.md` — the note for the customer team on the host path (ruling 2026-10-01: ISSP carrying addressable port-0 transactions is adopted; the profile overrides C5-D8 here) | — | prepared |
 | 2026-09-30 | `reports/customer_note_sd16_sin.md` — the note for the customer team on the L1 sine (ruling 2026-09-30: the published realization is the official specification) | — | prepared |
-| 2026-09-27 | `reports/discrepancies.md` — SD-01 … SD-21, filed, not fixed; rulings of 2026-09-28, 2026-09-29, 2026-09-30 and 2026-10-01 recorded | — | open |
+| 2026-10-03 | `quartus/2026-10-03_DE10_Nano_wpms_fit1/` (`observation.md`, `ledger.md`, the two Quartus reports) + `reports/phase6_silicon.md` §8–§9 — the first compile of the 50 MHz revision. After the configurator's RH003 (two drivers of `nack`: Quartus error 10028), Quartus Prime Lite 23.1std.1 completes. The resource ledger: 11,052.8 ALMs, 15,318 registers, 22 M10K, 23 DSP; the Formation 6,788.7 ALMs; PTSG-Core RH031p 457.7 (414.3). Timing: every clock meets but clk_sys, −14.307 ns (TNS −65,525 ns): the Formation's one-clock execute (SD-22) | SILICON (resources), STA | ledger recorded; timing open (SD-22) |
+| 2026-09-27 | `reports/discrepancies.md` — SD-01 … SD-22, filed, not fixed; rulings of 2026-09-28, 2026-09-29, 2026-09-30 and 2026-10-01 recorded | — | open |
 
 ## Layout / 構成
 
@@ -29,6 +30,7 @@
 ├── SILICON_BRIEF_2026-09-27.md      the plan (Layer 4 plan, not evidence)
 ├── reports/                          one report per phase, bilingual; discrepancies.md; logs/
 ├── rtl_sim/<date>_<feature>/         RTL-SIM evidence: observation.md + small VCDs + logs
+├── quartus/<date>_<revision>_fit<n>/ a fit: the Quartus reports, the resource ledger, observation.md (Phase 6)
 ├── signaltap/<date>_<feature>/       SILICON evidence: VCD + observation.md (Phase 6)
 └── signaltap/phase6_pending/        the Phase 6 captures' templates, Expected filled before capture
 ```

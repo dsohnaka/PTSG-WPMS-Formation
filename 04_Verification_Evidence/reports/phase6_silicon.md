@@ -229,6 +229,10 @@ None new in this part; SD-01 … SD-21 stand as ruled. The board run may add som
 
 本パートで新たな食い違いはない。SD-01〜SD-21 は裁定どおり。実機で見つかれば、修正せず 1 行ずつ追加する。
 
+**Added 2026-10-03:** **SD-22**, clk_sys does not close at 50 MHz (§9). It is open, for the architect's ruling; no fix is applied until then.
+
+**2026-10-03 追加:** **SD-22**（clk_sys が 50 MHz で収束しない、§9）。アーキテクトの裁定待ちで、それまで修正はしない。
+
 ## 6. Questions for the architect / アーキテクトへの質問
 
 1. **Compile.**
@@ -286,3 +290,118 @@ The other messages in the screenshot are warnings, not errors:
 - 10036 "`cur` assigned a value but never read".
 
 初回コンパイルの 3 エラーは、ADV7513 設定器（Phase 4）の `nack` を 2 つの always ブロックが駆動していたことによる（Icarus は許すが Quartus は許さない）。RH003 で駆動元を 1 つにし、単体試験・スレーブ不在試験・基板ベンチ・プロジェクト検査で確認した。ほかに二重駆動のレジスタはない。残りの表示は警告で、exp2 表の値はすべて 31 ビットに収まる。
+
+## 9. The first fit (2026-10-03): resources and timing / 初回フィット：資源とタイミング
+
+After RH003 the compile went through:
+- Quartus Prime Lite 23.1std.1, revision `DE10_Nano_wpms` (50 MHz), about ten minutes;
+- Analysis & Synthesis, the Fitter and TimeQuest all completed;
+- the three PLLs (two of them fractional) were accepted and placed.
+
+The architect's two reports are kept with the ledger and an observation in `quartus/2026-10-03_DE10_Nano_wpms_fit1/`. They are *Multicorner Timing Analysis Summary* and *Resource Utilization by Entity*.
+
+### 9.1 Resource ledger (SILICON, the Fitter) / 資源台帳
+
+The Core's format (`resource_ledger.py`):
+
+| Date | Revision | ALMs needed (full trim) | Core proper (entity-only) | Comb. ALUTs |
+|---|---|---|---|---|
+| 2026-10-03 | DE10_Nano_wpms (50 MHz): Core RH031p, Formation RH004, cfg RH003 | 457.7 | 414.3 | 773 (725) |
+
+The WPMS entities (total, entity-only in parentheses where it differs; the full table is in `ledger.md`):
+
+| Entity | ALMs | Registers | M10K | DSP |
+|---|---|---|---|---|
+| board top (all) | 11,052.8 | 15,318 | 22 | 23 |
+| Formation | 6,788.7 | 9,716 | 9 | 3 |
+| input switch | 1,692.2 (1,644.2) | 1,493 | 4 (its ROM 3) | 0 |
+| L1 module | 831.7 (582.4) | 1,552 | 5 | 20 |
+| PTSG-Core RH031p | 457.7 (414.3) | 303 | 4 (imem) | 0 |
+| output stage | 336.7 | 283 | 0 | 0 |
+| sequencer | 181.3 | 364 | 0 | 0 |
+| ADV7513 configurator | 140.5 | 145 | 0 | 0 |
+| ISSP ×4, host bridge, JTAG hub | 385.9 | 738 | 0 | 0 |
+
+**Readings.**
+- **The whole design is about a quarter of the device's ALMs**, a fifth of its DSP blocks and a few percent of its M10K. SignalTap is not in yet: its 4 K-deep instance (about 203 M10K, §6) fits beside it.
+- **The Formation is 61 % of the design.** Its store, inbox and their forwarding muxes are registers. The datapath reads the store asynchronously, in the X clock, and an M10K cannot do that.
+- **The nine M10K under the Formation are the prefetch's copies** of the nine banks it reads: N, LP, LAD1, LAD2, PH0, PHD1, PHD2, RT and LS0. Their read address, `pf_block`, is a register, and Quartus absorbed it. The datapath's own port stays in registers.
+- **Against the ESTIMATE (§7):**
+  - Yosys's 10,245 LUTs + 4,019 arithmetic ALUTs = 14,264, against the Fitter's 14,312 combinational ALUTs;
+  - DSP 22 against 23;
+  - Yosys had put memories in MLABs, where Quartus used registers and M10K.
+
+### 9.2 Timing (STA, slow corner 1100 mV 85 °C) / タイミング
+
+| Clock | Setup slack (ns) | Hold slack (ns) |
+|---|---|---|
+| **clk_sys** (`u_pll_sys` output counter, 50 MHz) | **−14.307** (TNS −65,525.293) | +0.033 |
+| FPGA_CLK1_50 | +12.962 | +0.167 |
+| hdmi_tx_clk (the forwarded pixel clock) | +2.975 | +2.968 |
+| pixel (`u_pll_pix` counter 0) | +6.516 | +0.195 |
+| MCLK (`u_pll_aud`) | +74.428 | +0.298 |
+| altera_reserved_tck | +3.395 | +0.167 |
+
+Recovery +35.228 and removal +0.423 (tck only); minimum pulse width met everywhere.
+- **What meets:** the SDC's work.
+  - hdmi_tx_clk exists, so the 180° counter was found.
+  - The HDMI pixel bus meets t_VSU / t_VHLD with about 3 ns each way.
+  - MCLK and the pixel clock are far from their limits.
+- **What fails:** clk_sys alone, by 14.3 ns in a 20 ns period. The worst path is about 34 ns.
+
+### 9.3 Why clk_sys fails / clk_sys が満たさない理由
+
+By reading the RTL, with the gate depth of each module: Yosys 0.69, `synth -flatten -noabc; ltp -noff`, gates before LUT mapping, a multiplier as one cell. The details are in `discrepancies.md`, SD-22.
+
+- **The Formation's X clock is one long chain (depth 146).**
+  - It runs: address decode → forwarded store read → 32 × 32 MUL/MAC → shift by SHV → add → overflow → error priority → the one `x_commit`.
+  - From there it fans out to the store's write enables (≈ 4,100 flip-flops), the background copy and its pending masks, and on to `inbox_taken`.
+  - The Phase 2 clock table puts all of it in one clock, and the 2026-09-28 ruling deferred pipelining.
+- **The tail from the multiplier into the store, the copy and the masks is structural only.** STM, STA @PPM and BCP are the only instructions that reach those registers, and none of their errors depends on the multiplier. A single `x_commit` serves every instruction, so the netlist makes them wait anyway.
+- **What is long for real:**
+  - MUL @PPM into Accm;
+  - BCP's EW5, whose sum of eight N is written as a chain;
+  - the switch's GO check (depth 99), also a chained sum of N.
+- **Everything else is short:** L1 42, output stage 52, sequencer 12.
+
+### 9.4 What was expected / 事前の見込み
+
+- **Written before the compile:**
+  - README §1 and §3.4: "at 100 MHz the expected critical path is the imem half-cycle path";
+  - Phase 2 §6 Q4: three Formation paths are long for one clock "at 100 MHz".
+- **Neither said that 50 MHz might fail. It does, by 14 ns.** The Phase 2 reading named the right paths, but did not see that they exceed even 20 ns. Phase 6's README then carried the wrong one (the imem) forward.
+- The observation of this fit records that as a miss.
+
+### 9.5 Proposed disposition and what I need / 提案と必要なもの
+
+SD-22's two steps, each followed by Phases 2–6 and a new fit:
+1. **Behaviour unchanged** (no clock added; the recorded runs must repeat cycle for cycle):
+   - per-register enables;
+   - the address decode registered with ADRS;
+   - adder trees for the sums of N (Formation RH005, switch RH002).
+2. **Only if 1 does not close:** a write-back clock for Accm, Temp and the store, E8 checked there, with forwarding. BCP and the copy keep their clocks. It is a pipeline, so the 2026-09-28 ruling must be lifted.
+
+What I need from the architect:
+- **(a) The failing-path report.**
+  - Copy `hw/de10_nano/report_setup_paths.tcl` into `build/quartus/`. Rerunning `make_quartus_project.py` also copies it and leaves the compiled database alone.
+  - Run `quartus_sta -t report_setup_paths.tcl` there. It also works from the Timing Analyzer's Tcl console with the project open: `source report_setup_paths.tcl`.
+  - Send `output_files/setup_clk_sys_groups.txt` first (small). `setup_clk_sys_keys.rpt` and `setup_clk_sys_worst10.rpt` show the cells.
+- **(b) A ruling.** Step 1 now? And step 2, if needed, without a new round?
+
+The 100 MHz revision need not be compiled: it is not expected to close even after step 2 (SD-22).
+
+**和文.**
+- **コンパイル。** RH003 の後、コンパイルは約 10 分で最後まで通った。PLL 3 基（うち 2 基は分数モード）も受理・配置された。
+- **資源（SILICON）。**
+  - 全体で 11,053 ALM（デバイスの約 4 分の 1）、DSP 23、M10K 22。
+  - Formation が 6,789 ALM で全体の 61 %。データパスのストア読出しが非同期のため、ストアとインボックスはレジスタで実装される。
+  - Core（RH031p）は 457.7（本体 414.3）ALM。
+- **タイミング。** clk_sys だけが −14.3 ns で満たさない。HDMI 画素バス、MCLK、画素クロック、JTAG は満たす。
+- **原因。**
+  - Formation の X クロックが、アドレス解読から乗算・桁あふれ・コミットを経て、ストア書込み許可と背景コピーまでの一本の長い連鎖になっている。
+  - そのうち乗算器からストア側への部分は構造上だけのもの。
+  - 実在する長経路は MUL @PPM、BCP の EW5、スイッチの GO 検査。
+- **事前の見込み。** 50 MHz が通らないとは予想しておらず、見込み違いとして記録する。
+- **提案。**
+  - まず動作不変の再構成。足りなければ書戻しクロック（パイプライン化。2026-09-28 の裁定の解除が必要）。
+  - 失敗経路の集計（`report_setup_paths.tcl`）の実行と、提案への裁定をお願いしたい。

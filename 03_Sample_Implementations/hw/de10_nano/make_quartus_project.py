@@ -35,6 +35,7 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-01       Claude Code   Add : First version (SILICON_BRIEF Phase 6).
+# 002 2026-10-03       Claude Code   Add : report_setup_paths.tcl copied beside the project.
 # ============================================================================
 import argparse, datetime, glob, hashlib, os, re, shutil, subprocess, sys, tempfile
 
@@ -158,6 +159,7 @@ def make(out):
         if n.endswith(".mif"):
             files["mif"].append(n)
     files["sdc"] = put(*SDC)
+    put("de10_nano", "report_setup_paths.tcl")            # quartus_sta -t: the failing clk_sys paths
     for p in sorted(glob.glob(os.path.join(HERE, "inject", "*.mif"))):
         put("de10_nano", os.path.join("inject", os.path.basename(p)), "inject")
     for p in sorted(glob.glob(os.path.join(HW, "tools", "host", "*.tcl"))):

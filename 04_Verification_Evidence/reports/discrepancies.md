@@ -34,8 +34,9 @@ Evidence classes: **ORACLE** (Python model) · **RTL-SIM** (Icarus) · **SILICON
 | **SD-19** | The host path: ISSP carries the writes — *Phase 5* | Customer Ch.5 §5.7 and C5-D8 (Fixed): writes through "a JTAG-reachable memory-mapped master on port 0" (reference: the JTAG-to-Avalon master bridge; a Virtual-JTAG custom protocol is the Arena alternative); "ISSP stays required, for probes and a few direct knobs … ISSP is no longer the parameter write path"; the brief's Phase 5: HPS bridge or UART | Architect's ruling of 2026-09-30: the Phase 5 host path is **ISSP over JTAG**, read and written by hand from the Quartus editor. Realized so that nothing of the map changes: the ISSP instance HOST carries **addressable port-0 transactions** of §5.6 (ADDR 12 + WDATA 32 + a write and a read toggle; RDATA and acknowledges on the probe) — an addressable write path in the Virtual-JTAG family, the Arena alternative's kind; ISSP keeps its probe role (instances STAT, INSP) | For the customer, via the architect: §5.7 / C5-D8 to admit ISSP as a transport of port 0 (or to list it with the Arena alternatives); the map, the ports and stage-arm-go are unchanged | **Ruled 2026-09-30** (architect); **2026-10-01: adopted** as the profile's host path, and the customer may be told that the profile overrides C5-D8 here (note prepared: `reports/customer_note_sd19_host_path.md`) · RTL-SIM · closed for the profile; with the customer (information) |
 | **SD-20** | The ROM's list against ownership — *Phase 5* | Ch.5 §5.8: the ROM (port 3) writes module 0 block 0, its SWEEP, MG_TARGET and "all owners = port 0", ending in GO_ALL; §5.5.2: a write, arm or GO from a non-owner is refused; owners are set only from ports 0 and 3; "changing an owner disarms that item" | Taken together, the ROM cannot write blocks that port 0 owns, and if it sets "all owners = port 0" before its GO_ALL it disarms its own items — unless port 3 is exempt from ownership for its own list, which the text does not say. The minimal switch builds ports 0 and 3 only, both privileged: OWNER is stored and read back but **not enforced** (enforcement matters once port 1 or 2 exists) | Customer to state the ROM's standing: port 3 exempt from ownership for its list (proposed), or the owner writes first and no disarm for the ROM's own items | **Ruled 2026-10-01**: port 3 (the ROM) is **exempt from ownership** for its own list. Nothing changes with ports 0 and 3 (OWNER is not enforced); when port 1 or 2 brings enforcement, it skips port 3 · closed |
 | **SD-21** | "Armed" means two things — *Phase 5* | Ch.5 §5.4.2: "arm" is the writer's step before GO; Map v0.3 §7: at each strobe the sequencer latches the take-set, "the blocks and sweep item **armed** at that moment" | In the profile the Formation's armed flags must mean **handed over by a GO**, else an armed-but-not-fired item would be taken without GO. Realized: the switch keeps the writer's arm and hands the fired set over in one clock (Formation RH004, inbox port 0x9F: a strobe takes all of a GO or none). Found by the Phase 5 timing case: with a registered hand-over, a GO accepted in the clock before a strobe missed that strobe and played from the third (2 periods + 1 clock, against §5.4.3's ≤ 2); RH004 also lets the strobe take an arm write presented in its own clock — now every GO plays from the second strobe after its acceptance | Map v0.3 §7 wording at the next version: "the items handed over (fired) at that moment, including a hand-over in the strobe's own clock" | **Ruled 2026-10-01**: RH004 approved; Map §7's wording changes at the Map's next version (the wording above) · RTL-SIM · closed (realized); the wording waits for the Map's next version |
+| **SD-22** | clk_sys does not close at 50 MHz — *Phase 6* | Brief Phase 6: "100 MHz; timing closure"; ruling 2026-09-28: 50 MHz if 100 MHz is at all difficult, "no pipelining of the long paths now; timing optimization after correct operation"; ruling 2026-09-29: NMAX 1,008 at 50 MHz; Phase 2's clock table: each Formation instruction is read, computed, checked and committed — the store write included — in its X clock, one per clock, never stalled (IF-1) | First Quartus fit (2026-10-03, revision DE10_Nano_wpms, 5CSEBA6U23I7, slow corner): clk_sys setup **−14.307 ns** against 20 ns, TNS −65,525 ns; every other clock meets. The X clock chains the address decode, the forwarded store read, the 32 × 32 MUL/MAC with shift and add, the overflow, the error priority, the one x_commit, the store's write enables (≈ 4,100 flip-flops) and the background copy's pending logic (gate depth 146). Its tail from the multiplier into the store, the copy and the pending masks is **structural only** (STM and STA @PPM, the only store writers, and BCP have errors that do not depend on the multiplier). Real long paths: MUL @PPM into Accm; BCP's EW5 (a chained eight-term sum of N) into inbox_taken; the switch's GO check (a chained sum of N; depth 99) | In RTL, in two steps, each followed by the Phases 2–6 recipes (window floor 30, BCP 10, T_wake 2, bit-exact bundles and banks) and a new fit. **Step 1, behaviour unchanged** (no clock added): each register's enable from its own instruction's error conditions; the address decode registered with ADRS; the sums of N as adder trees (Formation RH005, switch RH002). **Step 2, only if step 1 does not close**: a write-back clock for Accm, Temp and the store, E8 checked there, forwarding, BCP and the copy in their clocks — a pipeline, so it needs the 2026-09-28 ruling lifted. Not proposed: a multicycle exception, a slower clk_sys. The failing-path report first (`hw/de10_nano/report_setup_paths.tcl`) | STA (Quartus 23.1std.1) · open — the architect's ruling |
 
-Rows added in later phases are appended below the Phase 0 set (SD-12 from Phase 1; SD-13, SD-14 from Phase 2; SD-15 from Phase 3; SD-16 … SD-18 from Phase 4; SD-19 … SD-21 from Phase 5).
+Rows added in later phases are appended below the Phase 0 set (SD-12 from Phase 1; SD-13, SD-14 from Phase 2; SD-15 from Phase 3; SD-16 … SD-18 from Phase 4; SD-19 … SD-21 from Phase 5; SD-22 from Phase 6).
 
 **Rulings received 2026-09-28 (architect) / 裁定（2026-09-28）:** SD-13 (a); SD-14 (a); SD-06 insertion approved, with L1 silenced at once by the Formation's `error_flag`; **clock target**: schedule first — if 100 MHz is at all difficult the target becomes **50 MHz**, with the per-sweep budgets (NMAX and the rest) halved; no pipelining of the long paths now; timing optimization after correct operation. / SD-13 は (a)、SD-14 は (a)。SD-06 は挿入方式を承認し、L1 は Formation の `error_flag` で即座に無音化。クロック目標は日程優先で、100 MHz が少しでも難しければ 50 MHz（NMAX 等は半分）。長経路のパイプライン化は今は行わない。 / 以降の段階で見つかった行は Phase 0 の組の下に追記する（SD-12 は Phase 1、SD-13・SD-14 は Phase 2、SD-15 は Phase 3）。
 
@@ -215,3 +216,61 @@ Rows added in later phases are appended below the Phase 0 set (SD-12 from Phase 
 - **Disposition (proposed).** Map v0.3 §7 at its next version: "the items handed over (fired) at that moment, a hand-over in the strobe's own clock included".
 - **Ruling 2026-10-01 (architect).** RH004 is approved, and the definition of "armed" in Map §7 may change at the Map's next version. Not applied here: `01_Architecture/` is the law and is not edited in this phase; the wording above waits for the Map's next version.
 - **和文.** 第 5 章の「構え」は GO 前の段階、Map v0.3 §7 の「構えられた項目」は GO で引き渡された項目の意味でなければならない。スイッチは構えを保持し、発火した集合を 1 クロックで Formation に渡す（RH004）。さらにタイミング試験で、ストローブ直前に受理された GO が 3 番目のストローブまで遅れる（2 周期 + 1 クロック）ことを見つけ、ストローブのクロックに提示された書込みも取込みに含めるようにした。いまはすべての GO が受理後 2 番目のストローブから鳴る。
+
+### SD-22 — clk_sys does not close at 50 MHz / clk_sys が 50 MHz で収束しない *(Phase 6)*
+
+- **Texts.**
+  - Brief Phase 6: the board at 100 MHz, with timing closure.
+  - Ruling 2026-09-28: "schedule first — if 100 MHz is at all difficult the target becomes 50 MHz …; no pipelining of the long paths now; timing optimization after correct operation". Ruling 2026-09-29: NMAX = 1,008 at 50 MHz.
+  - Phase 2's clock table (`phase2_datapath.md` §3): the Formation registers each issue (stage I) and executes it in the next clock (stage X), one per clock, never stalled (IF-1). The read, the computation, the error check and the commit — the store write included — all happen in X.
+  - Phase 2 §6 Q4 had named three paths as long for one clock at 100 MHz: MUL @PPM, BCP's EW5, and the commit fan-out.
+- **Found (STA).** Quartus Prime Lite 23.1std.1, revision `DE10_Nano_wpms` (50 MHz), 5CSEBA6U23I7, the slow corner (1100 mV, 85 °C).
+  - clk_sys setup slack is **−14.307 ns** against the 20 ns period, so the worst path takes about 34 ns. TNS is −65,525.293 ns; hold is met (+0.033 ns).
+  - Every other clock meets: FPGA_CLK1_50 +12.962 ns, hdmi_tx_clk +2.975 setup / +2.968 hold, the pixel clock +6.516, MCLK +74.428, JTAG +3.395.
+- **Diagnosis (by reading, and by gate depth).** The summary names no path. The depths come from Yosys 0.69: gates before LUT mapping, a multiplier counted as one cell.
+  - **The Formation, depth 146.** The chain is `adrs → region → a_block → pmask / forwarded store read → rd_val → src → m_b → 32 × 32 product → >>> SHV → + src → overflow → x_err → x_commit → dp_st_we → cp_go → pending masks → pm_idle_next → inbox_taken / taken_due`.
+  - **The tail of that chain is structural only.** One `x_commit`, computed for every instruction, drives:
+    - the store's write enables: ≈ 4,100 flip-flops, plus the M10K copies of the nine banks the prefetch reads;
+    - the background copy;
+    - the pending masks.
+
+    But the store is written only by STM and STA @PPM, and their errors (E4, E5, EW3, EW4) do not depend on the multiplier. BCP's errors (E4, EW4, EW5) do not either. So the multiplier's overflow can never decide those enables, yet in the netlist they wait for it. If about 4,000–5,000 endpoints fail near −13 ns, that gives this TNS — the store failing together. That is an inference; the grouped report will confirm or correct it.
+  - **The long paths that are real:**
+    - **MUL @PPM:** address decode → forwarded store read → multiply → shift → overflow → commit → Accm;
+    - **BCP:** pending masks → N select → the sum of eight N, written as a chain → EW5 → commit → pending masks → inbox_taken;
+    - **the switch's GO check (depth 99):** transaction decode → the items GO fires → the sum of N over the sweep word, a chain → go_bad → reject or hand-over.
+  - The other modules are short: L1 42, the output stage 52, the sequencer 12.
+- **Not proposed.**
+  - A multicycle exception: each of these paths is single-cycle by the clock table, so an exception would hide a real failure.
+  - A slower clk_sys: NMAX 1,008 needs 50 MHz.
+  - Fewer instructions per clock: IF-1 forbids it.
+- **Disposition (proposed).** Both steps are RTL changes. After each step: the Phases 2–6 recipes, which must keep the window floor at 30, BCP at 10, T_wake at 2, and every bundle and bank bit-exact; then a new fit.
+  1. **Restructuring, with behaviour unchanged.** No clock is added; the recorded runs must repeat cycle for cycle.
+     - (a) Each register's enable comes from its own instructions' error conditions, not from the one `x_commit`. The store, the copy and the pending masks no longer wait for the multiplier.
+     - (b) The address decode (region, block, slot) is registered with ADRS.
+     - (c) The sums of N become balanced adder trees, in the Formation (EW5) and the switch (the GO check).
+
+     These would be Formation RH005 and switch RH002. Expected (estimate): the store leaves the critical path. MUL @PPM remains, at roughly 20–22 ns on this speed grade, so possibly still short.
+  2. **A write-back clock, only if step 1 does not close.**
+     - Accm, Temp and the store are written one clock after X.
+     - E8 is checked there; on an error, the next instruction is squashed.
+     - Accm and the store are forwarded to the next instruction and to the prefetch.
+     - BCP and the background copy keep their clocks, so BCP ≤ 10 holds.
+
+     The program sees nothing of this, but the Phase 2 clock table changes: the store lands one clock later, and E8 is raised one clock later. Expected (estimate): MUL @PPM at roughly 16–18 ns. This is a pipeline, so the 2026-09-28 ruling must be lifted for it.
+
+  The failing-path report comes first: `hw/de10_nano/report_setup_paths.tcl` (RH002) groups every failing endpoint, and gives the worst path into each register class.
+- **100 MHz.** Not expected to close even after step 2. Accm's recurrence (multiply, shift, add, one instruction per clock) alone exceeds 10 ns on this device (estimate). 50 MHz stays the target (ruling 2026-09-28).
+- **和文.**
+  - 初回フィット（50 MHz 版）で clk_sys のセットアップスラックが −14.307 ns となった。周期 20 ns に対し、最悪経路は約 34 ns。TNS は −65,525 ns。ほかのクロックはすべて満たす。
+  - 原因：Formation の X クロックに、次の処理が直列に並ぶ（ゲート深さ 146）。
+    - アドレス解読、転送付きストア読出し
+    - 32×32 乗算、シフト、加算、桁あふれ検査
+    - エラー優先、コミット
+    - ストア書込み許可（約 4,100 FF）、背景コピーの保留論理
+  - このうち乗算器からストア・コピー・保留マスクへ至る部分は、構造上だけ存在する。ストアを書く STM・STA @PPM のエラーも、BCP のエラーも、乗算に依存しないため。
+  - 実在する長経路は MUL @PPM、BCP の EW5（N の 8 項和の連鎖）、スイッチの GO 検査（深さ 99）。
+  - 提案は 2 段階。
+    1. 動作を変えない再構成。各レジスタの許可をその命令自身のエラー条件から作り、アドレス解読をレジスタ化し、N の和を加算木にする。
+    2. それで足りなければ書戻しクロックを加える。これはパイプライン化なので、2026-09-28 の裁定の解除が必要。
+  - マルチサイクル例外とクロック低下は提案しない。まず失敗経路の集計（`report_setup_paths.tcl`）を受け取りたい。100 MHz は 2 の後でも収束しない見込み。
