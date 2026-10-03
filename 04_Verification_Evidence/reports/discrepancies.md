@@ -266,7 +266,7 @@ Rows added in later phases are appended below the Phase 0 set (SD-12 from Phase 
 - **Step 1 realized (2026-10-03).**
   - What changed: Formation RH005 and switch RH002, exactly the three items above. The repeat checks (EW5's, and the switch's PR-1) are also made pairwise, beside the sums they share a check with.
   - Evidence that nothing changed:
-    - RTL-SIM: each module ran beside its previous revision on random stimulus for 400,000 clocks per run, in 8 runs, comparing every output and every register in every clock — 0 differences. Phase 2 repeated as recorded, with the 20 mutants caught at the same counts; 3 new mutants of the new structure are caught.
+    - RTL-SIM: each module ran beside its previous revision on random stimulus for 400,000 clocks per run, in 8 runs, comparing every output and every register in every clock — 0 differences. Phases 2–6 repeated the record: the 18 board runs and the 16 expected captures are identical, the captures byte for byte. The 20 mutants were caught at the same counts; 3 new mutants of the new structure are caught.
     - Formal (SAT): every restructured function is proved equal to the one it replaces.
   - ESTIMATE (gate depth): the store's chain went from 136 levels to 33, the pending masks and inbox_taken from 136–146 to 56–66. The longest is now the real MUL/MAC @PPM path into the error registers (112) and Accm (106). Was 146.
   - Next: the second fit decides (`rtl_sim/2026-10-03_sd22_step1/`, `phase6_silicon.md` §10).

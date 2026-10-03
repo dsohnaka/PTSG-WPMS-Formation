@@ -26,8 +26,8 @@
 | S1 | `equiv_lockstep.py`: 8 runs (two modules, NMAX 1,008 and 2,048, seeds 1 and 2), 400,000 clocks each, **0 differences**. A Formation run executes about 318,000 instructions: every op; errors E4 ≈ 560, E5 ≈ 1,300, E8 ≈ 1,670, EW2 ≈ 390, EW3 ≈ 770, EW4 ≈ 730, EW5 ≈ 230, EW6 ≈ 280; about 24,000 store writes, 1,500 BCPs that copy, 2,000 copy clocks, 3,700 rises of `inbox_taken`. A switch run makes about 71,000 transactions, 8,700 GOs and 1,870 go-nows; refusals for each cause. Coverage per run in `logs/equiv_lockstep.txt` | as expected |
 | S2 | `equiv_formal.py`: **5/5 proved** — the GO check at NMAX 1,008 and 2,048, the EW5 sum, the repeat check, the split enables (`logs/equiv_formal.txt`) | as expected |
 | S3 | 3,914/3,914 bit-identical; the summary equals the record apart from the line with the durations. **23/23** mutants caught; M1–M20 with the recorded counts by group | as expected |
-| S4 | *the regression was running when this was committed; filled in the next commit* | — |
-| S5 | *the same* | — |
+| S4 | `run_phase6.sh` (REGRESSION=1) from 2026-10-03T07:20:59Z: **ALL PHASE 2, 3, 4, 5 and 6 CHECKS PASSED**. Against the record (`logs/compare_regression.txt`): Phase 3's log is identical. The other logs differ only where explained: the resource ESTIMATE lines (Formation, switch, board top; the configurator's from RH003, before step 1); Phase 2's 23/23 mutants (20/20 recorded); the five regression lines of run_phase6.txt (the record ran REGRESSION=0); the line numbers of Icarus's 11 notes on wpms_formation.v (the same notes) | as expected |
+| S5 | The 18 board runs: `cosim_board.txt` **identical** to the record. Every value of the eight items repeats at both budgets: g 0, T_wake 2, window 28, BCP 10, full-load sweep 1,023 / 2,063, EW2–EW6, 534 + 531 bundles, 1,320 + 1,316 banks. `expected/`: **34 of 34 identical** — the 18 JSON by value (the simulator's run time aside) and the 16 expected captures byte for byte: cycle for cycle at the board's taps | as expected |
 | S6 | `gate_depth.py`: the store 136 → 33 levels; the pending masks 136 → 56; `inbox_taken` and `taken_due` 145–146 → 65–66; ADRS, Temp, SHV, LoopVal, JumpVal 127 → 23–27. Longest left: the error registers 112 and Accm 106 (was 146); the switch 99 → 77 (`logs/gate_depth.txt`) | as expected |
 
 ## How to repeat / 再現
@@ -36,7 +36,9 @@
 python3 03_Sample_Implementations/hw/tools/equiv_lockstep.py --clocks 400000 --seeds 1,2
 python3 03_Sample_Implementations/hw/tools/equiv_formal.py
 python3 03_Sample_Implementations/hw/tools/gate_depth.py
-03_Sample_Implementations/hw/de10_nano/run_phase6.sh          # Phases 2-6
+BUILD=/tmp/r 03_Sample_Implementations/hw/de10_nano/run_phase6.sh          # Phases 2-6
+python3 03_Sample_Implementations/hw/tools/compare_regression.py --build /tmp/r \
+        --record 04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board
 ```
 
 The tools take the previous revisions from git (`--ref`, default e3d4985). `equiv_formal.py` and `gate_depth.py` need `yowasp-yosys` (or `yosys`).
@@ -47,4 +49,4 @@ The tools take the previous revisions from git (`--ref`, default e3d4985). `equi
 - Phase 2 の結果が記録と同一だった。
 - ゲート段数（概算）で、ストアと保留論理の前の連鎖が縮んだことを確かめた。
 
-Phase 3〜6 の回帰の比較は次のコミットで記入する。
+Phase 2〜6 の回帰も記録と同一だった。ボード 18 本の結果と期待キャプチャ 16 本はバイト単位で一致し、差は概算資源量などの説明済みの行だけだった。

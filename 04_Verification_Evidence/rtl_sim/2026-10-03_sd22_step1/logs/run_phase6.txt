@@ -1,0 +1,40 @@
+run_phase6: 2026-10-03T07:20:59Z — Icarus Verilog version 12.0 (stable) (); Python 3.11.15
+  run_phase5: ALL PHASE 5 CHECKS PASSED
+  run_phase4: ALL PHASE 4 CHECKS PASSED
+  run_phase3: ALL PHASE 3 CHECKS PASSED
+  run_phase2: ALL PHASE 2 CHECKS PASSED
+  [PASS] regression: Phases 2-5 on wpms_system RH002
+  [PASS] injection images wpms_r1d_ew{2,3,4,5_1008,5_2048}.{score,pfasm,hex,mif} regenerate identically
+    phase6  PASS: 6 scripts: 370 writes and 38 reads, each script's in the order of its wpms_phase6_steps.py steps; one GO each, applied
+  check_host_tcl: PASS
+  [PASS] the host scripts under tclsh against the ISSP stand-ins (stand-in): each sends exactly its steps
+    mutants 7/7 broken copies of the project caught
+  make_quartus_project --check: PASS (stand-ins, not Quartus)
+  [PASS] Quartus project: pins = the golden top's, files present, SDC groups and HDMI clock (stand-in), INTEL elaboration, 7 mutants
+  iverilog -Wall: 16 lines, 0 from hw/de10_nano
+  [PASS] board top + bench compile; nothing to say about hw/de10_nano
+  [origin @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (5.0 s simulated)
+  [first_go @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (3.7 s simulated)
+  [full8 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.5 s simulated)
+  [ew6 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.4 s simulated)
+  [ew2 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.5 s simulated)
+  [ew3 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.3 s simulated)
+  [ew4 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.3 s simulated)
+  [ew5 @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (4.3 s simulated)
+  [pcm @ 50 MHz budget, NMAX 1008, T_min 1041] PASS  (86.4 s simulated)
+  [origin @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.9 s simulated)
+  [first_go @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (6.3 s simulated)
+  [full8 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (6.9 s simulated)
+  [ew6 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (7.9 s simulated)
+  [ew2 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (7.7 s simulated)
+  [ew3 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (7.6 s simulated)
+  [ew4 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (7.9 s simulated)
+  [ew5 @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (8.0 s simulated)
+  [pcm @ 100 MHz budget, NMAX 2048, T_min 2083] PASS  (151.8 s simulated)
+  cosim_board: PASS (18 runs, 0 failed checks, 184 s)
+  [PASS] cosim_board: the eight evidence items within the brief's bounds, bit-exact with the models, both budgets
+  [PASS] resource_ledger.py reads the Fitter's 'Resource Utilization by Entity' table (self-test)
+  ESTIMATE DE10_Nano_wpms_top: $lut 9904; MISTRAL_ALUT_ARITH 3632; MISTRAL_FF 6492; MISTRAL_M10K 2; MISTRAL_MLAB 1538; MISTRAL_MUL18X18 6; MISTRAL_MUL27X27 16; wpms_bb_altera_pll 3; wpms_bb_altsource_probe 2; wpms_bb_altsyncram 2; 
+  [PASS] resource ESTIMATE of the whole board top (Yosys, not Quartus)
+  [PASS] observation templates of captures C1-C5 written from the expected values (before any capture)
+run_phase6: ALL PHASE 6 CHECKS PASSED (RTL-SIM; the board is next)

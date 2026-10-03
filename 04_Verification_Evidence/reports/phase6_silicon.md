@@ -443,7 +443,7 @@ The 100 MHz revision need not be compiled: it is not expected to close even afte
 | **Lockstep.** Formation RH005 beside RH004, and switch RH002 beside RH001, both taken from commit e3d4985. NMAX 1,008 and 2,048, seeds 1 and 2, 400,000 clocks per run. Compared in every clock: every output, every register (the Formation's 128 store words, 104 inbox words, the masks; the switch's whole state) and the restructured signals | RTL-SIM | **0 differences in 8 runs** (3.2 M clocks). Each Formation run executed about 318,000 instructions — all 16 ops, every error code (E4, E5, E8, EW2–EW6, about 230 EW5) — with about 1,500 BCPs that copy and 2,000 copy clocks. Each switch run made about 8,700 GOs and 1,870 go-nows, refused for every cause (P > 8, a block twice, N out of range, sum > NMAX) |
 | **Formal.** The switch's GO check (`go_bad`, `go_sum`) at both NMAX; the Formation's EW5 sum (tree against chain) and repeat check; the Formation's split enables equal to RH004's commit for every state and input (the overflow flags and EW5 cut free) | formal (SAT) | **5/5 proved** (`logs/equiv_formal.txt`) |
 | **Phase 2.** `cosim_l2` against the golden model | RTL-SIM | **3,914/3,914** bit-identical; the summary equals the recorded one, traced clocks included (durations aside). Mutants **23/23**; M1–M20 caught at exactly the recorded counts |
-| **Phases 3–6.** The recipes rerun and their logs compared with the 2026-10-01 record (the 18 board runs, the 16 expected captures) | RTL-SIM | *running when this was committed; the result follows in the next commit* |
+| **Phases 3–6.** The recipes rerun (`run_phase6.sh`, REGRESSION=1) and compared with the 2026-10-01 record (`compare_regression.py`) | RTL-SIM | **ALL CHECKS PASSED.** Phase 3's log and the 18 board runs (`cosim_board.txt`) are identical to the record. All 34 expected files are identical: the 18 JSON by value, the 16 captures byte for byte. The only other differences are explained: the resource ESTIMATE lines, the new mutants, and the moved line numbers of the same compiler notes |
 
 ### 10.3 Where the long chains end now (ESTIMATE) / 長い連鎖の終点
 
@@ -480,6 +480,7 @@ A gate level is not a nanosecond, so the second fit is the measure. My estimate 
   - スイッチ RH002：GO 検査の和を加算木に、PR-1 の重複検査を並列比較にした。
 - **動作が変わらないことの証拠。**
   - 旧版と並べた毎クロック比較（320 万クロック、全出力・全レジスタ）で差は 0。
+  - Phase 2〜6 の回帰も記録と同一（ボード 18 本と期待キャプチャ 16 本はバイト単位で一致）。
   - SAT で書き換えた論理の等価を 5 件すべて証明した。
   - Phase 2 は記録と同一（ミュータント 20 件の検出数も同じ、新規 3 件も検出）。
 - **長い連鎖の終点（概算）。** ストア約 4,100 FF の前の連鎖は 136 段から 33 段に縮んだ。残る最長は実在の MUL/MAC @PPM 経路（エラー登録 112 段、Accm 106 段）。
