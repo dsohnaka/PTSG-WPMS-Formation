@@ -264,3 +264,25 @@ None new in this part; SD-01 … SD-21 stand as ruled. The board run may add som
 For scale: the 5CSEBA6 has about 41,500 ALMs, 112 DSP blocks and some 500 M10K (the Fitter's summary states the exact totals). The SILICON ledger replaces this table once the Fitter has run.
 
 **概算**（Yosys、Quartus ではない）：ボード全体で LUT 10,245、算術 ALUT 4,019、FF 6,479、MLAB 1,538、DSP 22、M10K 2（ブラックボックスの M10K 6 を除く）。Fitter の結果が出れば SILICON の台帳に置き換える。
+
+## 8. After the first Quartus compile (2026-10-03) / 初回 Quartus コンパイル後
+
+The architect's first compile (Quartus Prime Lite 23.1std.1, revision `DE10_Nano_wpms`) stopped in Analysis & Synthesis with 3 errors:
+- 10028 "Can't resolve multiple constant drivers for net `nack`" at `wpms_adv7513_cfg.v`(186);
+- 10029 "Constant driver" at (149);
+- 12152 "Can't elaborate user hierarchy `wpms_adv7513_cfg:u_cfg`".
+
+**Cause.** In the configurator (Phase 4), the sticky `nack` was cleared at reset by the top FSM's always block and set by the transaction engine's. Icarus accepts two procedural drivers of a `reg`; Quartus does not. No other register of the design has two drivers (a scan of every always block of the RTL given to Quartus).
+
+**Fix: `wpms_adv7513_cfg.v` RH003.** The engine raises a one-clock `nack_ev`; the top FSM alone owns `nack` and sets it one clock later. Checked:
+- Phase 4's ADV7513 bench: PASS (29 writes, then 58 after the hot-plug, nack 0);
+- a bench with no I2C slave: `nack` rises at the first unacknowledged byte, stays, and clears on reset;
+- the board-level bench, origin at both budgets: PASS (table done, NACK 0);
+- `make_quartus_project.py --check --mutants`: PASS.
+
+The other messages in the screenshot are warnings, not errors:
+- 10230 at `wpms_exp2_table.hex`: each value is written with 8 hex digits for a 31-bit word. Every value is below 2^31, so nothing is lost.
+- 10030 "rom.data_a/waddr_a/we_a … no driver": the exp2 table inferred as a ROM.
+- 10036 "`cur` assigned a value but never read".
+
+初回コンパイルの 3 エラーは、ADV7513 設定器（Phase 4）の `nack` を 2 つの always ブロックが駆動していたことによる（Icarus は許すが Quartus は許さない）。RH003 で駆動元を 1 つにし、単体試験・スレーブ不在試験・基板ベンチ・プロジェクト検査で確認した。ほかに二重駆動のレジスタはない。残りの表示は警告で、exp2 表の値はすべて 31 ビットに収まる。
