@@ -57,6 +57,10 @@
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 5).
+//  002 2026-10-03       Claude Code   Chg : timing restructure, behaviour unchanged (SD-22 step 1, ruling
+//                                          2026-10-03): the GO check's sum of N as a balanced tree and its
+//                                          PR-1 repeat check pairwise, instead of one chained loop (the
+//                                          switch's longest path in the first fit's reading, depth 99).
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -236,23 +240,27 @@ module wpms_switch #(
         end
     end
     wire [27:0] sw_nx = go_items[8] ? sw_st : sw_fu;
+    // The first P entries of that sweep word, checked all at once and summed as a
+    // balanced tree (RH002, SD-22; the chained loop it replaces gives the same
+    // verdict: eight 12-bit terms never overflow 15 bits).
     reg         go_bad;
     reg  [14:0] go_sum;
-    reg  [7:0]  seen;
-    reg  [2:0]  blk;
-    integer     q;
+    reg  [119:0] gt;                      // entry q's N, 15 bits; 0 when q >= P
+    reg  [2:0]  bq, br;
+    integer     q, r;
     always @* begin
         go_bad = (sw_nx[3:0] > 4'd8);
-        go_sum = 15'd0;
-        seen   = 8'd0;
-        blk    = 3'd0;
-        for (q = 0; q < 8; q = q + 1)
-            if (q < sw_nx[3:0]) begin
-                blk = sw_nx[4 + 3*q +: 3];
-                if (seen[blk] || !nv_nx[blk]) go_bad = 1'b1;
-                seen[blk] = 1'b1;
-                go_sum = go_sum + {3'd0, n_nx_v[12*blk +: 12]};
+        for (q = 0; q < 8; q = q + 1) begin
+            bq = sw_nx[4 + 3*q +: 3];
+            gt[15*q +: 15] = (q < sw_nx[3:0]) ? {3'd0, n_nx_v[12*bq +: 12]} : 15'd0;
+            if (q < sw_nx[3:0] && !nv_nx[bq]) go_bad = 1'b1;                     // PR-2
+            for (r = 0; r < q; r = r + 1) begin
+                br = sw_nx[4 + 3*r +: 3];
+                if (q < sw_nx[3:0] && br == bq) go_bad = 1'b1;                   // PR-1: a block twice
             end
+        end
+        go_sum = ((gt[  0 +: 15] + gt[ 15 +: 15]) + (gt[ 30 +: 15] + gt[ 45 +: 15]))
+               + ((gt[ 60 +: 15] + gt[ 75 +: 15]) + (gt[ 90 +: 15] + gt[105 +: 15]));
         if (go_sum > NMAX) go_bad = 1'b1;
     end
 

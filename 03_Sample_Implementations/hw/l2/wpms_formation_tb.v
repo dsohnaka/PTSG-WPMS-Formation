@@ -39,6 +39,8 @@
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF Phase 2 cosimulation).
+//  002 2026-10-03       Claude Code   Chg : the backdoor A also sets the Formation's registered
+//                                          decode of ADRS (region, a_block: wpms_formation RH005).
 // ============================================================================
 `timescale 1ns/1ps
 module wpms_formation_tb;
@@ -163,6 +165,9 @@ module wpms_formation_tb;
                 "A": begin
                         r = $fscanf(fin, "%h %h %h %h %h", v0, v1, v2, v3, v4);
                         dut.accm = v0; dut.temp = v1; dut.adrs = v2; dut.shv = v3; dut.sweep_a = v4;
+                        // RH005 registers the decode of ADRS: keep it equal to region_of(adrs)
+                        dut.region  = dut.region_of(v2[9:0]);
+                        dut.a_block = (dut.region == 3'd2) ? dut.x_cur : v2[6:4];   // 3'd2: R_CUR
                      end
                 "X": begin
                         r = $fscanf(fin, "%h %h", v0, v1);

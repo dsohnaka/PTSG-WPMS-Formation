@@ -27,6 +27,8 @@
 //      instruction sees the effects of the one issued before it (IF-2); the taps and
 //      the sequencer context are captured with the issue, so K/I/SN/SSS read "as of
 //      the reading instruction's execution clock" (F-F10). Latency 2, throughput 1.
+//      The decode of ADRS is registered with it (RH005): the X clock starts from the
+//      region and the block, not from ADRS.
 //    * BCP completes architecturally in its X clock: copied bits, SWEEP.a, the EW5
 //      checks (on the post-copy N) — the next instruction sees the whole copy. The
 //      physical copy runs in the background, one block per clock (slot-major store),
@@ -73,6 +75,16 @@
 //                                          the strobe edge is taken by that strobe: it plays from the second
 //                                          strobe after its acceptance at the latest (Ch.5 §5.4.3; found by
 //                                          the Phase 5 timing case: 2 periods + 1 clock without it).
+//  005 2026-10-03       Claude Code   Chg : timing restructure, behaviour unchanged (SD-22 step 1, ruling
+//                                          2026-10-03; the first fit missed 50 MHz by 14.3 ns): (a) each
+//                                          register's enable from the errors its own instructions can
+//                                          raise, not from one commit of every instruction — the store,
+//                                          the background copy, the pending masks and ADRS no longer wait
+//                                          for the multiplier's overflow; (b) the address decode (region,
+//                                          block) registered with ADRS and x_cur; (c) EW5's sum of N as a
+//                                          balanced tree and its repeat check pairwise. Cycle for cycle the
+//                                          same: a simulation check compares the split enables with the
+//                                          commit they replace in every clock.
 // ============================================================================
 `timescale 1ns/1ps
 
@@ -221,19 +233,25 @@ module wpms_formation #(
     // ========================================================================
     localparam [2:0] R_STORE = 3'd0, R_INBOX = 3'd1, R_CUR = 3'd2, R_COMMIT = 3'd3,
                      R_SWST = 3'd4, R_SWA = 3'd5, R_STAT = 3'd6, R_NONE = 3'd7;
-    reg [2:0] region;
-    always @* begin
-        if      (adrs < 10'h080)  region = R_STORE;
-        else if (adrs < 10'h100)  region = R_INBOX;
-        else if (adrs < 10'h110)  region = R_CUR;
-        else if (adrs < 10'h118)  region = R_COMMIT;
-        else if (adrs == 10'h118) region = R_SWST;
-        else if (adrs == 10'h119) region = R_SWA;
-        else if (adrs == 10'h11A) region = R_STAT;
-        else                      region = R_NONE;
-    end
+    function [2:0] region_of;
+        input [9:0] a;
+        begin
+            if      (a < 10'h080)  region_of = R_STORE;
+            else if (a < 10'h100)  region_of = R_INBOX;
+            else if (a < 10'h110)  region_of = R_CUR;
+            else if (a < 10'h118)  region_of = R_COMMIT;
+            else if (a == 10'h118) region_of = R_SWST;
+            else if (a == 10'h119) region_of = R_SWA;
+            else if (a == 10'h11A) region_of = R_STAT;
+            else                   region_of = R_NONE;
+        end
+    endfunction
+    // The decode is registered (RH005, SD-22): in every clock region = region_of(adrs)
+    // and a_block = (region == R_CUR) ? x_cur : adrs[6:4]. Both are loaded from the
+    // values ADRS and x_cur take at the same edge (adrs_nx, seq_cur: see below).
+    reg  [2:0] region;
+    reg  [2:0] a_block;
     wire [3:0] a_slot  = adrs[3:0];
-    wire [2:0] a_block = (region == R_CUR) ? x_cur : adrs[6:4];
 
     // ========================================================================
     //  Store: sixteen slot banks x 8 blocks (bank 0 = N, a register file)
@@ -380,35 +398,32 @@ module wpms_formation #(
             n_post[bn] = pe[0] ? ib_n[bn] : st_n[bn];
         end
     end
-    // sum of N over the first P entries of a sweep word; flags an invalid word
+    // sum of N over the first P entries of a sweep word, as a balanced tree (RH005,
+    // SD-22; the chain it replaces gives the same sum: eight signed 32-bit terms
+    // never overflow 36 bits); flags an invalid word
     function signed [35:0] sum_n;
         input [27:0] w;
         input [255:0] n_all;                                    // n_post[7..0] packed
         integer k;
         reg [2:0] blk;
+        reg [287:0] t;                                          // the eight terms, 36 bits each
         begin
-            sum_n = 36'sd0;
-            for (k = 0; k < 8; k = k + 1)
-                if (k < w[3:0]) begin
-                    blk = w[4 + 3*k +: 3];
-                    sum_n = sum_n + {{4{n_all[32*blk + 31]}}, n_all[32*blk +: 32]};
-                end
+            for (k = 0; k < 8; k = k + 1) begin
+                blk = w[4 + 3*k +: 3];
+                t[36*k +: 36] = (k < w[3:0]) ? {{4{n_all[32*blk + 31]}}, n_all[32*blk +: 32]} : 36'd0;
+            end
+            sum_n = ((t[  0 +: 36] + t[ 36 +: 36]) + (t[ 72 +: 36] + t[108 +: 36]))
+                  + ((t[144 +: 36] + t[180 +: 36]) + (t[216 +: 36] + t[252 +: 36]));
         end
     endfunction
     function sweep_invalid;                                     // P > 8, or a block repeated
         input [27:0] w;
-        integer k;
-        reg [7:0] seen;
-        reg [2:0] blk;
+        integer k, j;
         begin
             sweep_invalid = (w[3:0] > 4'd8);
-            seen = 8'd0;
-            for (k = 0; k < 8; k = k + 1)
-                if (k < w[3:0]) begin
-                    blk = w[4 + 3*k +: 3];
-                    if (seen[blk]) sweep_invalid = 1'b1;
-                    seen[blk] = 1'b1;
-                end
+            for (k = 1; k < 8; k = k + 1)                       // every pair at once (RH005)
+                for (j = 0; j < k; j = j + 1)
+                    if (k < w[3:0] && w[4 + 3*j +: 3] == w[4 + 3*k +: 3]) sweep_invalid = 1'b1;
         end
     endfunction
     wire [255:0] n_all = {n_post[7], n_post[6], n_post[5], n_post[4],
@@ -446,7 +461,17 @@ module wpms_formation #(
             default: x_err = 5'd0;
         endcase
     end
-    wire x_commit = x_go && (x_err == 5'd0);
+    // Each register's enable from the errors its own instructions can raise (RH005,
+    // SD-22). For every op the enable used equals x_go && x_err == 0, the one commit
+    // it replaces (checked in simulation below); split so that the store, the
+    // background copy, the pending masks and ADRS do not wait for the multiplier's
+    // overflow, which none of the instructions writing them can raise.
+    wire x_ok0   = x_go && !e4;
+    wire ok_src  = x_ok0 && !(uses_ppm_src && rd_e5);        // LDA ADD SUB; MUL MAC with no E8
+    wire ok_mem  = x_ok0 && (wr_err == 5'd0);                // STM, STA @PPM
+    wire ok_stp  = x_ok0 && !temp[31] && !(uses_ppm_src && rd_e5);
+    wire ok_bcp  = x_ok0 && !x_pkt && !ew5;                  // BCP
+    wire x_fault = x_go && (x_err != 5'd0);                  // error_flag, error_code, the trap
 
     // prefetch: N outside [N_MIN, NMAX] (EW2)
     assign pf_n    = st_n[pf_block];
@@ -458,7 +483,7 @@ module wpms_formation #(
     // ========================================================================
     //  Store writes: the datapath (STM, STA @PPM) or the background copy
     // ========================================================================
-    wire dp_st_we = x_commit && ((op == OP_STM) || is_store_dst) &&
+    wire dp_st_we = ok_mem && ((op == OP_STM) || is_store_dst) &&
                     ((region == R_STORE) || (region == R_CUR));
     // background copy: lowest pending block; paused while the datapath writes
     reg [2:0] cp_b;
@@ -489,6 +514,7 @@ module wpms_formation #(
 
     // pending slots, next clock: the copy clears what it landed, a datapath write
     // to a pending slot cancels its copy (the program's write wins), BCP adds.
+    wire bcp_commit = ok_bcp && (op == OP_BCP);
     reg [15:0] pm_next [0:7];
     always @* begin : pending_next
         reg [15:0] pn;
@@ -496,14 +522,22 @@ module wpms_formation #(
             pn = pmask[bp];
             if (cp_go && cp_b == bp[2:0])        pn = 16'd0;
             if (dp_st_we && a_block == bp[2:0])  pn[a_slot] = 1'b0;
-            if (x_commit && op == OP_BCP && new_list[bp])
+            if (bcp_commit && new_list[bp])
                 pn = pn | mask_slots(cm_mask[bp]);
             pm_next[bp] = pn;
         end
     end
     wire pm_idle_next = ~|{pm_next[7], pm_next[6], pm_next[5], pm_next[4],
                            pm_next[3], pm_next[2], pm_next[1], pm_next[0]};
-    wire bcp_commit   = x_commit && (op == OP_BCP);
+
+    // ---- ADRS after this clock (SAD, LDM, STM write it) and its decode (RH005) ----
+    wire [9:0] adrs_sad   = {1'b0, x_imm[8:0]};
+    wire [9:0] adrs_inc   = adrs + 10'd1;
+    wire       we_sad     = x_ok0 && (op == OP_SAD);
+    wire       we_inc     = (x_ok0 && (op == OP_LDM) && !rd_e5) || (ok_mem && (op == OP_STM));
+    wire [9:0] adrs_nx    = we_sad ? adrs_sad : we_inc ? adrs_inc : adrs;
+    wire [2:0] region_nx  = we_sad ? region_of(adrs_sad) : we_inc ? region_of(adrs_inc) : region;
+    wire [2:0] a_block_nx = (region_nx == R_CUR) ? seq_cur : adrs_nx[6:4];   // x_cur <= seq_cur
 
     // ---- the arm bits after this clock's inbox-port write (RH004) ----------------
     reg  [7:0]  armed_nx;
@@ -524,6 +558,7 @@ module wpms_formation #(
     always @(posedge clk) begin
         if (rst) begin
             accm <= 32'd0; temp <= 32'd0; adrs <= 10'd0; shv <= 5'd0;
+            region <= R_STORE; a_block <= 3'd0;                  // region_of(0); adrs[6:4]
             loopval <= 12'd0; jumpval <= JUMPVAL_RESET;
             sweep_a <= 28'd0;                                    // CR5-R1: P = 0
             armed <= 8'd0; sweep_armed <= 1'b0; take <= 8'd0; take_sweep <= 1'b0;
@@ -551,35 +586,33 @@ module wpms_formation #(
                 inbox_taken <= 1'b1; taken_due <= 1'b0;
             end else if (bcp_commit) taken_due <= 1'b1;
 
-            // ---- execute ------------------------------------------------------
-            if (x_commit) begin
-                case (op)
-                    OP_LDA: accm <= src;
-                    OP_STA: if (x_rid == DST_TEMP) temp <= accm;       // STORE: see dp_st_we
-                    OP_ADD: accm <= accm + src;                         // W-F30: wrap
-                    OP_SUB: accm <= accm - src;
-                    OP_MUL: accm <= mul_r[31:0];
-                    OP_MAC: accm <= mac_r[31:0];
-                    OP_SWP: begin accm <= temp; temp <= accm; end
-                    OP_SFT: accm <= sft_r;
-                    OP_SAD: adrs <= {1'b0, x_imm[8:0]};
-                    OP_LDM: begin accm <= rd_val; adrs <= adrs + 10'd1; end
-                    OP_STM: adrs <= adrs + 10'd1;                       // the write: dp_st_we
-                    OP_WLV: loopval <= accm[11:0];
-                    OP_WJV: jumpval <= accm[11:0];
-                    OP_WSH: shv <= accm[4:0];
-                    OP_STP: accm <= stp_r;
-                    OP_BCP: begin                        // pending slots: pm_next; inbox_taken above
-                        copied       <= copied | new_list;
-                        sweep_copied <= sweep_copied | do_sweep;
-                        sweep_a      <= sweep_new;
-                    end
-                    default: ;
-                endcase
-            end else if (x_go) begin                                      // x_err != 0
+            // ---- execute: each register under its own instructions' errors (RH005) --
+            case (op)
+                OP_LDA: if (ok_src) accm <= src;
+                OP_STA: if (x_ok0 && x_rid == DST_TEMP) temp <= accm;   // STORE: see dp_st_we
+                OP_ADD: if (ok_src) accm <= accm + src;                 // W-F30: wrap
+                OP_SUB: if (ok_src) accm <= accm - src;
+                OP_MUL: if (ok_src && !mul_ovf) accm <= mul_r[31:0];
+                OP_MAC: if (ok_src && !mac_ovf) accm <= mac_r[31:0];
+                OP_SWP: if (x_ok0) begin accm <= temp; temp <= accm; end
+                OP_SFT: if (x_ok0 && !sft_ovf) accm <= sft_r;
+                OP_LDM: if (x_ok0 && !rd_e5) accm <= rd_val;            // ADRS: adrs_nx
+                OP_WLV: if (x_ok0) loopval <= accm[11:0];
+                OP_WJV: if (x_ok0) jumpval <= accm[11:0];
+                OP_WSH: if (x_ok0) shv <= accm[4:0];
+                OP_STP: if (ok_stp) accm <= stp_r;
+                OP_BCP: if (ok_bcp) begin                // pending slots: pm_next; inbox_taken above
+                            copied       <= copied | new_list;
+                            sweep_copied <= sweep_copied | do_sweep;
+                            sweep_a      <= sweep_new;
+                        end
+                default: ;
+            endcase
+            adrs <= adrs_nx;  region <= region_nx;  a_block <= a_block_nx;   // SAD, LDM, STM; x_cur
+            if (x_fault) begin
                 error_flag <= 1'b1; error_code <= x_err; error_sn <= x_sn; insert_req_r <= 1'b1;
             end
-            if (pf_ew2 && !error_flag && !(x_go && x_err != 5'd0)) begin
+            if (pf_ew2 && !error_flag && !x_fault) begin
                 error_flag <= 1'b1; error_code <= ERR_EW2; error_sn <= tap_sn; insert_req_r <= 1'b1;
             end
             if (insert_req_r && insert_ack) insert_req_r <= 1'b0;
@@ -597,6 +630,28 @@ module wpms_formation #(
     end
 
 `ifndef SYNTHESIS
+    // RH005 (SD-22): the split enables equal the one commit they replace. x_ok_split
+    // is the enable each op's registers use above; x_commit is RH004's (also traced
+    // by wpms_formation_tb.v).
+    wire x_commit = x_go && (x_err == 5'd0);
+    reg  x_ok_split;
+    always @* begin
+        case (op)
+            OP_LDA, OP_ADD, OP_SUB: x_ok_split = ok_src;
+            OP_MUL:  x_ok_split = ok_src && !mul_ovf;
+            OP_MAC:  x_ok_split = ok_src && !mac_ovf;
+            OP_SFT:  x_ok_split = x_ok0 && !sft_ovf;
+            OP_LDM:  x_ok_split = x_ok0 && !rd_e5;
+            OP_STM:  x_ok_split = ok_mem;
+            OP_STA:  x_ok_split = is_store_dst ? ok_mem : x_ok0;
+            OP_STP:  x_ok_split = ok_stp;
+            OP_BCP:  x_ok_split = ok_bcp;
+            default: x_ok_split = x_ok0;
+        endcase
+    end
+    always @(posedge clk) if (!rst && x_valid && (x_ok_split !== x_commit))
+        $display("%t wpms_formation: ERROR split enable %b against x_err %0d (op %0d)", $time, x_ok_split, x_err, op);
+
     // The input switch must not write a block whose copy is still pending (it is
     // frozen while armed, customer Ch.5 §5.4.2); the sequencer must not prefetch
     // while the copy runs (it prefetches after BCP has landed, Deliverable 3 §6.2).

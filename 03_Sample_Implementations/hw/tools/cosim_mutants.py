@@ -11,6 +11,9 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF Phase 2).
+# 002 2026-10-03       Claude Code   Chg : M3, M6, M11, M20 follow wpms_formation RH005 (the same defects
+#                                          in the restructured text); Add : M21-M23, defects of what RH005
+#                                          added (the registered decode, the split enables).
 # ============================================================================
 import argparse, os, re, shutil, subprocess, sys
 
@@ -26,8 +29,8 @@ MUTANTS = [
      "if (dp_st_we && a_block == bp[2:0])  pn[a_slot] = 1'b0;",
      "if (1'b0)  pn[a_slot] = 1'b0;"),
     ("M3", "ADD saturates on positive overflow instead of wrapping (W-F30)",
-     "OP_ADD: accm <= accm + src;",
-     "OP_ADD: accm <= (!accm[31] && !src[31] && ((accm + src) >> 31)) ? 32'h7FFFFFFF : accm + src;"),
+     "OP_ADD: if (ok_src) accm <= accm + src;",
+     "OP_ADD: if (ok_src) accm <= (!accm[31] && !src[31] && ((accm + src) >> 31)) ? 32'h7FFFFFFF : accm + src;"),
     ("M4", "BCP in the strobe's clock wins over the strobe (execute after strobe)",
      "copied <= 8'd0; sweep_copied <= 1'b0; inbox_taken <= 1'b0; taken_due <= 1'b0;\n            end",
      "copied <= bcp_commit ? (copied | new_list) : 8'd0; sweep_copied <= 1'b0; inbox_taken <= 1'b0; taken_due <= 1'b0;\n            end"),
@@ -35,8 +38,8 @@ MUTANTS = [
      "K_NONE:  e4 = (x_rid != 4'd0) || (x_imm != 16'd0);",
      "K_NONE:  e4 = (x_rid != 4'd0);"),
     ("M6", "the CUR alias follows ADRS instead of order[q]",
-     "wire [2:0] a_block = (region == R_CUR) ? x_cur : adrs[6:4];",
-     "wire [2:0] a_block = adrs[6:4];"),
+     "wire [2:0] a_block_nx = (region_nx == R_CUR) ? seq_cur : adrs_nx[6:4];",
+     "wire [2:0] a_block_nx = adrs_nx[6:4];"),
     ("M7", "MAC realigns with a logical shift",
      "wire signed [64:0] mac_sh = mac_pe >>> shv;",
      "wire signed [64:0] mac_sh = mac_pe >> shv;"),
@@ -50,7 +53,7 @@ MUTANTS = [
      "SRC_K:    src = {20'd0, x_k};",
      "SRC_K:    src = {20'd0, tap_k};"),
     ("M11", "the violating STM still writes the store",
-     "wire dp_st_we = x_commit && ((op == OP_STM) || is_store_dst) &&",
+     "wire dp_st_we = ok_mem && ((op == OP_STM) || is_store_dst) &&",
      "wire dp_st_we = x_go && ((op == OP_STM) || is_store_dst) &&"),
     ("M12", "BCP checks the sweep's sum N on the pre-copy N",
      "n_post[bn] = pe[0] ? ib_n[bn] : st_n[bn];",
@@ -77,8 +80,17 @@ MUTANTS = [
      "wire         ew5        = (do_sweep && sw_invalid) || (chk_sum > NMAX);",
      "wire         ew5        = (do_sweep && sw_invalid) || (do_sweep && chk_sum > NMAX);"),
     ("M20", "a repeated block in the sweep item is not refused",
-     "if (seen[blk]) sweep_invalid = 1'b1;",
+     "if (k < w[3:0] && w[4 + 3*j +: 3] == w[4 + 3*k +: 3]) sweep_invalid = 1'b1;",
      "if (1'b0) sweep_invalid = 1'b1;"),
+    ("M21", "the registered region misses ADRS's post-increment (LDM/STM across a region boundary)",
+     "wire [2:0] region_nx  = we_sad ? region_of(adrs_sad) : we_inc ? region_of(adrs_inc) : region;",
+     "wire [2:0] region_nx  = we_sad ? region_of(adrs_sad) : region;"),
+    ("M22", "BCP's split enable ignores EW5 (the refused BCP still copies)",
+     "wire ok_bcp  = x_ok0 && !x_pkt && !ew5;",
+     "wire ok_bcp  = x_ok0 && !x_pkt;"),
+    ("M23", "MUL's Accm enable ignores E8 (the overflowing MUL still writes Accm)",
+     "OP_MUL: if (ok_src && !mul_ovf) accm <= mul_r[31:0];",
+     "OP_MUL: if (ok_src) accm <= mul_r[31:0];"),
 ]
 
 

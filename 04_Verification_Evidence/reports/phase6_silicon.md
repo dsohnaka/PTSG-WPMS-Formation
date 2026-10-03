@@ -405,3 +405,82 @@ The 100 MHz revision need not be compiled: it is not expected to close even afte
 - **提案。**
   - まず動作不変の再構成。足りなければ書戻しクロック（パイプライン化。2026-09-28 の裁定の解除が必要）。
   - 失敗経路の集計（`report_setup_paths.tcl`）の実行と、提案への裁定をお願いしたい。
+
+## 10. SD-22 step 1 (2026-10-03): the long paths restructured, behaviour unchanged / 段階 1：動作不変の再構成
+
+**Ruling 2026-10-03 (architect):** step 1 now. If step 1 does not close timing, step 2 follows without a new round of questions.
+
+### 10.1 What changed / 変更点
+
+**Formation RH005** (`hw/l2/wpms_formation.v`). No clock is added to anything.
+- **(a) Each register's enable comes from the errors its own instructions can raise.** RH004 derived every enable from one commit, `x_go && x_err == 0`, computed for every instruction.
+  - The store's write enable now comes from STM's and STA @PPM's errors: E4, E5, EW3, EW4.
+  - BCP's effects (the pending masks, `inbox_taken`, copied, SWEEP.a) come from E4, EW4 and EW5.
+  - ADRS (SAD, LDM, STM) and Accm, Temp, SHV, LoopVal and JumpVal each use their own op's conditions.
+  - The error path (`error_flag`, code, SN, the trap) keeps the full priority.
+  - In simulation, a check compares in every clock the enable each op uses with RH004's commit.
+- **(b) The address decode is registered.** `region` and `a_block` are registers, loaded at the edge that loads ADRS (from `adrs_nx`) and x_cur (from `seq_cur`). The X clock starts from them, not from ADRS.
+- **(c) EW5's sum of N is a balanced tree,** three adder levels instead of eight. Its repeat check is pairwise instead of a running mask.
+
+**Switch RH002** (`hw/switch/wpms_switch.v`): the GO check's sum of N is a tree, and PR-1's repeat check is pairwise.
+
+**Tests that followed the text** (same intent):
+- `wpms_formation_tb.v` RH002: the backdoor that sets ADRS also sets its registered decode.
+- `cosim_mutants.py` RH002:
+  - M3, M6, M11 and M20 are the same defects in the new text;
+  - M21–M23 are new: the registered region missing ADRS's post-increment, BCP's enable ignoring EW5, and MUL's Accm enable ignoring E8.
+- `cosim_switch_mutants.py` RH002: W5 follows the pairwise PR-1.
+
+**New tools:**
+- `equiv_lockstep.py` — the previous revision beside the current one, compared in every clock (RTL-SIM);
+- `equiv_formal.py` — the restructured logic proved equal (SAT, Yosys);
+- `gate_depth.py` — the gate levels in front of each register group (ESTIMATE).
+
+### 10.2 Nothing changed: the evidence / 動作が変わらないことの証拠
+
+| Check | Class | Result |
+|---|---|---|
+| **Lockstep.** Formation RH005 beside RH004, and switch RH002 beside RH001, both taken from commit e3d4985. NMAX 1,008 and 2,048, seeds 1 and 2, 400,000 clocks per run. Compared in every clock: every output, every register (the Formation's 128 store words, 104 inbox words, the masks; the switch's whole state) and the restructured signals | RTL-SIM | **0 differences in 8 runs** (3.2 M clocks). Each Formation run executed about 318,000 instructions — all 16 ops, every error code (E4, E5, E8, EW2–EW6, about 230 EW5) — with about 1,500 BCPs that copy and 2,000 copy clocks. Each switch run made about 8,700 GOs and 1,870 go-nows, refused for every cause (P > 8, a block twice, N out of range, sum > NMAX) |
+| **Formal.** The switch's GO check (`go_bad`, `go_sum`) at both NMAX; the Formation's EW5 sum (tree against chain) and repeat check; the Formation's split enables equal to RH004's commit for every state and input (the overflow flags and EW5 cut free) | formal (SAT) | **5/5 proved** (`logs/equiv_formal.txt`) |
+| **Phase 2.** `cosim_l2` against the golden model | RTL-SIM | **3,914/3,914** bit-identical; the summary equals the recorded one, traced clocks included (durations aside). Mutants **23/23**; M1–M20 caught at exactly the recorded counts |
+| **Phases 3–6.** The recipes rerun and their logs compared with the 2026-10-01 record (the 18 board runs, the 16 expected captures) | RTL-SIM | *running when this was committed; the result follows in the next commit* |
+
+### 10.3 Where the long chains end now (ESTIMATE) / 長い連鎖の終点
+
+`gate_depth.py` (Yosys `synth -flatten -noabc`). Gate levels in front of each register group, RH004 → RH005:
+
+| Register group | Bits | RH004 | RH005 |
+|---|---|---|---|
+| `taken_due`, `inbox_taken` | 2 | 146, 145 | 66, 65 |
+| the store (`g_store`, `st_n`) | 4,096 | 136 | **33** |
+| the pending masks | 128 | 136 | 56 |
+| `error_flag`, `error_code`, `error_sn`, the trap | 19 | 129 | **112** |
+| Accm | 32 | 127 | **106** |
+| ADRS, Temp, SHV, LoopVal, JumpVal | 71 | 127 | 23–27 |
+| SWEEP.a, copied | 37 | 127 | 54 |
+| switch: `arm` … `ibx_*` (the GO check's results) | ≈ 400 | 99 | 77 |
+
+In RH004, the chain more than 125 levels deep reached about 4,400 registers. Now the chains deeper than 100 levels reach about 50: the real MUL/MAC @PPM path through the overflow, in front of the error registers and Accm.
+
+A gate level is not a nanosecond, so the second fit is the measure. My estimate is that MUL/MAC @PPM is close to 20 ns on this speed grade; if it does not close, that path is what step 2 removes.
+
+### 10.4 Next / 次に
+
+- **The second fit.** Please compile `DE10_Nano_wpms` as before (`make_quartus_project.py`, then Quartus). Send the *Multicorner Timing Analysis Summary*, and, if clk_sys still fails, `setup_clk_sys_groups.txt` from `report_setup_paths.tcl`.
+- **If clk_sys closes:** Phase 6 continues with SignalTap and the captures.
+- **If not:** step 2 at once, as ruled. Planned in its smallest form:
+  - the E8 check of MUL and MAC moves to the next clock;
+  - Accm is written in X and restored from a one-clock copy if that check fails, and the instruction behind is squashed;
+  - the store, Temp, BCP and the copy keep their clocks, because MUL and MAC write only Accm;
+  - EW2 keeps its clock. Only E8 is raised one clock later (and, when a prefetch's EW2 falls in the same clock, EW2 is the code reported).
+
+**和文.**
+- **変更（2026-10-03 の裁定どおり段階 1）。**
+  - Formation RH005：各レジスタの書込み許可をその命令自身のエラー条件から作り、アドレス解読をレジスタ化し、EW5 の N の和を加算木に、重複検査を総当たりの並列比較にした。
+  - スイッチ RH002：GO 検査の和を加算木に、PR-1 の重複検査を並列比較にした。
+- **動作が変わらないことの証拠。**
+  - 旧版と並べた毎クロック比較（320 万クロック、全出力・全レジスタ）で差は 0。
+  - SAT で書き換えた論理の等価を 5 件すべて証明した。
+  - Phase 2 は記録と同一（ミュータント 20 件の検出数も同じ、新規 3 件も検出）。
+- **長い連鎖の終点（概算）。** ストア約 4,100 FF の前の連鎖は 136 段から 33 段に縮んだ。残る最長は実在の MUL/MAC @PPM 経路（エラー登録 112 段、Accm 106 段）。
+- **次。** 第 2 回フィットで判定する。収束しなければ段階 2（E8 判定を次クロックへ、Accm は投機的に書いて控えから復元、後続命令を打ち消す）へ直ちに進む。
