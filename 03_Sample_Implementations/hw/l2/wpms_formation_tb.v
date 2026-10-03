@@ -41,6 +41,9 @@
 //  001 2026-09-27       Claude Code   Add : First version (SILICON_BRIEF Phase 2 cosimulation).
 //  002 2026-10-03       Claude Code   Chg : the backdoor A also sets the Formation's registered
 //                                          decode of ADRS (region, a_block: wpms_formation RH005).
+//  003 2026-10-03       Claude Code   Chg : the error index follows the late E8 of MUL and MAC, raised
+//                                          from stage W (wpms_formation RH006). Add : command J, an
+//                                          issue with the strobe in the same clock (cosim_l2.py RH003).
 // ============================================================================
 `timescale 1ns/1ps
 module wpms_formation_tb;
@@ -86,8 +89,13 @@ module wpms_formation_tb;
     integer n_issued = 0;
     integer x_idx = -1;           // index of the instruction in stage X this clock
     integer err_idx = -1;
+    integer w_idx = -1;           // index of the instruction in stage W (wpms_formation RH006)
     always @(posedge clk) begin
-        if (!error_flag && dut.x_go && dut.x_err != 5'd0) err_idx <= x_idx;
+        if (!error_flag) begin
+            if (dut.w_e8) err_idx <= w_idx;                // the late E8 of a MUL or MAC
+            else if (dut.x_fault) err_idx <= x_idx;
+        end
+        w_idx <= x_idx;
         x_idx <= issue_idx;
     end
 
@@ -175,13 +183,14 @@ module wpms_formation_tb;
                         @(negedge clk); ibx_we = 0;
                      end
                 "S": begin seq_strobe = 1; @(negedge clk); seq_strobe = 0; end
-                "I": begin
+                "I", "J": begin                                   // J: with the strobe in the same clock
                         r = $fscanf(fin, "%h", v0);
                         ext_op_valid = 1; ext_op_subopcode = v0[7:4];
                         ext_op_sub_operand = v0[15:8]; ext_op_data = v0[31:16];
                         issue_idx = n_issued; n_issued = n_issued + 1;
+                        if (cmd == "J") seq_strobe = 1;
                         @(negedge clk);
-                        ext_op_valid = 0; issue_idx = -1;
+                        ext_op_valid = 0; issue_idx = -1; seq_strobe = 0;
                      end
                 "N": begin r = $fscanf(fin, "%h", v0); for (k = 0; k < v0; k = k + 1) @(negedge clk); end
                 "P": begin

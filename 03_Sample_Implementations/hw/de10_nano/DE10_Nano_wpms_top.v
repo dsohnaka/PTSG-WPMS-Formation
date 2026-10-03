@@ -14,7 +14,11 @@
 //
 //    clocks   FPGA_CLK1_50 -> PLL clk_sys (SYS_MHZ 50: NMAX 1,008, the ROM's
 //             origin N = 1,008; or 100: NMAX 2,048, N = 2,048 — rulings
-//             2026-09-28/29; one integer, set by the Quartus revision); FPGA_CLK2_50 ->
+//             2026-09-28/29; one integer, set by the Quartus revision; its duty
+//             cycle SYS_DUTY likewise, 30 % high at 50 MHz: the Core's imem reads on
+//             the falling edge, and its word must reach the Core's registers by the
+//             next rising edge — 14 ns instead of 10, the address side keeping 6 ns
+//             (SD-23)); FPGA_CLK2_50 ->
 //             fractional PLL clk_aud = MCLK 12.288 MHz (C4-D2); FPGA_CLK3_50 ->
 //             PLL clk_pix 74.25 MHz (720p60, C4-D9) and clk_pix_tx, the same
 //             shifted by half a period, forwarded as HDMI_TX_CLK (the ADV7513
@@ -55,11 +59,13 @@
 // ----------------------------------------------------------------------------
 //  REVISION HISTORY(RH)
 //  001 2026-10-01       Claude Code   Add : First version (SILICON_BRIEF_2026-09-27 Phase 6).
+//  002 2026-10-03       Claude Code   Add : SYS_DUTY, clk_sys's duty cycle (SD-23; SD-22 step 2's third fit).
 // ============================================================================
 `timescale 1ns/1ps
 
 module DE10_Nano_wpms_top #(
     parameter integer SYS_MHZ          = 50,                     // 50 | 100 (the Quartus revision sets it)
+    parameter integer SYS_DUTY         = 50,                     // clk_sys time high, % (the revision sets it)
     parameter         VENDOR           = "INTEL",                // "INTEL" | "SIM" (the board-level bench)
     parameter         SCORE_HEX        = "wpms_r1d.hex",
     parameter         SCORE_MIF        = "wpms_r1d.mif",
@@ -103,7 +109,7 @@ module DE10_Nano_wpms_top #(
     // ---- clocks ------------------------------------------------------------------------------
     wire clk_sys, clk_aud, clk_pix, clk_pix_tx;
     wire lk_sys, lk_aud, lk_pix;
-    wpms_pll #(.VENDOR(VENDOR), .FRACTIONAL("false"), .NCLK(1), .OUT0(SYS_FREQ),
+    wpms_pll #(.VENDOR(VENDOR), .FRACTIONAL("false"), .NCLK(1), .OUT0(SYS_FREQ), .DUTY0(SYS_DUTY),
                .SIM_HALF0_PS(SIM_SYS_HALF_PS), .SIM_LOCK_NS(2000)) u_pll_sys (
         .refclk(FPGA_CLK1_50), .rst(1'b0), .outclk0(clk_sys), .outclk1(), .locked(lk_sys));
     wpms_pll #(.VENDOR(VENDOR), .FRACTIONAL("true"), .NCLK(1), .OUT0("12.288000 MHz"),

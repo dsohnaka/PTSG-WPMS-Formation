@@ -1,0 +1,32 @@
+cosim_mutants: each mutant is one defect in a scratch copy of wpms_formation.v — evidence class RTL-SIM
+  id   verdict   defect  ->  failing cases by group
+  M1   KILLED    store reads ignore pending slots (no forwarding from the inbox)  ->  fwd 53, timing 1, random 1, late 3, invariant/protocol 284
+  M2   KILLED    a datapath write to a pending slot does not cancel its copy  ->  fwd 33, timing 1, invariant/protocol 8
+  M3   KILLED    ADD saturates on positive overflow instead of wrapping (W-F30)  ->  packet 51, fwd 25, neg 2, timing 1, random 2
+  M4   KILLED    BCP in the strobe's clock wins over the strobe (execute after strobe)  ->  timing 1, random 1
+  M5   KILLED    must-be-zero immediate not checked for operand-less instructions  ->  e4 14
+  M6   KILLED    the CUR alias follows ADRS instead of order[q]  ->  packet 60, neg 3, timing 1, random 68, invariant/protocol 11315
+  M7   KILLED    MAC realigns with a logical shift  ->  exp 10, random 73
+  M8   KILLED    bundle order: LP and LS0 swapped on the prefetch port  ->  prefetch 14
+  M9   KILLED    EW2 lower bound off by one (N = N_MIN rejected)  ->  prefetch 1
+  M10  KILLED    K read at execute instead of with the issue (F-F10 alignment)  ->  random 17
+  M11  KILLED    the violating STM still writes the store  ->  e4 4, random 11
+  M12  KILLED    BCP checks the sweep's sum N on the pre-copy N  ->  hk 19, late 1, invariant/protocol 1604
+  M13  KILLED    STP reads its source before the EW6 check (E5 wins over EW6)  ->  random 1
+  M14  KILLED    inbox_taken rises at BCP's edge, before the copy has landed  ->  invariant/protocol 1853
+  M15  KILLED    the copy engine does not pause for a datapath store write  ->  fwd 71, timing 1, random 7, invariant/protocol 9
+  M16  KILLED    STA TEMP also writes the store (destination ID ignored)  ->  neg 4, e4 377, random 178
+  M17  KILLED    E8 not raised on a left SFT overflow (the model raises it: SD-13)  ->  random 3, invariant/protocol 3
+  M18  KILLED    status view: phase bit inverted  ->  random 27
+  M19  KILLED    no backstop: sum N checked only when a sweep item is taken  ->  hk 6
+  M20  KILLED    a repeated block in the sweep item is not refused  ->  hk 28, neg 1
+  M21  KILLED    the registered region misses ADRS's post-increment (LDM/STM across a region boundary)  ->  random 14, invariant/protocol 22
+  M22  KILLED    BCP's split enable ignores EW5 (the refused BCP still copies)  ->  hk 73, neg 2, late 1, invariant/protocol 76
+  M23  KILLED    the late E8 leaves the overflowed product in Accm (no restore)  ->  random 3, late 2
+  M24  KILLED    the instruction behind an overflowing MUL/MAC still executes (no squash)  ->  late 2, invariant/protocol 3
+  M25  KILLED    the operand pre-read misses this clock's store write (read after write)  ->  random 12, invariant/protocol 232
+  M26  KILLED    the operand pre-read misses the slots BCP makes pending  ->  late 3, invariant/protocol 83
+  M27  KILLED    EW5's lookahead ignores a strobe in BCP's previous clock (the take before it)  ->  late 2, invariant/protocol 2
+  M28  KILLED    a prefetch's EW2 in a MUL's X clock is raised at once (the MUL's E8 loses its priority)  ->  late 1
+  M29  KILLED    the registered decode's CUR alias follows ADRS (writes to CUR land in the wrong block)  ->  packet 60, neg 3, timing 1, random 63, invariant/protocol 13212
+cosim_mutants: 29/29 mutants killed

@@ -12,6 +12,8 @@
 # REVISION HISTORY(RH)
 # 001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF Phase 5).
 # 002 2026-10-03       Claude Code   Chg : W5 follows wpms_switch RH002 (the PR-1 check, now pairwise).
+# 003 2026-10-03       Claude Code   Chg : W2, W4, W5 follow wpms_switch RH003 (the same defects in the
+#                                          restructured text); Add : W23, the landed blocks of a go-now.
 # ============================================================================
 import argparse, os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -25,14 +27,14 @@ MUTANTS = [
     ("W1", "switch", "wpms_switch.v", "a GO's hand-over carries only its own items (earlier fired items dropped)",
      "ibx_wdata <= {23'd0, fired | go_items};", "ibx_wdata <= {23'd0, go_items};", "random"),
     ("W2", "switch", "wpms_switch.v", "GO_ALL fires only the issuing port's items",
-     "if (x_go)        go_items = x_d[1] ? arm : (arm & (x_p3 ? arm_p3 : ~arm_p3));",
-     "if (x_go)        go_items = (arm & (x_p3 ? arm_p3 : ~arm_p3));", "random"),
+     "wire [8:0]   go_set   = x_d[1] ? arm : (arm & (x_p3 ? arm_p3 : ~arm_p3));",
+     "wire [8:0]   go_set   = (arm & (x_p3 ? arm_p3 : ~arm_p3));", "random"),
     ("W3", "switch", "wpms_switch.v", "inbox slots writable while their block is armed (no freeze)",
      "if (!x_slot_ok || frozen[xb]) rej_now = 1'b1;", "if (!x_slot_ok) rej_now = 1'b1;", "reject"),
     ("W4", "switch", "wpms_switch.v", "the sum of N checked against NMAX + 64",
-     "if (go_sum > NMAX) go_bad = 1'b1;", "if (go_sum > NMAX + 64) go_bad = 1'b1;", "reject"),
+     "localparam [15:0] NEG_NMAX1 = -(NMAX + 1);", "localparam [15:0] NEG_NMAX1 = -(NMAX + 65);", "reject"),
     ("W5", "switch", "wpms_switch.v", "PR-1 not checked (a block twice in the sweep word)",
-     "if (q < sw_nx[3:0] && br == bq) go_bad = 1'b1;", "if (1'b0) go_bad = 1'b1;", "reject"),
+     "if (q < sw_nx[3:0] && br == bq) go_pr = 1'b1;", "if (1'b0) go_pr = 1'b1;", "reject"),
     ("W6", "switch", "wpms_switch.v", "PR-2 range closed below NMAX (N = NMAX refused)",
      "wire         x_inrange = ($signed(x_d) >= N_MIN) && ($signed(x_d) <= NMAX);",
      "wire         x_inrange = ($signed(x_d) >= N_MIN) && ($signed(x_d) < NMAX);", "origin"),
@@ -72,6 +74,8 @@ MUTANTS = [
      "8'h11: mg_rate   <= x_d;", "8'h11: mg_target <= x_d;", "random"),
     ("W22", "switch", "wpms_switch.v", "the ROM may restart itself (TEST_ORIGIN from port 3 accepted)",
      "8'h1C: if (x_p3) rej_now = 1'b1;", "8'h1C: if (1'b0) rej_now = 1'b1;", "origin+rom"),
+    ("W23", "switch", "wpms_switch.v", "a go-now of a block lands its staged N whatever COMMIT bit 0 says",
+     "x_a[4] ? 8'd0 : (go_blk & {8{x_d[0]}});", "x_a[4] ? 8'd0 : go_blk;", "reject"),
 ]
 
 

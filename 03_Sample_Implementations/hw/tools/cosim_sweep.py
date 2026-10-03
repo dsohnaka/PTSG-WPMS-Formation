@@ -30,6 +30,8 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-28       Claude Code   Add : First version (SILICON_BRIEF Phase 3).
+# 002 2026-10-03       Claude Code   Chg : the simulator's ERROR lines count with its warnings (the
+#                                          Formation's own checks, RH005/RH006, print ERROR).
 # ============================================================================
 import argparse, json, os, random, subprocess, sys, time
 from concurrent.futures import ThreadPoolExecutor
@@ -84,7 +86,7 @@ def run(exe, outdir, tag, stim):
     sp, rp = os.path.join(outdir, f"stim_{tag}.txt"), os.path.join(outdir, f"res_{tag}.txt")
     open(sp, "w").write(stim)
     r = subprocess.run(["vvp", "-n", exe, f"+stim={sp}", f"+out={rp}"], capture_output=True, text=True)
-    warn = [l for l in (r.stdout + r.stderr).splitlines() if "WARNING" in l]
+    warn = [l for l in (r.stdout + r.stderr).splitlines() if "WARNING" in l or "ERROR" in l]
     return parse(rp), warn
 
 

@@ -1,0 +1,68 @@
+gate_depth: gate levels in front of each register group — previous revision (commit 8815e35) against the working file; yowasp-yosys synth -flatten -noabc — evidence class ESTIMATE
+
+wpms_formation: longest 112 -> 82 levels
+  register group                                 bits   old   new
+  error_code                                        5   112    50
+  error_flag                                        1   112    50
+  error_sn                                         12   112    50
+  insert_req_r                                      1   112    50
+  accm                                             32   106    81
+  w_hi                                             34     -    82
+  taken_due                                         1    66    43
+  inbox_taken                                       1    65    42
+  pmask[]                                         128    56    40
+  copied                                            8    54    38
+  sweep_a                                          28    54    38
+  sweep_copied                                      1    54    38
+  ew5_c                                            34     -    44
+  ew5_s                                            33     -    43
+  store_q                                          32     -    39
+  region                                            3    35    28
+  g_store[].m[]                                  3840    33    34
+  inbox_q                                          32     -    34
+  st_n[]                                          256    33    34
+  rd_e5                                             1    33     -
+  a_block                                           3    31    32
+  $\cm_mask$rdreg[]$q                               3    28    29
+  a_slot                                            4    27    28
+  adrs                                              6    27    28
+  pf_w                                              1     -    27
+  s_temp                                           32    26    27
+  w_chk                                             1     -    25
+  jumpval                                          12    23    24
+  loopval                                          12    23    24
+  shv                                               5    23    24
+
+wpms_switch: longest 77 -> 67 levels
+  register group                                 bits   old   new
+  arm                                               9    77    67
+  fired                                             9    73    63
+  reject0                                          32    73    63
+  ibx_we                                            1    72    62
+  go_seq                                           32    71    61
+  n_fu_v                                           96    71    61
+  nv_fu                                             8    71    61
+  sw_fu                                            28    71    61
+  ibx_hand                                          1    70    60
+  d_rej                                             1    69    59
+  ibx_addr                                          8    67    57
+  ibx_wdata                                        32    67    57
+  cmask_v                                         128    65    55
+  cm0                                               8     -    55
+  n_st_v                                           96    50    50
+  rtout_v                                         128    43    43
+  nv_st                                             8    26    26
+  d_rdata                                          32    24    24
+  arm_p3                                            9    19    19
+  sweep_clocks_max                                 12    17    17
+  fa                                                9    14    14
+  ft                                                9    14    14
+  shadow[]                                       4096    12    12
+  sample_n                                         32    11    11
+  sw_st                                            28    11    11
+  applied_sample                                   32     9     9
+  n_take                                           32     9     9
+  d_inbox                                           1     8     8
+  sample_hi                                        32     8     8
+  applied_seq                                      32     7     7
+exit 0

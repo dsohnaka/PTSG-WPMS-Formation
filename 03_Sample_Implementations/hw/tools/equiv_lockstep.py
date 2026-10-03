@@ -9,6 +9,19 @@
 #
 # SD-22 step 1 (ruling 2026-10-03): wpms_formation RH005 against RH004 and
 # wpms_switch RH002 against RH001, each at NMAX 1,008 and 2,048.
+# SD-22 step 2: wpms_switch RH003 against RH002, compared as in step 1; and
+# wpms_formation RH006 against RH005 with the one change step 2 makes on
+# purpose: the E8 of MUL and MAC, and a prefetch's EW2 met in a MUL's or MAC's
+# X clock, are raised one clock later. After the reference raises such an
+# error, the bench skips, for that one clock, Accm (the new revision holds the
+# product until it restores it) and the error flag, and, until the reset that
+# follows, the error code, its SN and the trap request (whose handshake the
+# bench drives from the reference). From the next clock on it checks that the
+# new revision has raised the same error with the same SN. Signals the
+# pre-read and the lookahead feed (rd_val, src, ew5, x_err) are compared while
+# an instruction executes (a halted Formation, or the squashed clock, computes
+# them from values it never uses), x_err and x_commit except for the
+# overflowing MUL/MAC itself.
 #
 #   python3 equiv_lockstep.py [--ref COMMIT] [--clocks N] [--seeds 1,2]
 #                             [--only formation|switch] [--out DIR]
@@ -22,6 +35,10 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-03       Claude Code   Add : First version (SD-22 step 1).
+# 002 2026-10-03       Claude Code   Chg : SD-22 step 2: the reference is commit 8815e35 (Formation RH005,
+#                                          switch RH002); the Formation's late E8 is allowed for as above;
+#                                          the switch's GO-check signals are compared where the switch uses
+#                                          them (a GO, a go-now).
 # ============================================================================
 import argparse, os, re, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
@@ -29,7 +46,7 @@ from concurrent.futures import ThreadPoolExecutor
 HERE = os.path.dirname(os.path.abspath(__file__))
 HW = os.path.normpath(os.path.join(HERE, ".."))
 L2, SW = os.path.join(HW, "l2"), os.path.join(HW, "switch")
-REF_COMMIT = "e3d4985"          # Formation RH004, switch RH001 (the first fit's RTL)
+REF_COMMIT = "8815e35"          # Formation RH005, switch RH002 (the second fit's RTL)
 
 
 def git_show(commit, rel):
@@ -48,8 +65,9 @@ def ref_copy(commit, rel, module, out):
     return path
 
 
-def cmp_line(name, x, y):
-    return (f'        if (({x}) !== ({y})) begin mism = mism + 1; '
+def cmp_line(name, x, y, when=None):
+    cond = f"(({x}) !== ({y}))" if when is None else f"({when}) && (({x}) !== ({y}))"
+    return (f'        if ({cond}) begin mism = mism + 1; '
             f'if (mism <= 20) $display("%0d MISMATCH {name}: %h / %h", cyc, {x}, {y}); end\n')
 
 
@@ -70,6 +88,11 @@ F_REGS = ["accm", "temp", "adrs", "shv", "armed", "sweep_armed", "take", "take_s
 # the signals the restructure touched (RH004 combinational, RH005 some registered)
 F_TOUCHED = ["region", "a_block", "x_err", "dp_st_we", "cp_go", "cp_b", "bcp_commit", "pm_idle_next", "ew5",
              "chk_sum", "sw_invalid", "rd_val", "src", "rd_e5", "wr_err", "x_commit"]
+# step 2 (the late E8, the pre-read, the lookahead): when each comparison holds
+F_WHEN = {"accm": "!late_first", "error_flag": "!late_first", "a_error_flag": "!late_first",
+          "error_code": "!late_win", "a_error_code": "!late_win", "error_sn": "!late_win", "a_error_sn": "!late_win",
+          "insert_req_r": "!late_win", "a_insert_req": "!late_win",
+          "x_err": "a.x_go && !e8_x", "x_commit": "!e8_x", "rd_val": "a.x_go", "src": "a.x_go", "ew5": "a.x_go"}
 
 
 def formation_bench():
@@ -77,8 +100,8 @@ def formation_bench():
     decl += "".join(f"    wire [{w - 1}:0] a_{n}, b_{n};\n" for n, w in F_OUT)
     ports = lambda p: ", ".join([".clk(clk)", ".rst(rst)"] + [f".{n}({n})" for n, _ in F_IN] +
                                 [f".{n}({p}_{n})" for n, _ in F_OUT])
-    cmp = "".join(cmp_line(n, f"a_{n}", f"b_{n}") for n, _ in F_OUT)
-    cmp += "".join(cmp_line(n, f"a.{n}", f"b.{n}") for n in F_REGS + F_TOUCHED)
+    cmp = "".join(cmp_line(n, f"a_{n}", f"b_{n}", F_WHEN.get(f"a_{n}")) for n, _ in F_OUT)
+    cmp += "".join(cmp_line(n, f"a.{n}", f"b.{n}", F_WHEN.get(n)) for n in F_REGS + F_TOUCHED)
     for arr in ("pmask", "cm_mask", "rtout", "st_n", "ib_n"):
         cmp += "".join(cmp_line(f"{arr}[{w}]", f"a.{arr}[{w}]", f"b.{arr}[{w}]") for w in range(8))
     for gs in range(1, 16):
@@ -182,10 +205,33 @@ module equiv_formation_tb;
 @MEMINIT@
     end
 
+    // ---- the late errors (step 2): the reference raised, at the last edge, the E8 of a
+    //      MUL/MAC or an EW2 met in its X clock (late_first); the clocks from then until the
+    //      reset (late_win). mm_x: a MUL/MAC in X that the new revision writes to Accm at once;
+    //      e8_x: one that overflows (the reference's E8 in X)
+    reg     late_win = 0, late_first = 0, mm_x_q = 0, ew2_q = 0;
+    wire    mm_x = (a.op == 4'd4 || a.op == 4'd5) && (a.x_err == 5'd0 || a.x_err == 5'd8);
+    wire    e8_x = (a.op == 4'd4 || a.op == 4'd5) && (a.x_err == 5'd8);
+    integer n_late_e8 = 0, n_late_ew2 = 0, n_late_both = 0;
+
     always @(negedge clk) begin
         cyc = cyc + 1;
+        if (rst) late_win = 0;
+        late_first = !rst && a_error_flag && !flag_q && mm_x_q && (a_error_code == 5'd8 || a_error_code == 5'd18);
+        if (late_first) begin
+            late_win = 1;
+            if (a_error_code == 5'd8) n_late_e8 = n_late_e8 + 1; else n_late_ew2 = n_late_ew2 + 1;
+            if (a_error_code == 5'd8 && ew2_q) n_late_both = n_late_both + 1;
+        end
         // ---- compare: registers after the last edge, outputs for the inputs held -------
 @CMP@
+        // one clock later, the new revision has raised the same error with the same SN
+        if (late_win && !late_first && !(b_error_flag && b_error_code == a_error_code && b_error_sn == a_error_sn)) begin
+            mism = mism + 1;
+            if (mism <= 20) $display("%0d MISMATCH late error: flag %b code %0d SN %0d (reference: code %0d SN %0d)",
+                                     cyc, b_error_flag, b_error_code, b_error_sn, a_error_code, a_error_sn);
+        end
+        mm_x_q = !rst && a.x_go && mm_x;            // a MUL/MAC in X: its errors and its clock's EW2 come late
         // ---- coverage ------------------------------------------------------------------
         if (!rst && a.x_valid) begin
             n_x = n_x + 1;
@@ -282,7 +328,12 @@ module equiv_formation_tb;
         pf_block = $random(seed);
         if ({$random(seed)} % 20 != 0 && ($signed(a.st_n[pf_block]) < N_MIN || $signed(a.st_n[pf_block]) > NMAX))
             pf_req = 0;                                                                   // EW2 now and then only
+        // step 2: a prefetch's EW2 in the X clock of a MUL/MAC (overflowing or not), now and then
+        if (!rst && a.x_go && mm_x && !a_bcp_busy && !b_bcp_busy && {$random(seed)} % (e8_x ? 3 : 40) == 0)
+            for (k = 0; k < 8; k = k + 1)
+                if ($signed(a.st_n[k]) < N_MIN || $signed(a.st_n[k]) > NMAX) begin pf_req = 1; pf_block = k; end
         if (pf_req) n_pf = n_pf + 1;
+        ew2_q = pf_req && ($signed(a.st_n[pf_block]) < N_MIN || $signed(a.st_n[pf_block]) > NMAX);   // EW2 this clock
 
         // ---- the input switch's writes: never into a block whose copy is pending ----------
         ibx_we = ({$random(seed)} % 4 == 0);
@@ -315,6 +366,8 @@ module equiv_formation_tb;
                      n_ok[8], n_ok[9], n_ok[10], n_ok[11], n_ok[12], n_ok[13], n_ok[14], n_ok[15]);
             $display("  errors %0d: E4 %0d E5 %0d E8 %0d EW2 %0d EW3 %0d EW4 %0d EW5 %0d EW6 %0d", n_fault,
                      n_err[4], n_err[5], n_err[8], n_err[18], n_err[19], n_err[20], n_err[21], n_err[22]);
+            $display("  raised one clock later, as the reference's code and SN: E8 of MUL/MAC %0d (%0d with an EW2 in the same clock), EW2 in their X clock %0d",
+                     n_late_e8, n_late_both, n_late_ew2);
             $display("  store writes %0d; copy clocks %0d; BCP commits %0d (%0d with blocks to copy); inbox_taken rises %0d",
                      n_stwe, n_cpgo, n_bcp, n_bcpcp, n_taken);
             $display("  region at X: store %0d inbox %0d CUR %0d COMMIT %0d SWST %0d SWA %0d STAT %0d none %0d",
@@ -351,7 +404,8 @@ def switch_bench():
     ports = lambda p: ", ".join([".clk(clk)", ".rst(rst)"] + [f".{n}({n})" for n, _ in S_IN] +
                                 [f".{n}({p}_{n})" for n, _ in S_OUT])
     cmp = "".join(cmp_line(n, f"a_{n}", f"b_{n}") for n, _ in S_OUT)
-    cmp += "".join(cmp_line(n, f"a.{n}", f"b.{n}") for n in S_REGS + S_TOUCHED)
+    cmp += "".join(cmp_line(n, f"a.{n}", f"b.{n}") for n in S_REGS)
+    cmp += "".join(cmp_line(n, f"a.{n}", f"b.{n}", "a.x_go || a.x_nowb || a.x_nows") for n in S_TOUCHED)
     return SWITCH_TB.replace("@DECL@", decl).replace("@PORTS_A@", ports("a")) \
                     .replace("@PORTS_B@", ports("b")).replace("@CMP@", cmp)
 
