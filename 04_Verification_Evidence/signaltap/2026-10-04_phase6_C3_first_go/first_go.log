@@ -1,0 +1,88 @@
+quartus_stp.exe : TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msiz
+e
+発生場所 行:1 文字:1
++ & '<quartus>\bin64\quartus_stp.exe' `
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (TBBmalloc: skip...function _msize:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Info: *******************************************************************
+Info: Running Quartus Prime Signal Tap
+    Info: Version 23.1std.1 Build 993 05/14/2024 SC Lite Edition
+    Info: Copyright (C) 2024  Intel Corporation. All rights reserved.
+    Info: Your use of Intel Corporation's design tools, logic functions 
+    Info: and other software and tools, and any partner logic 
+    Info: functions, and any output files from any of the foregoing 
+    Info: (including device programming or simulation files), and any 
+    Info: associated documentation or information are expressly subject 
+    Info: to the terms and conditions of the Intel Program License 
+    Info: Subscription Agreement, the Intel Quartus Prime License Agreement,
+    Info: the Intel FPGA IP License Agreement, or other applicable license
+    Info: agreement, including, without limitation, that your use is for
+    Info: the sole purpose of programming logic devices manufactured by
+    Info: Intel and sold by Intel or its authorized distributors.  Please
+    Info: refer to the applicable agreement for further details, at
+    Info: https://fpgasoftware.intel.com/eula.
+    Info: Processing started: Sun Oct  4 22:16:06 2026
+Info: Command: quartus_stp -t .\host\wpms_phase6_first_go_1008.tcl
+wpms: DE-SoC [USB-1] / @2: 5CSEBA6(.|ES)/5CSEMA6/.. (0x02D020DD), HOST = instance 0, source 300B00000000
+R 009 -> 00000002  GO_SEQ (the ROM's GO)
+R 00B -> 000BEE84  APPLIED_SAMPLE (the ROM's GO)
+W 210 000000F0 -> 000000F0  triad 1 INBOX[1][0]
+W 211 00000000 -> 00000000  triad 1 INBOX[1][1]
+W 212 FFD30084 -> FFD30084  triad 1 INBOX[1][2]
+W 213 001A7B20 -> 001A7B20  triad 1 INBOX[1][3]
+W 214 FFF1D157 -> FFF1D157  triad 1 INBOX[1][4]
+W 215 00000000 -> 00000000  triad 1 INBOX[1][5]
+W 216 00000000 -> 00000000  triad 1 INBOX[1][6]
+W 217 00000000 -> 00000000  triad 1 INBOX[1][7]
+W 218 00000000 -> 00000000  triad 1 INBOX[1][8]
+W 219 FFD30084 -> FFD30084  triad 1 INBOX[1][9]
+W 21A 02C036FF -> 02C036FF  triad 1 INBOX[1][A]
+W 21B 000015D8 -> 000015D8  triad 1 INBOX[1][B]
+W 21C 00000000 -> 00000000  triad 1 INBOX[1][C]
+W 21F FF9C47EC -> FF9C47EC  triad 1 INBOX[1][F]
+W 281 00000001 -> 00000001  triad 1 RTOUT[1]
+W 289 40019FFF -> 40019FFF  triad 1 COMMIT[1]
+W 220 000000F0 -> 000000F0  triad 2 INBOX[2][0]
+W 221 00000000 -> 00000000  triad 2 INBOX[2][1]
+W 222 FFD30084 -> FFD30084  triad 2 INBOX[2][2]
+W 223 001A7B20 -> 001A7B20  triad 2 INBOX[2][3]
+W 224 FFF1D157 -> FFF1D157  triad 2 INBOX[2][4]
+W 225 00000000 -> 00000000  triad 2 INBOX[2][5]
+W 226 00000000 -> 00000000  triad 2 INBOX[2][6]
+W 227 00000000 -> 00000000  triad 2 INBOX[2][7]
+W 228 00000000 -> 00000000  triad 2 INBOX[2][8]
+W 229 FFD30084 -> FFD30084  triad 2 INBOX[2][9]
+W 22A 0379E7D7 -> 0379E7D7  triad 2 INBOX[2][A]
+W 22B 000015D8 -> 000015D8  triad 2 INBOX[2][B]
+W 22C 00000000 -> 00000000  triad 2 INBOX[2][C]
+W 22F FF9C47EC -> FF9C47EC  triad 2 INBOX[2][F]
+W 282 00000003 -> 00000003  triad 2 RTOUT[2]
+W 28A 40019FFF -> 40019FFF  triad 2 COMMIT[2]
+W 230 000000F0 -> 000000F0  triad 3 INBOX[3][0]
+W 231 00000000 -> 00000000  triad 3 INBOX[3][1]
+W 232 FFD30084 -> FFD30084  triad 3 INBOX[3][2]
+W 233 001A7B20 -> 001A7B20  triad 3 INBOX[3][3]
+W 234 FFF1D157 -> FFF1D157  triad 3 INBOX[3][4]
+W 235 00000000 -> 00000000  triad 3 INBOX[3][5]
+W 236 00000000 -> 00000000  triad 3 INBOX[3][6]
+W 237 00000000 -> 00000000  triad 3 INBOX[3][7]
+W 238 00000000 -> 00000000  triad 3 INBOX[3][8]
+W 239 FFD30084 -> FFD30084  triad 3 INBOX[3][9]
+W 23A 0424362A -> 0424362A  triad 3 INBOX[3][A]
+W 23B 000015D8 -> 000015D8  triad 3 INBOX[3][B]
+W 23C 00000000 -> 00000000  triad 3 INBOX[3][C]
+W 23F FF9C47EC -> FF9C47EC  triad 3 INBOX[3][F]
+W 283 00000002 -> 00000002  triad 3 RTOUT[3]
+W 28B 40019FFF -> 40019FFF  triad 3 COMMIT[3]
+W 290 00000D13 -> 00000D13  SWEEP [1, 2, 3]
+W 291 40000000 -> 40000000  SWEEP_COMMIT arm
+W 008 00000001 -> 00000000  GO
+   applied GO 3 at sweep 10103934  C major
+Info (23030): Evaluation of Tcl script .\host\wpms_phase6_first_go_1008.tcl was successful
+Info: Quartus Prime Signal Tap was successful. 0 errors, 0 warnings
+    Info: Peak virtual memory: 4574 megabytes
+    Info: Processing ended: Sun Oct  4 22:16:08 2026
+    Info: Elapsed time: 00:00:02
+    Info: Total CPU time (on all processors): 00:00:00

@@ -17,9 +17,9 @@
 # data_index are in the signal set's <presentation>). The <extradata> after
 # it marks each sample: '1' stored, 'T' the trigger sample; D is the number
 # of marks (the data element's sample_depth can be one less). Every log is
-# checked against its own trigger: a condition on one node ('n' == rising
-# edge / falling edge / high / low) must hold at the sample marked T, else the
-# conversion stops.
+# checked against its own trigger: a basic condition on single nodes ('n' ==
+# rising edge / falling edge / high / low, ANDed) must hold at the sample
+# marked T, else the conversion stops.
 # The VCD follows the export's layout (QUARTUS_VCD_EXPORT 1.0): 1 ps, every
 # bit its own variable, X at time 0, the acquisition clock listed with two
 # time stamps per sample, "Sample n" comments counted from the trigger.
@@ -31,6 +31,8 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-04       Claude Code   Add : First version (Phase 6: an export failed after a capture).
+# 002 2026-10-04       Claude Code   Add : the trigger check takes ANDed conditions on single nodes (C2's trigger);
+#                                          checked on the architect's C2_full8.stp against its own export: equal.
 # ============================================================================
 import argparse, gzip, os, re, sys, tempfile
 import xml.etree.ElementTree as ET
@@ -64,12 +66,17 @@ def _index_map(signal_set):
 
 
 def _condition(trigger):
-    """(node, kind) of a basic one-node trigger condition, else None."""
+    """[(node, kind), ...] of a basic trigger condition on single nodes, ANDed; else None."""
     levels = [lv for lv in trigger.iter("level") if lv.get("enabled", "yes") == "yes"]
     if len(levels) != 1 or levels[0].get("type", "basic") != "basic":
         return None
-    m = re.match(r"\s*'([^']+)'\s*==\s*(rising edge|falling edge|high|low)\s*$", levels[0].text or "")
-    return (m.group(1), m.group(2)) if m else None
+    terms = []
+    for term in (levels[0].text or "").split("&&"):
+        m = re.match(r"\s*'([^']+)'\s*==\s*(rising edge|falling edge|high|low)\s*$", term)
+        if not m:
+            return None
+        terms.append((m.group(1), m.group(2)))
+    return terms
 
 
 def logs(path):
@@ -118,21 +125,22 @@ def decode(lg):
     for n, i in idx.items():
         names[i] = n
     samples = [bits[k * w:(k + 1) * w] for k in range(depth)]
-    note = "no single-node condition to check"
+    note = "no condition on single nodes to check"
     cond = lg["condition"]
-    if cond and cond[0] in idx:
-        i, kind = idx[cond[0]], cond[1]
-        now = samples[t][i]
-        before = samples[t - 1][i] if t > 0 else None
-        ok = {"high": now == "1", "low": now == "0",
-              "rising edge": before == "0" and now == "1",
-              "falling edge": before == "1" and now == "0"}[kind]
-        if not ok:
-            raise StpError(f"{lg['name']}: the trigger '{cond[0]}' == {kind} does not hold at the sample "
-                           f"marked T ({t}); the file's layout is not the one this tool knows")
-        note = f"'{cond[0]}' == {kind} holds at sample {t}, the trigger mark"
+    if cond and all(n in idx for n, _ in cond):
+        for n, kind in cond:
+            i = idx[n]
+            now = samples[t][i]
+            before = samples[t - 1][i] if t > 0 else None
+            ok = {"high": now == "1", "low": now == "0",
+                  "rising edge": before == "0" and now == "1",
+                  "falling edge": before == "1" and now == "0"}[kind]
+            if not ok:
+                raise StpError(f"{lg['name']}: the trigger '{n}' == {kind} does not hold at the sample "
+                               f"marked T ({t}); the file's layout is not the one this tool knows")
+        note = " && ".join(f"'{n}' == {kind}" for n, kind in cond) + f" holds at sample {t}, the trigger mark"
     elif cond:
-        note = f"the trigger node {cond[0]} is not among the stored nodes"
+        note = "a trigger node is not among the stored nodes"
     return names, samples, t, note
 
 
@@ -170,7 +178,7 @@ def write_vcd(lg, out, period_ps=20000):
     date = f"{m.group(2)}/{m.group(3)}/{m.group(1)} {m.group(4)}" if m else "unknown"
     L = ["$comment", f" {os.path.basename(out)}: the stored log \"{lg['name']}\" of instance {lg['instance']},",
          " converted by hw/tools/stp_log_to_vcd.py in the layout of a SignalTap VCD export", "$end",
-         "$date", f"  {date}", "$end", "$version", " QUARTUS_VCD_EXPORT 1.0 (stp_log_to_vcd.py RH001)", "$end",
+         "$date", f"  {date}", "$end", "$version", " QUARTUS_VCD_EXPORT 1.0 (stp_log_to_vcd.py RH002)", "$end",
          "$timescale", "  1 ps", "$end"]
     keys = sorted(tree)
     if clk_last is not None and tuple(clk_scopes) not in tree:

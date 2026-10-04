@@ -42,6 +42,8 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-01       Claude Code   Add : First version (SILICON_BRIEF Phase 6).
+# 002 2026-10-04       Claude Code   Fix : a host log written by PowerShell's ">" (UTF-16) is read; before, none of
+#                                          its lines matched and the log counted as empty (the board's C3, C4 logs).
 # ============================================================================
 import argparse, gzip, json, math, os, re, sys
 
@@ -356,7 +358,9 @@ def parse_log(path):
     steps = []
     if not path:
         return steps
-    for line in open(path):
+    raw = open(path, "rb").read()
+    text = raw.decode("utf-16") if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else raw.decode("utf-8", "replace")
+    for line in text.splitlines():                # PowerShell's ">" writes UTF-16 (RH002)
         s = line.strip()
         m = re.match(r"^W (\d+) ([0-9a-fA-F]{3}) ([0-9a-fA-F]{8}) ([0-9a-fA-F]{8}) (\d)$", s)
         if m:

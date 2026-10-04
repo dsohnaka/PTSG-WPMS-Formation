@@ -1,0 +1,47 @@
+{
+ "budget": 50,
+ "qualified": false,
+ "strobe_interval": [
+  1041,
+  1042
+ ],
+ "sweeps_with_packets": 0,
+ "g": [],
+ "t_wake": [],
+ "window": [],
+ "floor": [],
+ "k_ok": true,
+ "bcp": null,
+ "bcp_full_take": null,
+ "full_load_sweeps": 0,
+ "full_load_length": null,
+ "sweep_length_max": null,
+ "packets": 0,
+ "errors": [
+  {
+   "at": 512,
+   "n": 2,
+   "code": "EW2",
+   "packets_after": 0,
+   "bins_after": 0,
+   "banks_after": 4,
+   "banks_after_nonzero": 0,
+   "halt_after": 9,
+   "halted": true
+  }
+ ],
+ "model_from": "reset",
+ "bundles": {
+  "compared": 0,
+  "equal": 0,
+  "first_bad": null
+ },
+ "pcm": {
+  "compared": 0,
+  "equal": 0,
+  "first_bad": null
+ },
+ "model_problems": [],
+ "samples": 4096,
+ "strobes": 4
+}

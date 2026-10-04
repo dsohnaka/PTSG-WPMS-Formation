@@ -1,0 +1,54 @@
+{
+ "budget": 50,
+ "qualified": false,
+ "strobe_interval": [
+  1041,
+  1042
+ ],
+ "sweeps_with_packets": 4,
+ "g": [],
+ "t_wake": [
+  2
+ ],
+ "window": [
+  28
+ ],
+ "floor": [
+  30
+ ],
+ "k_ok": true,
+ "bcp": [
+  2,
+  2
+ ],
+ "bcp_full_take": null,
+ "full_load_sweeps": 3,
+ "full_load_length": [
+  1023,
+  1023
+ ],
+ "sweep_length_max": 1023,
+ "packets": 4,
+ "errors": [],
+ "model_from": "reset",
+ "bundles": {
+  "compared": 4,
+  "equal": 4,
+  "first_bad": null
+ },
+ "pcm": {
+  "compared": 4,
+  "equal": 4,
+  "first_bad": null
+ },
+ "model_problems": [],
+ "pcm_peak_dbfs": -24.2,
+ "pcm_peak_dbfs_last_go": -24.2,
+ "spectrum_samples": 4,
+ "spectrum_peaks_captured_L": null,
+ "spectrum_peaks_model_L": null,
+ "spectrum_peaks_captured_R": null,
+ "spectrum_peaks_model_R": null,
+ "samples": 4096,
+ "strobes": 4
+}

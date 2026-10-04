@@ -136,11 +136,12 @@ Expected values: `04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board/expec
 **Analysis of each export** (in the evidence folder):
 ```
 python3 hw/tools/phase6_evidence.py C2_full8.vcd --budget 50 --log full8.log --json observed.json
-python3 hw/tools/phase6_evidence.py C5_ew3.vcd --budget 50 --score hw/de10_nano/inject/wpms_r1d_ew3.score
+python3 hw/tools/phase6_evidence.py C5_ew3.vcd --budget 50 --log reset.log --score hw/de10_nano/inject/wpms_r1d_ew3.score
 ```
+For C1 and C5, which have no script, `reset.log` holds the one line `RESET`: the model then starts from reset. Without a log the tool does not compare with the model. Give each run of a script its own log name (`> first_go_1.log`, `> first_go_2.log`): a second run into the same name overwrites the first, as happened to C3's log on 2026-10-04. A log written by PowerShell's `>` is UTF-16; the tool reads it.
 `--budget 100` for the 100 MHz revision. The log is what the Tcl printed. The tool understands `W aaa dddddddd -> rrrrrrrr`, `R aaa -> rrrrrrrr` and `applied GO g at sweep s`; add a line `RESET` where the board was reset. For a capture long after reset (C3), the model starts from the GO itself: it is complete (every slot of every block it plays, and the sweep word). If SignalTap exports without the clock signal, the tool samples once per period of the time stamps (`--period-ps` overrides).
 
-取得は C1〜C5 の 5 種類。C1 と C5 では、音系をリセット保持したまま SignalTap を待機させ、その後に解除する（試験原点は常にパケットを出しており、実行中に書いた注入像はその場でエラーを起こしうるため）。各取得の期待値（RTL-SIM、実機より先に記録）と、同じ手順で RTL-SIM から切り出した VCD（SignalTap エクスポート形式）は `04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board/expected/` にある。C5 のあとは ISMCE で `wpms_r1d.mif` を書き戻す。C3 では耳でも確認する：試験原点（約 996 Hz）のあと C メジャー三和音（左 C5+E5、右 E5+G5）。
+取得は C1〜C5 の 5 種類。C1 と C5 では、音系をリセット保持したまま SignalTap を待機させ、その後に解除する（試験原点は常にパケットを出しており、実行中に書いた注入像はその場でエラーを起こしうるため）。各取得の期待値（RTL-SIM、実機より先に記録）と、同じ手順で RTL-SIM から切り出した VCD（SignalTap エクスポート形式）は `04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board/expected/` にある。C5 のあとは ISMCE で `wpms_r1d.mif` を書き戻す。C3 では耳でも確認する：試験原点（約 996 Hz）のあと C メジャー三和音（左 C5+E5、右 E5+G5）。C1 と C5 の解析には、`RESET` の 1 行だけのログ（`reset.log`）を与える。スクリプトを何度か実行するときは、実行ごとにログ名を変える（同じ名前だと上書きされる）。
 
 ## 5. Resource ledger / 資源台帳
 
@@ -158,3 +159,4 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 - 2026-10-04 — §2: SW[1:0] = 11 (G = 12). The first version said 00, which is wrong: every expected value assumes G = 12. / §2：SW[1:0] は 11（G = 12）。初版の 00 は誤りで、期待値はすべて G = 12 を前提とする。
 - 2026-10-04 — `wpms_tap.stp` committed and enabled by the generator (§3); SD-23 adopted (§1); the host script's session defect and its fix (§4). / `wpms_tap.stp` を収め、生成器で有効化（§3）。SD-23 正式採用（§1）。ホストスクリプトのセッションの不具合と修正（§4）。
 - 2026-10-04 — `wpms_tap.stp`: the stored acquisition (a C5 trial) removed at the architect's word; the setup is unchanged. §3: if the VCD export fails, send the saved `.stp` (`stp_log_to_vcd.py`). / `wpms_tap.stp` から取得データ（C5 の試行）を削除。設定は不変。§3：VCD エクスポートが失敗したら、保存した `.stp` を送る。
+- 2026-10-04 — §4: `reset.log` for C1 and C5; a log name per run; PowerShell's UTF-16 logs (after the first captures). / §4：C1・C5 の `reset.log`、実行ごとのログ名、PowerShell の UTF-16 ログ。

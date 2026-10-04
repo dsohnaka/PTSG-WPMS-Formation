@@ -1,0 +1,163 @@
+TBBmalloc: skip allocation functions replacement in ucrtbase.dll: unknown prologue for function _msize
+Info: *******************************************************************
+Info: Running Quartus Prime Signal Tap
+    Info: Version 23.1std.1 Build 993 05/14/2024 SC Lite Edition
+    Info: Copyright (C) 2024  Intel Corporation. All rights reserved.
+    Info: Your use of Intel Corporation's design tools, logic functions 
+    Info: and other software and tools, and any partner logic 
+    Info: functions, and any output files from any of the foregoing 
+    Info: (including device programming or simulation files), and any 
+    Info: associated documentation or information are expressly subject 
+    Info: to the terms and conditions of the Intel Program License 
+    Info: Subscription Agreement, the Intel Quartus Prime License Agreement,
+    Info: the Intel FPGA IP License Agreement, or other applicable license
+    Info: agreement, including, without limitation, that your use is for
+    Info: the sole purpose of programming logic devices manufactured by
+    Info: Intel and sold by Intel or its authorized distributors.  Please
+    Info: refer to the applicable agreement for further details, at
+    Info: https://fpgasoftware.intel.com/eula.
+    Info: Processing started: Sun Oct  4 21:15:28 2026
+Info: Command: quartus_stp -t host/wpms_phase6_full8_1008.tcl
+wpms: DE-SoC [USB-1] / @2: 5CSEBA6(.|ES)/5CSEMA6/.. (0x02D020DD), HOST = instance 0, source 000000000000
+R 009 -> 00000001  GO_SEQ
+R 00B -> 00000002  APPLIED_SAMPLE
+W 200 0000007E -> 0000007E  full8 0 INBOX[0][0]
+W 201 00000000 -> 00000000  full8 0 INBOX[0][1]
+W 202 FFD30084 -> FFD30084  full8 0 INBOX[0][2]
+W 203 000DD991 -> 000DD991  full8 0 INBOX[0][3]
+W 204 FFF1D157 -> FFF1D157  full8 0 INBOX[0][4]
+W 205 00000000 -> 00000000  full8 0 INBOX[0][5]
+W 206 00000000 -> 00000000  full8 0 INBOX[0][6]
+W 207 00000000 -> 00000000  full8 0 INBOX[0][7]
+W 208 00000000 -> 00000000  full8 0 INBOX[0][8]
+W 209 FFD30084 -> FFD30084  full8 0 INBOX[0][9]
+W 20A 015FDF71 -> 015FDF71  full8 0 INBOX[0][A]
+W 20B 000015D8 -> 000015D8  full8 0 INBOX[0][B]
+W 20C 00000000 -> 00000000  full8 0 INBOX[0][C]
+W 20F FFE483D3 -> FFE483D3  full8 0 INBOX[0][F]
+W 280 00000001 -> 00000001  full8 0 RTOUT[0]
+W 288 40019FFF -> 40019FFF  full8 0 COMMIT[0]
+W 210 0000007E -> 0000007E  full8 1 INBOX[1][0]
+W 211 00000000 -> 00000000  full8 1 INBOX[1][1]
+W 212 FFD30084 -> FFD30084  full8 1 INBOX[1][2]
+W 213 000DD991 -> 000DD991  full8 1 INBOX[1][3]
+W 214 FFF1D157 -> FFF1D157  full8 1 INBOX[1][4]
+W 215 00000000 -> 00000000  full8 1 INBOX[1][5]
+W 216 00000000 -> 00000000  full8 1 INBOX[1][6]
+W 217 00000000 -> 00000000  full8 1 INBOX[1][7]
+W 218 00000000 -> 00000000  full8 1 INBOX[1][8]
+W 219 FFD30084 -> FFD30084  full8 1 INBOX[1][9]
+W 21A 018B9DF5 -> 018B9DF5  full8 1 INBOX[1][A]
+W 21B 000015D8 -> 000015D8  full8 1 INBOX[1][B]
+W 21C 00000000 -> 00000000  full8 1 INBOX[1][C]
+W 21F FFE483D3 -> FFE483D3  full8 1 INBOX[1][F]
+W 281 00000002 -> 00000002  full8 1 RTOUT[1]
+W 289 40019FFF -> 40019FFF  full8 1 COMMIT[1]
+W 220 0000007E -> 0000007E  full8 2 INBOX[2][0]
+W 221 00000000 -> 00000000  full8 2 INBOX[2][1]
+W 222 FFD30084 -> FFD30084  full8 2 INBOX[2][2]
+W 223 000DD991 -> 000DD991  full8 2 INBOX[2][3]
+W 224 FFF1D157 -> FFF1D157  full8 2 INBOX[2][4]
+W 225 00000000 -> 00000000  full8 2 INBOX[2][5]
+W 226 00000000 -> 00000000  full8 2 INBOX[2][6]
+W 227 00000000 -> 00000000  full8 2 INBOX[2][7]
+W 228 00000000 -> 00000000  full8 2 INBOX[2][8]
+W 229 FFD30084 -> FFD30084  full8 2 INBOX[2][9]
+W 22A 01BCB7DD -> 01BCB7DD  full8 2 INBOX[2][A]
+W 22B 000015D8 -> 000015D8  full8 2 INBOX[2][B]
+W 22C 00000000 -> 00000000  full8 2 INBOX[2][C]
+W 22F FFE483D3 -> FFE483D3  full8 2 INBOX[2][F]
+W 282 00000003 -> 00000003  full8 2 RTOUT[2]
+W 28A 40019FFF -> 40019FFF  full8 2 COMMIT[2]
+W 230 0000007E -> 0000007E  full8 3 INBOX[3][0]
+W 231 00000000 -> 00000000  full8 3 INBOX[3][1]
+W 232 FFD30084 -> FFD30084  full8 3 INBOX[3][2]
+W 233 000DD991 -> 000DD991  full8 3 INBOX[3][3]
+W 234 FFF1D157 -> FFF1D157  full8 3 INBOX[3][4]
+W 235 00000000 -> 00000000  full8 3 INBOX[3][5]
+W 236 00000000 -> 00000000  full8 3 INBOX[3][6]
+W 237 00000000 -> 00000000  full8 3 INBOX[3][7]
+W 238 00000000 -> 00000000  full8 3 INBOX[3][8]
+W 239 FFD30084 -> FFD30084  full8 3 INBOX[3][9]
+W 23A 01F3D51C -> 01F3D51C  full8 3 INBOX[3][A]
+W 23B 000015D8 -> 000015D8  full8 3 INBOX[3][B]
+W 23C 00000000 -> 00000000  full8 3 INBOX[3][C]
+W 23F FFE483D3 -> FFE483D3  full8 3 INBOX[3][F]
+W 283 00000001 -> 00000001  full8 3 RTOUT[3]
+W 28B 40019FFF -> 40019FFF  full8 3 COMMIT[3]
+W 240 0000007E -> 0000007E  full8 4 INBOX[4][0]
+W 241 00000000 -> 00000000  full8 4 INBOX[4][1]
+W 242 FFD30084 -> FFD30084  full8 4 INBOX[4][2]
+W 243 000DD991 -> 000DD991  full8 4 INBOX[4][3]
+W 244 FFF1D157 -> FFF1D157  full8 4 INBOX[4][4]
+W 245 00000000 -> 00000000  full8 4 INBOX[4][5]
+W 246 00000000 -> 00000000  full8 4 INBOX[4][6]
+W 247 00000000 -> 00000000  full8 4 INBOX[4][7]
+W 248 00000000 -> 00000000  full8 4 INBOX[4][8]
+W 249 FFD30084 -> FFD30084  full8 4 INBOX[4][9]
+W 24A 0231B233 -> 0231B233  full8 4 INBOX[4][A]
+W 24B 000015D8 -> 000015D8  full8 4 INBOX[4][B]
+W 24C 00000000 -> 00000000  full8 4 INBOX[4][C]
+W 24F FFE483D3 -> FFE483D3  full8 4 INBOX[4][F]
+W 284 00000002 -> 00000002  full8 4 RTOUT[4]
+W 28C 40019FFF -> 40019FFF  full8 4 COMMIT[4]
+W 250 0000007E -> 0000007E  full8 5 INBOX[5][0]
+W 251 00000000 -> 00000000  full8 5 INBOX[5][1]
+W 252 FFD30084 -> FFD30084  full8 5 INBOX[5][2]
+W 253 000DD991 -> 000DD991  full8 5 INBOX[5][3]
+W 254 FFF1D157 -> FFF1D157  full8 5 INBOX[5][4]
+W 255 00000000 -> 00000000  full8 5 INBOX[5][5]
+W 256 00000000 -> 00000000  full8 5 INBOX[5][6]
+W 257 00000000 -> 00000000  full8 5 INBOX[5][7]
+W 258 00000000 -> 00000000  full8 5 INBOX[5][8]
+W 259 FFD30084 -> FFD30084  full8 5 INBOX[5][9]
+W 25A 027722BB -> 027722BB  full8 5 INBOX[5][A]
+W 25B 000015D8 -> 000015D8  full8 5 INBOX[5][B]
+W 25C 00000000 -> 00000000  full8 5 INBOX[5][C]
+W 25F FFE483D3 -> FFE483D3  full8 5 INBOX[5][F]
+W 285 00000003 -> 00000003  full8 5 RTOUT[5]
+W 28D 40019FFF -> 40019FFF  full8 5 COMMIT[5]
+W 260 0000007E -> 0000007E  full8 6 INBOX[6][0]
+W 261 00000000 -> 00000000  full8 6 INBOX[6][1]
+W 262 FFD30084 -> FFD30084  full8 6 INBOX[6][2]
+W 263 000DD991 -> 000DD991  full8 6 INBOX[6][3]
+W 264 FFF1D157 -> FFF1D157  full8 6 INBOX[6][4]
+W 265 00000000 -> 00000000  full8 6 INBOX[6][5]
+W 266 00000000 -> 00000000  full8 6 INBOX[6][6]
+W 267 00000000 -> 00000000  full8 6 INBOX[6][7]
+W 268 00000000 -> 00000000  full8 6 INBOX[6][8]
+W 269 FFD30084 -> FFD30084  full8 6 INBOX[6][9]
+W 26A 02C51437 -> 02C51437  full8 6 INBOX[6][A]
+W 26B 000015D8 -> 000015D8  full8 6 INBOX[6][B]
+W 26C 00000000 -> 00000000  full8 6 INBOX[6][C]
+W 26F FFE483D3 -> FFE483D3  full8 6 INBOX[6][F]
+W 286 00000001 -> 00000001  full8 6 RTOUT[6]
+W 28E 40019FFF -> 40019FFF  full8 6 COMMIT[6]
+W 270 0000007E -> 0000007E  full8 7 INBOX[7][0]
+W 271 00000000 -> 00000000  full8 7 INBOX[7][1]
+W 272 FFD30084 -> FFD30084  full8 7 INBOX[7][2]
+W 273 000DD991 -> 000DD991  full8 7 INBOX[7][3]
+W 274 FFF1D157 -> FFF1D157  full8 7 INBOX[7][4]
+W 275 00000000 -> 00000000  full8 7 INBOX[7][5]
+W 276 00000000 -> 00000000  full8 7 INBOX[7][6]
+W 277 00000000 -> 00000000  full8 7 INBOX[7][7]
+W 278 00000000 -> 00000000  full8 7 INBOX[7][8]
+W 279 FFD30084 -> FFD30084  full8 7 INBOX[7][9]
+W 27A 031C913F -> 031C913F  full8 7 INBOX[7][A]
+W 27B 000015D8 -> 000015D8  full8 7 INBOX[7][B]
+W 27C 00000000 -> 00000000  full8 7 INBOX[7][C]
+W 27F FFE483D3 -> FFE483D3  full8 7 INBOX[7][F]
+W 287 00000002 -> 00000002  full8 7 RTOUT[7]
+W 28F 40019FFF -> 40019FFF  full8 7 COMMIT[7]
+W 290 0FAC6888 -> 0FAC6888  SWEEP [0 .. 7], P = 8
+W 291 40000000 -> 40000000  SWEEP_COMMIT arm
+W 008 00000001 -> 00000000  GO: eight blocks and the sweep word
+   applied GO 2 at sweep 1541413  full take-set, full load
+R 299 -> 00000404  SWEEP_CLOCKS_MAX
+R 018 -> 00000412  STROBE_INTERVAL
+Info (23030): Evaluation of Tcl script host/wpms_phase6_full8_1008.tcl was successful
+Info: Quartus Prime Signal Tap was successful. 0 errors, 0 warnings
+    Info: Peak virtual memory: 4574 megabytes
+    Info: Processing ended: Sun Oct  4 21:15:29 2026
+    Info: Elapsed time: 00:00:01
+    Info: Total CPU time (on all processors): 00:00:00

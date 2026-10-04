@@ -1,0 +1,6 @@
+
+Algorithm : SHA256
+Hash      : 14703DBB3D5DD80B46E62A365D432E35F9BC5D7A9CE01C26723424BC22F82D27
+Path      : <local>\PTSG-WPMS-Formation\03_Sample_Implementations\hw\de10_nano\build\quartus\output_files\DE10_Nano_wpms.sof
+
+
