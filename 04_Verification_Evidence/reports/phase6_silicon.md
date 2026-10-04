@@ -655,3 +655,64 @@ The architect programmed the board with the second fit's bitstream (to be confir
 - 期待値（ROM の整数から報告後に導出）：997.97 Hz の搬送波、包絡の零点は 253.62 ms ごと、255.65 s 周期。定性的に一致する。
 - Core から HDMI 音声までの全経路がシリコン上で動くことを示す。タイミングの余裕は示さない。
 - 同日の SignalTap 取得（`ptsg_core_debug`）では、I2S の 8 フレームがモデルとビット単位で一致した（GO から 39,684,738 掃引目、G = 0）。位相の更新は約 4,000 万掃引のあいだ一度も誤っていない。掃引はオーディオのフレームにロックしている。DIP[1:0] は 00 で、設計の音量は SW[1:0] = 11。
+
+## 13. The third fit (2026-10-04): clk_sys closes at 50 MHz / 第 3 回フィット：50 MHz で clk_sys が収束
+
+The architect compiled `DE10_Nano_wpms` after PR #7: Formation RH006, switch RH003, clk_sys 30 % high. The records are in `quartus/2026-10-04_DE10_Nano_wpms_fit3/`: `observation.md`, the reports and `ledger.md`.
+
+### 13.1 Timing (STA) against §11.6 / タイミング
+
+| # | Expected (§11.6) | Observed | Verdict |
+|---|---|---|---|
+| H1 | clk_sys closes | **setup +0.978 ns, TNS 0** (Slow 1100 mV 0 °C model); hold +0.042 ns; every clock meets | as expected |
+| H2 | MUL/MAC about 15 ns | MAC into `w_hi`, 18.8 ns of data delay; all 10 worst endpoints are `w_hi`. The estimate left out the opcode decode in front of the operand select (3.5 ns) | not as estimated; closes nevertheless |
+| H3–H6 | the switch about +3 ns, `bcp_commit` about 9 ns, the Core about +2 ns, the new paths below 20 ns | none of them is among the 10 worst: each slack ≥ +1.547 ns | met (a lower bound) |
+| H5, the clock | 30 % high | clk_sys's minimum pulse width slack fell by 4.0 ns (8.541 → 4.544): 6 ns high, as set | as set |
+| H7 | hold met; the Formation +1,000–2,000 ALMs | hold met (+0.042 ns, thin); the Formation +259 ALMs over the first fit | resources far below the estimate |
+
+Worst setup slack of clk_sys by fit: −14.307 ns (first), −6.976 ns (second), **+0.978 ns** (third).
+
+### 13.2 Resource ledger (SILICON, the Fitter) / 資源台帳
+
+In the Core's format:
+
+| Date | Revision | ALMs needed (full trim) | Core proper (entity-only) | Comb. ALUTs |
+|---|---|---|---|---|
+| 2026-10-04 | DE10_Nano_wpms (50 MHz, clk_sys 30 % high): Core RH031p, Formation RH006, switch RH003 | 500.9 | 454.3 | 800 (751) |
+
+Per entity, total with entity-only in brackets; first fit in the last column:
+
+| Entity | ALMs | Registers | M10K | DSP | First fit (ALMs) |
+|---|---|---|---|---|---|
+| board top (all) | 11,321.7 (100.7) | 14,835 | 22 | 23 | 11,052.8 |
+| Formation | 7,048.0 | 9,267 | 9 | 3 | 6,788.7 |
+| input switch | 1,659.7 (1,611.2) | 1,481 | 4 | 0 | 1,692.2 |
+| L1 module | 827.4 (578.1) | 1,532 | 5 | 20 | 831.7 |
+| PTSG-Core (RH031p) | 500.9 (454.3) | 308 | 4 | 0 | 457.7 |
+
+The whole design uses about 27 % of the device's ALMs. SignalTap is not in this build. The full table is `ledger.md`.
+
+### 13.3 The architect's answers to §6 (2026-10-04) / §6 への回答
+
+1. **Compile:** the 100 MHz revision follows once 50 MHz operation is established.
+2. **SignalTap:** `wpms_tap.stp` may be committed once it exists.
+3. **Captures:** the architect takes them and sends each VCD export with its host log. The HDMI sink with speakers already works (§12).
+4. **The resource ledger** comes from the Fitter report (§13.2); the Yosys figures are for reference only.
+
+### 13.4 Next / 次に
+
+- **The captures C1–C5 at 50 MHz**, on a build with `wpms_tap.stp`. That is a new fit, so its timing must be read again: this fit's margin is +0.98 ns.
+- **The SD-23 ruling** (`discrepancies.md`).
+- **The 100 MHz revision**, after that.
+
+**和文.**
+- 第 3 回フィットで clk_sys は **+0.978 ns、TNS 0** となり、50 MHz で収束した（推移：−14.307 → −6.976 → +0.978 ns）。ホールドは +0.042 ns。
+- 最悪 10 端点はすべて MAC → `w_hi`（18.8 ns）。見込み（約 15 ns）は、乗数選択の前のデコード 3.5 ns を落としていた。スイッチ、EW5、Core の imem 経路、新しい経路は最悪 10 本に入らない。
+- デューティ比 30 % は設定どおり入った（最小パルス幅のスラックが 4.0 ns 減）。
+- 資源は全体 11,321.7 ALM（デバイスの約 27 %）、Formation 7,048.0 ALM（第 1 回比 +259）。
+- §6 への回答（2026-10-04）：
+  - 100 MHz は 50 MHz の動作確立後。
+  - `.stp` はコミット可。
+  - 取得物は VCD とホストのログで受け渡す。
+  - 台帳は Fitter 報告から作る。
+- 次は、SignalTap を入れたビルドで C1〜C5 を取得する。新しいフィットなので、タイミングを読み直す。あわせて SD-23 の裁定をお願いしたい。
