@@ -711,7 +711,7 @@ The board README (§2, 2026-10-01) said to set SW[1:0] = 00. That is wrong. G = 
 ### 13.5 Next / 次に
 
 - **The captures C1–C5 at 50 MHz**, on a build with `wpms_tap.stp`. That is a new fit, so its timing must be read again: this fit's margin is +0.98 ns.
-- **The SD-23 ruling** (`discrepancies.md`).
+- **The SD-23 ruling** (`discrepancies.md`): given on 2026-10-04 (§14).
 - **The 100 MHz revision**, after that.
 
 **和文.**
@@ -725,3 +725,26 @@ The board README (§2, 2026-10-01) said to set SW[1:0] = 00. That is wrong. G = 
   - 取得物は VCD とホストのログで受け渡す。
   - 台帳は Fitter 報告から作る。
 - 次は、SignalTap を入れたビルドで C1〜C5 を取得する。新しいフィットなので、タイミングを読み直す。あわせて SD-23 の裁定をお願いしたい。
+
+## 14. Later on 2026-10-04: the SD-23 ruling, the kernel at G = 12, SignalTap, a host-script defect / 同日後刻
+
+- **SD-23 is ruled:** clk_sys runs 30 % high in the 50 MHz revision, adopted by the architect.
+- **The Dirichlet kernel at G = 12.** At SW[1:0] = 11, the architect sees "a perfectly beautiful Dirichlet kernel", its main lobe about every 4 min 15 s. The cycle was predicted on 2026-10-03, before this report, from the ROM's integers: 255.65 s = 4 min 15.7 s (`signaltap/2026-10-03_first_sound/`). SILICON, qualitative; **as predicted**.
+- **`wpms_tap.stp`, the architect's, is committed** as `hw/de10_nano/wpms_tap.stp`.
+  - It has 4,096 samples of `tap_ctl[100:0]` and `tap_dat[303:0]`, as README §3.
+  - It holds one stored acquisition (2026-10-04 17:21:20, trigger `tap_ctl[4]` rising, the error flag).
+  - `make_quartus_project.py` RH004 copies it into `build/quartus/` when none is there, and enables it in the 50 MHz revision. A regenerated `.qsf` therefore keeps SignalTap; `--no-signaltap` leaves it out.
+- **A defect in the host script, found on the board.**
+  - C2's script stopped in `wpms_open`: "There is already an active In-System Sources and Probes session started".
+  - `wpms_open` started the session and then asked for the instance list, which Quartus refuses while a session is open.
+  - Fixed in `wpms_issp_host.tcl` RH002: the list is read first.
+  - The stand-in had not modelled this; it does now (`issp_standin.tcl` RH002). The old order, a ninth mutant, is caught in every case (`check_host_tcl.py` RH003: PASS, 9/9).
+  - On the board: update `build/quartus/host/` (rerun `make_quartus_project.py`, or copy the one file), then run C2 again.
+
+**和文.**
+- SD-23 は、50 MHz 版の clk_sys をハイ期間 30 % とする案で正式採用された（2026-10-04）。
+- SW[1:0] = 11（G = 12）で「完璧に美しいディリクレ核」が出て、メインローブは約 4 分 15 秒ごとに来る。前日に ROM の整数から予測した 255.65 s（4 分 15.7 秒）と一致する。
+- アーキテクトの `wpms_tap.stp` を `hw/de10_nano/` に収めた。
+  - 中には取得済みのログが 1 件ある（17:21:20、error_flag の立ち上がり）。
+  - 生成器は、これを出力先に無いときだけ写し、50 MHz 版で有効にする。
+- C2 で `wpms_open` が止まったのは、ホストスクリプトの不具合だった。セッションを開いてからインスタンス一覧を求めていたためで、一覧を先に読むよう直した。代役も同じ制約を持つようにし、旧い順序の変異体を検出することを確かめた。

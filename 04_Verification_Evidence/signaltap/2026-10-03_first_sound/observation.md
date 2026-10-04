@@ -42,6 +42,12 @@ Not yet measured: the carrier frequency and the null spacing to a few per mille,
 - **What this shows.** The whole chain plays the test origin from the ROM after reset, on silicon: PTSG-Core RH031p, the Formation, the sequencer, L1, I2S and the ADV7513's HDMI audio. The ADV7513's configuration had been checked only against its data sheet until now.
 - **What this does not show:** timing margin. This bitstream misses clk_sys by 6.976 ns at the slow corner (the slowest silicon at 85 °C). This board at room temperature runs it, but nothing is guaranteed at a higher temperature or on a slower part. Most failing endpoints lie on paths the test origin seldom sensitizes: the error registers, the GO check, EW5. The SILICON captures C1–C5 wait for a timing-closed build (SD-22).
 
+**2026-10-04, at SW[1:0] = 11 (G = 12).** The architect reports:
+
+> SW[1:0] = 11 にすると、完璧に美しいディリクレカーネルが発生します。約4分15秒ごとにメインローブを発生させています。
+
+In English: a perfectly beautiful Dirichlet kernel, its main lobe about every 4 min 15 s. The cycle in the table above was written on 2026-10-03, before this report: 255.65 s = 4 min 15.7 s. **As predicted** (SILICON, qualitative). At G = 12 nothing clips, so the kernel shows whole.
+
 **和文.**
 - 試験原点は、1,008 本の等振幅・位相 0 の部分音（996.000〜999.939 Hz、間隔 3.912 mHz）でできている。その和は 997.97 Hz の搬送波に、ディリクレ核の包絡をかけた形になる。
   - 包絡の零点は 253.62 ms ごとに来る。

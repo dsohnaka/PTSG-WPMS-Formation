@@ -25,6 +25,8 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF Phase 5).
+# 002 2026-10-04       Claude Code   Chg : as Quartus, no instance list and no second start while a session
+#                                          is open (the board's first run, 2026-10-04).
 # ============================================================================
 
 namespace eval standin {
@@ -119,6 +121,7 @@ proc get_device_names {args} {
 }
 
 proc start_insystem_source_probe {args} {
+    if {$::standin::started} { error "There is already an active In-System Sources and Probes session started. Unable to start another session." }
     set dev [standin::opt $args device_name]
     standin::opt $args hardware_name
     if {![string match "*5CSE*" $dev]} { error "stand-in: the FPGA is 5CSEBA6, not $dev" }
@@ -137,6 +140,8 @@ proc end_insystem_source_probe {} {
 }
 
 proc get_insystem_source_probe_instance_info {args} {
+    # Quartus opens a session of its own for this, so it fails while one is open
+    if {$::standin::started} { error "There is already an active In-System Sources and Probes session started. Unable to start another session." }
     standin::opt $args device_name
     standin::opt $args hardware_name
     # {index source_width probe_width name}; HOST deliberately not first
