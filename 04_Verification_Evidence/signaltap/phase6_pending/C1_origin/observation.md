@@ -12,8 +12,8 @@
 | Switches | SW[1:0] = 11, both up (G = 12, which the expected values assume); SW[2] = 0; SW[3] = 0 |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, pre trigger position (12 %); trigger `tap_ctl[1]` = 1 (the first packet_start); storage qualifier disabled |
 | Action | BRD source[0] → 1 (the sound held in reset); arm SignalTap; source[0] → 0 |
-| Files here | `C1_origin.vcd.gz` (the export; if it fails, the `.stp` saved after the acquisition, converted by `hw/tools/stp_log_to_vcd.py`), the host log if any, `observed.json` |
-| Analysis | `python3 hw/tools/phase6_evidence.py C1_origin.vcd.gz --budget 50|100 --json observed.json` |
+| Files here | `C1_origin.vcd.gz` (the export; if it fails, the `.stp` saved after the acquisition, converted by `hw/tools/stp_log_to_vcd.py`), the host log if any, `reset.log` (the one line `RESET`: the model starts from reset), `observed.json` |
+| Analysis | `python3 hw/tools/phase6_evidence.py C1_origin.vcd.gz --budget 50|100 --log reset.log --json observed.json` |
 
 ## Expected and observed / 期待値と観測値
 

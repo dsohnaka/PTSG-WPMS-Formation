@@ -1,0 +1,56 @@
+{
+ "budget": 50,
+ "qualified": false,
+ "strobe_interval": [
+  1041,
+  1042
+ ],
+ "sweeps_with_packets": 1,
+ "g": [],
+ "t_wake": [
+  2
+ ],
+ "window": [
+  28
+ ],
+ "floor": [
+  30
+ ],
+ "k_ok": true,
+ "bcp": null,
+ "bcp_full_take": null,
+ "full_load_sweeps": 0,
+ "full_load_length": null,
+ "sweep_length_max": null,
+ "packets": 1,
+ "errors": [
+  {
+   "at": 512,
+   "n": 82243832,
+   "code": "EW6",
+   "packets_after": 0,
+   "bins_after": 0,
+   "banks_after": 3,
+   "banks_after_nonzero": 0,
+   "halt_after": 1000,
+   "halted": true
+  }
+ ],
+ "model_from": "reset",
+ "bundles": {
+  "compared": 0,
+  "equal": 0,
+  "first_bad": null
+ },
+ "pcm": {
+  "compared": 0,
+  "equal": 0,
+  "first_bad": null
+ },
+ "model_problems": [
+  "GO 2: no APPLIED_SAMPLE read back for it; not modelled",
+  "capture at sweeps 82243832..82243835: no complete GO within 4000 sweeps before it; take the capture soon after a reset or after a GO"
+ ],
+ "samples": 4096,
+ "strobes": 4
+}

@@ -1,0 +1,56 @@
+{
+ "budget": 50,
+ "qualified": false,
+ "strobe_interval": [
+  1041,
+  1042
+ ],
+ "sweeps_with_packets": 4,
+ "g": [
+  0
+ ],
+ "t_wake": [
+  2
+ ],
+ "window": [
+  28
+ ],
+ "floor": [
+  30
+ ],
+ "k_ok": true,
+ "bcp": [
+  2,
+  2
+ ],
+ "bcp_full_take": 10,
+ "full_load_sweeps": 3,
+ "full_load_length": [
+  1023,
+  1023
+ ],
+ "sweep_length_max": 1023,
+ "packets": 28,
+ "errors": [],
+ "model_from": "the complete take of strobe 1541412",
+ "bundles": {
+  "compared": 28,
+  "equal": 28,
+  "first_bad": null
+ },
+ "pcm": {
+  "compared": 3,
+  "equal": 3,
+  "first_bad": null
+ },
+ "model_problems": [],
+ "pcm_peak_dbfs": -38.7,
+ "pcm_peak_dbfs_last_go": -38.7,
+ "spectrum_samples": 3,
+ "spectrum_peaks_captured_L": null,
+ "spectrum_peaks_model_L": null,
+ "spectrum_peaks_captured_R": null,
+ "spectrum_peaks_model_R": null,
+ "samples": 4096,
+ "strobes": 4
+}

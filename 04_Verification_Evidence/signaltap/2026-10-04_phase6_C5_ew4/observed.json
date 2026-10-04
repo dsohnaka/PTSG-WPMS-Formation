@@ -1,0 +1,60 @@
+{
+ "budget": 50,
+ "qualified": false,
+ "strobe_interval": [
+  1041,
+  1042
+ ],
+ "sweeps_with_packets": 1,
+ "g": [],
+ "t_wake": [
+  2
+ ],
+ "window": [
+  9
+ ],
+ "floor": [
+  11
+ ],
+ "k_ok": true,
+ "bcp": null,
+ "bcp_full_take": null,
+ "full_load_sweeps": 0,
+ "full_load_length": null,
+ "sweep_length_max": null,
+ "packets": 1,
+ "errors": [
+  {
+   "at": 512,
+   "n": 2,
+   "code": "EW4",
+   "packets_after": 0,
+   "bins_after": 0,
+   "banks_after": 3,
+   "banks_after_nonzero": 0,
+   "halt_after": 1001,
+   "halted": true
+  }
+ ],
+ "model_from": "reset",
+ "bundles": {
+  "compared": 1,
+  "equal": 1,
+  "first_bad": null
+ },
+ "pcm": {
+  "compared": 1,
+  "equal": 1,
+  "first_bad": null
+ },
+ "model_problems": [],
+ "pcm_peak_dbfs": null,
+ "pcm_peak_dbfs_last_go": null,
+ "spectrum_samples": 1,
+ "spectrum_peaks_captured_L": null,
+ "spectrum_peaks_model_L": null,
+ "spectrum_peaks_captured_R": null,
+ "spectrum_peaks_model_R": null,
+ "samples": 4096,
+ "strobes": 4
+}

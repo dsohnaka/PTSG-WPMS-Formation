@@ -15,22 +15,30 @@
 # '0'/'1' of D x W characters, sample by sample from the oldest;
 # within a sample, character i is the node whose data_index is i (the nodes'
 # data_index are in the signal set's <presentation>). The <extradata> after
-# it marks each sample: '1' stored, 'T' the trigger sample; D is the number
-# of marks (the data element's sample_depth can be one less). Every log is
-# checked against its own trigger: a condition on one node ('n' == rising
-# edge / falling edge / high / low) must hold at the sample marked T, else the
-# conversion stops.
+# it marks each sample: '1' stored, 'T' the trigger sample, 'B' the first
+# sample after a break (a storage-qualified record skipped clocks before it;
+# SignalTap's own VCD export drops this mark, the VCD here keeps it as a
+# comment); D is the number of marks (the data element's sample_depth can be
+# one less). A .stp may be gzip-compressed (.stp.gz). Every log is
+# checked against its own trigger: a basic condition on single nodes ('n' ==
+# rising edge / falling edge / high / low, ANDed) must hold at the sample
+# marked T, else the conversion stops.
 # The VCD follows the export's layout (QUARTUS_VCD_EXPORT 1.0): 1 ps, every
 # bit its own variable, X at time 0, the acquisition clock listed with two
 # time stamps per sample, "Sample n" comments counted from the trigger.
 # --check builds a .stp from known data (the board bench's expected EW5
 # capture) in Quartus's index order, converts it back, and requires the same
-# values; three broken decoders must fail it.
+# values; three broken decoders must fail it; and a .stp.gz with breaks must
+# keep them.
 # Evidence class: whatever the capture is (SILICON for the board). License:
 # MIT (Layer 3 tooling).
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-04       Claude Code   Add : First version (Phase 6: an export failed after a capture).
+# 002 2026-10-04       Claude Code   Add : the trigger check takes ANDed conditions on single nodes (C2's trigger);
+#                                          checked on the architect's C2_full8.stp against its own export: equal.
+# 003 2026-10-04       Claude Code   Add : 'B' marks (the breaks of a storage-qualified record, C3) kept as VCD
+#                                          comments and listed; a .stp.gz is read as it is.
 # ============================================================================
 import argparse, gzip, os, re, sys, tempfile
 import xml.etree.ElementTree as ET
@@ -64,18 +72,27 @@ def _index_map(signal_set):
 
 
 def _condition(trigger):
-    """(node, kind) of a basic one-node trigger condition, else None."""
+    """[(node, kind), ...] of a basic trigger condition on single nodes, ANDed; else None."""
     levels = [lv for lv in trigger.iter("level") if lv.get("enabled", "yes") == "yes"]
     if len(levels) != 1 or levels[0].get("type", "basic") != "basic":
         return None
-    m = re.match(r"\s*'([^']+)'\s*==\s*(rising edge|falling edge|high|low)\s*$", levels[0].text or "")
-    return (m.group(1), m.group(2)) if m else None
+    terms = []
+    for term in (levels[0].text or "").split("&&"):
+        m = re.match(r"\s*'([^']+)'\s*==\s*(rising edge|falling edge|high|low)\s*$", term)
+        if not m:
+            return None
+        terms.append((m.group(1), m.group(2)))
+    return terms
 
 
 def logs(path):
     """Every acquisition stored in the file, oldest first per trigger."""
     try:
-        root = ET.parse(path).getroot()
+        if path.endswith(".gz"):
+            with gzip.open(path, "rb") as f:
+                root = ET.parse(f).getroot()
+        else:
+            root = ET.parse(path).getroot()
     except ET.ParseError as e:
         raise StpError(f"{path}: not XML ({e})")
     out = []
@@ -109,30 +126,35 @@ def decode(lg):
     depth = len(marks)                       # the log's sample_depth attribute can be one short (Core's file)
     if depth == 0 or len(bits) != depth * w:
         raise StpError(f"{lg['name']}: {len(bits)} data characters, not {depth} marked samples x {w} nodes")
-    if set(marks) - set("1T") or marks.count("T") != 1:
+    if set(marks) - set("1TB") or marks.count("T") != 1:
         found = "".join(sorted(set(marks)))
         raise StpError(f"{lg['name']}: sample marks of length {len(marks)} with '{found}'; this tool knows "
-                       f"one mark per sample, '1' (stored) and one 'T' (the trigger). Send the file as it is")
+                       f"one mark per sample, '1' (stored), 'B' (after a break) and one 'T' (the trigger). "
+                       f"Send the file as it is")
     t = marks.index("T")
     names = [None] * w
     for n, i in idx.items():
         names[i] = n
     samples = [bits[k * w:(k + 1) * w] for k in range(depth)]
-    note = "no single-node condition to check"
+    note = "no condition on single nodes to check"
     cond = lg["condition"]
-    if cond and cond[0] in idx:
-        i, kind = idx[cond[0]], cond[1]
-        now = samples[t][i]
-        before = samples[t - 1][i] if t > 0 else None
-        ok = {"high": now == "1", "low": now == "0",
-              "rising edge": before == "0" and now == "1",
-              "falling edge": before == "1" and now == "0"}[kind]
-        if not ok:
-            raise StpError(f"{lg['name']}: the trigger '{cond[0]}' == {kind} does not hold at the sample "
-                           f"marked T ({t}); the file's layout is not the one this tool knows")
-        note = f"'{cond[0]}' == {kind} holds at sample {t}, the trigger mark"
+    if cond and all(n in idx for n, _ in cond):
+        for n, kind in cond:
+            i = idx[n]
+            now = samples[t][i]
+            before = samples[t - 1][i] if t > 0 else None
+            ok = {"high": now == "1", "low": now == "0",
+                  "rising edge": before == "0" and now == "1",
+                  "falling edge": before == "1" and now == "0"}[kind]
+            if not ok:
+                raise StpError(f"{lg['name']}: the trigger '{n}' == {kind} does not hold at the sample "
+                               f"marked T ({t}); the file's layout is not the one this tool knows")
+        note = " && ".join(f"'{n}' == {kind}" for n, kind in cond) + f" holds at sample {t}, the trigger mark"
     elif cond:
-        note = f"the trigger node {cond[0]} is not among the stored nodes"
+        note = "a trigger node is not among the stored nodes"
+    breaks = [k for k, m in enumerate(marks) if m == "B"]
+    if breaks:
+        note += f"; {len(breaks)} break(s), the record skipped clocks before sample(s) {breaks}"
     return names, samples, t, note
 
 
@@ -170,7 +192,7 @@ def write_vcd(lg, out, period_ps=20000):
     date = f"{m.group(2)}/{m.group(3)}/{m.group(1)} {m.group(4)}" if m else "unknown"
     L = ["$comment", f" {os.path.basename(out)}: the stored log \"{lg['name']}\" of instance {lg['instance']},",
          " converted by hw/tools/stp_log_to_vcd.py in the layout of a SignalTap VCD export", "$end",
-         "$date", f"  {date}", "$end", "$version", " QUARTUS_VCD_EXPORT 1.0 (stp_log_to_vcd.py RH001)", "$end",
+         "$date", f"  {date}", "$end", "$version", " QUARTUS_VCD_EXPORT 1.0 (stp_log_to_vcd.py RH003)", "$end",
          "$timescale", "  1 ps", "$end"]
     keys = sorted(tree)
     if clk_last is not None and tuple(clk_scopes) not in tree:
@@ -199,6 +221,8 @@ def write_vcd(lg, out, period_ps=20000):
         tag = " (Start)" if k == 0 else " (Trigger)" if k == t else " (End)" if k == depth - 1 else ""
         if tag:
             L.append(f"$comment Sample {k - t}{tag} $end")
+        if lg["marks"][k] == "B":
+            L.append(f"$comment Break: clocks were not stored before sample {k - t} (storage qualifier) $end")
         if clk_last is not None:
             L.append(f"1{clk_id}")
         for i in range(w):
@@ -228,8 +252,9 @@ def _bench_samples(path):
     return [(c, dat[k] if k in dat else rnd.getrandbits(304)) for k, c in enumerate(ctl)]
 
 
-def _make_stp(template, rows, t, path):
-    """The template .stp with one stored log of rows ((ctl, dat) per sample), trigger mark at t."""
+def _make_stp(template, rows, t, path, breaks=()):
+    """The template .stp with one stored log of rows ((ctl, dat) per sample), trigger mark at t, 'B' marks
+    at breaks; gzip-compressed when path ends in .gz."""
     with open(template) as f:
         s = f.read()
     idx = {n: int(i) for i, n in re.findall(r'data_index="(\d+)"[^>]*\bname="([^"]+)"', s)}
@@ -246,14 +271,14 @@ def _make_stp(template, rows, t, path):
             if (d >> i) & 1:
                 b[p] = "1"
         chunks.append("".join(b))
-    marks = "1" * t + "T" + "1" * (len(rows) - t - 1)
+    marks = "".join("T" if k == t else "B" if k in breaks else "1" for k in range(len(rows)))
     log = (f'<log>\n          <data global_temp="1" name="log: Trig @ 2026/10/04 00:00:00 (check)" '
            f'power_up_mode="false" sample_depth="{len(rows)}" trigger_position="{t}">{"".join(chunks)}</data>\n'
            f'          <extradata>{marks}</extradata>\n        </log>\n      </trigger>')
     s = re.sub(r"<log>.*?</log>\s*</trigger>|</trigger>", lambda m: log, s, count=1, flags=re.S)
     s = re.sub(r"(<level enabled=\"yes\" name=\"condition1\" type=\"basic\">)[^<]*",
                lambda m: m.group(1) + "'tap_ctl[4]' == rising edge\n            ", s, count=1)
-    with open(path, "w") as f:
+    with (gzip.open(path, "wt") if path.endswith(".gz") else open(path, "w")) as f:
         f.write(s)
 
 
@@ -327,6 +352,17 @@ def check():
             killed += caught
             print(f"  mutant '{label}': {'killed' if caught else 'SURVIVED'}")
         ok = ok and killed == len(MUTANTS)
+        # a storage-qualified record: 'B' marks, the file gzip-compressed
+        brk = [t + 100, t + 1500]
+        stz, vz = os.path.join(tmp, "check_b.stp.gz"), os.path.join(tmp, "check_b.vcd")
+        _make_stp(template, rows, t, stz, breaks=brk)
+        lb = logs(stz)
+        nb, sb, tb, noteb = write_vcd(lb[0], vz)
+        txt = open(vz).read()
+        want = [f"$comment Break: clocks were not stored before sample {k - t} (storage qualifier) $end" for k in brk]
+        okb = sb == samples and tb == t and all(w in txt for w in want) and txt.count("$comment Break") == len(brk)
+        print(f"  a .stp.gz with breaks at {brk}: same samples, the breaks kept as comments: {okb}")
+        ok = ok and okb
     print(f"stp_log_to_vcd --check: {'PASS' if ok else 'FAIL'} ({killed}/{len(MUTANTS)} mutants killed)")
     return 0 if ok else 1
 
