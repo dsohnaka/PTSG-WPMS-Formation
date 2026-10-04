@@ -16,6 +16,7 @@
 # REVISION HISTORY(RH)
 # 001 2026-10-01       Claude Code   Add : First version (SILICON_BRIEF Phase 6).
 # 002 2026-10-04       Claude Code   Add : the switches' row (SW[1:0] = 11, G = 12, as the expected values assume).
+# 003 2026-10-04       Claude Code   Add : the files' row names the saved .stp for when the VCD export fails.
 # ============================================================================
 import argparse, json, os, sys
 
@@ -139,7 +140,8 @@ def template(folder, case, en, ja, trig, qual, action, E):
          f"| SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, pre trigger position (12 %); trigger {trig}; "
          f"storage qualifier {qual} |",
          f"| Action | {action} |",
-         f"| Files here | `{folder}.vcd.gz` (the export), the host log if any, `observed.json` |",
+         f"| Files here | `{folder}.vcd.gz` (the export; if it fails, the `.stp` saved after the acquisition, "
+         f"converted by `hw/tools/stp_log_to_vcd.py`), the host log if any, `observed.json` |",
          f"| Analysis | `python3 hw/tools/phase6_evidence.py {folder}.vcd.gz --budget 50|100"
          + (" --log <log>" if case in ("full8", "first_go", "ew6") else "")
          + (f" --score hw/de10_nano/inject/wpms_r1d_{case}{'_<NMAX>' if case == 'ew5' else ''}.score"

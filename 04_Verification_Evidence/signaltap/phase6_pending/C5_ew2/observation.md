@@ -12,7 +12,7 @@
 | Switches | SW[1:0] = 11, both up (G = 12, which the expected values assume); SW[2] = 0; SW[3] = 0 |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, pre trigger position (12 %); trigger `tap_ctl[4]` rising (error_flag); storage qualifier disabled |
 | Action | BRD source[0] → 1; ISMCE PTSG ◂ `inject/wpms_r1d_ew2.mif`; arm; source[0] → 0; afterwards restore `wpms_r1d.mif` |
-| Files here | `C5_ew2.vcd.gz` (the export), the host log if any, `observed.json` |
+| Files here | `C5_ew2.vcd.gz` (the export; if it fails, the `.stp` saved after the acquisition, converted by `hw/tools/stp_log_to_vcd.py`), the host log if any, `observed.json` |
 | Analysis | `python3 hw/tools/phase6_evidence.py C5_ew2.vcd.gz --budget 50|100 --score hw/de10_nano/inject/wpms_r1d_ew2.score --json observed.json` |
 
 ## Expected and observed / 期待値と観測値

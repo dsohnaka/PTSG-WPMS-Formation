@@ -12,7 +12,7 @@
 | `wpms_pll.v` | One Cyclone V PLL, `altera_pll` instantiated directly (as the Core's 100 MHz top); `DUTY0`, the first output's duty cycle. |
 | `DE10_Nano_wpms.sdc` | The constraints of both revisions (header: what is constrained and why). |
 | `make_quartus_project.py` | Writes the Quartus project (flat, git-ignored) to `build/quartus/`; `--check` tests it without Quartus. |
-| `wpms_tap.stp` | The SignalTap file, the architect's (2026-10-04; §3). `make_quartus_project.py` copies it into `build/quartus/` when none is there and enables it in the 50 MHz revision. |
+| `wpms_tap.stp` | The SignalTap file, the architect's (2026-10-04; §3): the setup only, with no stored acquisition. `make_quartus_project.py` copies it into `build/quartus/` when none is there and enables it in the 50 MHz revision. |
 | `report_setup_paths.tcl` | After a compile: every failing clk_sys setup endpoint, grouped by register, and the worst path into each register class (`quartus_sta -t`; SD-22). |
 | `run_phase6.sh` | Every check that can run before the board (regression, images, scripts, project, board-level RTL-SIM). |
 | `inject/` | The EW2–EW5 injection images (score + window source + `.hex` + `.mif`), from `hw/tools/gen_inject_scores.py`. |
@@ -97,6 +97,8 @@ From `quartus_stp -s` in `build/quartus`, `source host/wpms_issp_host.tcl; wpms_
 
 The architect's `wpms_tap.stp` is committed (2026-10-04). `make_quartus_project.py` copies it into `build/quartus/` when none is there and enables it in the 50 MHz revision. A `.stp` already there, with your edits and acquisitions, is kept. `--no-signaltap` leaves SignalTap out. A SignalTap build is a new fit: read its timing again. Each capture: run the analysis once, do the capture's action, then **File ▸ Export ▸ VCD** into the evidence folder.
 
+**If the export fails**, save the `.stp` (**File ▸ Save**) right after the acquisition and send it instead: the acquisition is stored in it. `python3 hw/tools/stp_log_to_vcd.py FILE.stp C5_ew5.vcd.gz` writes the same VCD (`--list` shows the stored acquisitions, `--log N` picks one). It checks each one against its own trigger.
+
 The tap layout (one clock late, all alike; decoded by `phase6_evidence.py`):
 - `tap_ctl[7:0]`: strobe, packet_start, bin_valid, inbox_taken, error_flag, Core halted, seq_idle, bank_we;
 - `[12:8]`: error code; `[24:13]`: K; `[36:25]`: the Core's state; `[39:37]`: the packet's index q;
@@ -105,6 +107,8 @@ The tap layout (one clock late, all alike; decoded by `phase6_evidence.py`):
 - `tap_dat`: `[255:0]` the bundle, `[279:256]` bank L, `[303:280]` bank R.
 
 SignalTap は 1 インスタンスを一度だけ設定する。クロックは clk_sys、深さは 4 K、トリガ位置は全取得で「pre」（トリガ前 12 %）。`tap_dat` はデータ専用でトリガ不要。ストレージ・クオリファイアは入力ポート `tap_ctl[100]` とし、連続取得（C1・C2・C4・C5）では実行時に「無効化」する。
+
+VCD のエクスポートが失敗したときは、取得の直後に `.stp` を保存（File ▸ Save）し、VCD の代わりに送ってほしい。取得データは `.stp` の中に保存されており、`stp_log_to_vcd.py` で同じ VCD に変換できる。
 
 ## 4. The captures / 取得
 
@@ -153,3 +157,4 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 - 2026-10-03 — clk_sys's duty cycle per revision, `SYS_DUTY` and `--sys-duty` (§1; SD-23). / リビジョンごとの clk_sys デューティ比（§1、SD-23）。
 - 2026-10-04 — §2: SW[1:0] = 11 (G = 12). The first version said 00, which is wrong: every expected value assumes G = 12. / §2：SW[1:0] は 11（G = 12）。初版の 00 は誤りで、期待値はすべて G = 12 を前提とする。
 - 2026-10-04 — `wpms_tap.stp` committed and enabled by the generator (§3); SD-23 adopted (§1); the host script's session defect and its fix (§4). / `wpms_tap.stp` を収め、生成器で有効化（§3）。SD-23 正式採用（§1）。ホストスクリプトのセッションの不具合と修正（§4）。
+- 2026-10-04 — `wpms_tap.stp`: the stored acquisition (a C5 trial) removed at the architect's word; the setup is unchanged. §3: if the VCD export fails, send the saved `.stp` (`stp_log_to_vcd.py`). / `wpms_tap.stp` から取得データ（C5 の試行）を削除。設定は不変。§3：VCD エクスポートが失敗したら、保存した `.stp` を送る。
