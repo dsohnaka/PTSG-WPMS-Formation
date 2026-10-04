@@ -19,7 +19,7 @@
 #           of its steps in wpms_phase6_steps.py — the steps cosim_board.py
 #           plays in RTL-SIM — its one GO is applied, and the file on disk is
 #           what wpms_phase6_steps.py writes;
-#   mutants eight broken copies of wpms_issp_host.tcl, each of which must fail
+#   mutants nine broken copies of wpms_issp_host.tcl, each of which must fail
 #           at least one of the cases above.
 # This checks the scripts, not Quartus and not the RTL: the command names and
 # arguments are Quartus Prime's ::quartus::insystem_source_probe package as the
@@ -32,6 +32,8 @@
 # REVISION HISTORY(RH)
 # 001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF Phase 5).
 # 002 2026-10-01       Claude Code   Add : the phase6 case (the Phase 6 scripts; SILICON_BRIEF Phase 6).
+# 003 2026-10-04       Claude Code   Add : the mutant that reads the instance list inside the session (the
+#                                          defect the board found; the stand-in now refuses it, as Quartus).
 # ============================================================================
 import argparse, os, re, shutil, subprocess, sys, tempfile
 
@@ -59,6 +61,11 @@ MUTANTS = [
      "set ::wpms::src 000000000000"),
     ("an 8-bit address", "[expr {$addr & 0xFFF}]", "[expr {$addr & 0xFF}]"),
     ("no poll of APPLIED_SEQ", "while {[wpms_read 0x00A] != $go}", "while {0}"),
+    ("the instance list read inside the session",
+     "    set insts [get_insystem_source_probe_instance_info -device_name $dev_name -hardware_name $hw_name]\n"
+     "    start_insystem_source_probe -device_name $dev_name -hardware_name $hw_name\n",
+     "    start_insystem_source_probe -device_name $dev_name -hardware_name $hw_name\n"
+     "    set insts [get_insystem_source_probe_instance_info -device_name $dev_name -hardware_name $hw_name]\n"),
 ]
 
 

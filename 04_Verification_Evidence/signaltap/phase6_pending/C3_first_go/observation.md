@@ -12,7 +12,7 @@
 | Switches | SW[1:0] = 11, both up (G = 12, which the expected values assume); SW[2] = 0; SW[3] = 0 |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, pre trigger position (12 %); trigger `tap_ctl[43:40]` = 0011 (P becomes 3); storage qualifier **enabled** (`tap_ctl[100]`) |
 | Action | reset; listen; arm; `quartus_stp -t host/wpms_phase6_first_go_<NMAX>.tcl > first_go.log`; listen |
-| Files here | `C3_first_go.vcd.gz` (the export), the host log if any, `observed.json` |
+| Files here | `C3_first_go.vcd.gz` (the export; if it fails, the `.stp` saved after the acquisition, converted by `hw/tools/stp_log_to_vcd.py`), the host log if any, `observed.json` |
 | Analysis | `python3 hw/tools/phase6_evidence.py C3_first_go.vcd.gz --budget 50|100 --log <log> --json observed.json` |
 
 ## Expected and observed / 期待値と観測値

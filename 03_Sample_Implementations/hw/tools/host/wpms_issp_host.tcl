@@ -19,7 +19,9 @@
 # wpms_wait_applied (poll APPLIED_SEQ until it equals GO_SEQ), wpms_status.
 # Word addresses are customer Ch.5 §5.6's (e.g. 0x200 + 16 b + i = INBOX[b][i]).
 #
-# NOT YET RUN AGAINST QUARTUS (none here): Phase 6 runs it on the board. The
+# First run against Quartus on the board on 2026-10-04 (Phase 6): Quartus refuses
+# get_insystem_source_probe_instance_info while a session is open, so wpms_open
+# reads the instance list before start_insystem_source_probe (RH002). The
 # command names are those of Quartus Prime's ::quartus::insystem_source_probe
 # package. Run here under tclsh against stand-ins of those commands
 # (issp_standin.tcl, check_host_tcl.py); the steps it plays are checked in
@@ -28,6 +30,9 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-09-30       Claude Code   Add : First version (SILICON_BRIEF Phase 5).
+# 002 2026-10-04       Claude Code   Fix : wpms_open reads the instance list before it starts the session
+#                                          (Quartus: "There is already an active In-System Sources and Probes
+#                                          session started", met by the architect at the C2 capture).
 # ============================================================================
 
 namespace eval wpms {
@@ -50,8 +55,10 @@ proc wpms_open {{hw_name ""} {dev_name ""}} {
     }
     set ::wpms::hw $hw_name
     set ::wpms::dev $dev_name
+    # the instance list first: Quartus refuses it while a session is open (RH002)
+    set insts [get_insystem_source_probe_instance_info -device_name $dev_name -hardware_name $hw_name]
     start_insystem_source_probe -device_name $dev_name -hardware_name $hw_name
-    foreach inst [get_insystem_source_probe_instance_info -device_name $dev_name -hardware_name $hw_name] {
+    foreach inst $insts {
         # each entry: {index source_width probe_width name}
         set idx [lindex $inst 0]; set name [lindex $inst 3]
         if {$name eq "HOST"} { set ::wpms::host $idx }

@@ -12,6 +12,7 @@
 | `wpms_pll.v` | One Cyclone V PLL, `altera_pll` instantiated directly (as the Core's 100 MHz top); `DUTY0`, the first output's duty cycle. |
 | `DE10_Nano_wpms.sdc` | The constraints of both revisions (header: what is constrained and why). |
 | `make_quartus_project.py` | Writes the Quartus project (flat, git-ignored) to `build/quartus/`; `--check` tests it without Quartus. |
+| `wpms_tap.stp` | The SignalTap file, the architect's (2026-10-04; §3): the setup only, with no stored acquisition. `make_quartus_project.py` copies it into `build/quartus/` when none is there and enables it in the 50 MHz revision. |
 | `report_setup_paths.tcl` | After a compile: every failing clk_sys setup endpoint, grouped by register, and the worst path into each register class (`quartus_sta -t`; SD-22). |
 | `run_phase6.sh` | Every check that can run before the board (regression, images, scripts, project, board-level RTL-SIM). |
 | `inject/` | The EW2–EW5 injection images (score + window source + `.hex` + `.mif`), from `hw/tools/gen_inject_scores.py`. |
@@ -32,7 +33,7 @@ Open `build/quartus/DE10_Nano_wpms.qpf` in Quartus Prime Lite 23.1std.1. Two rev
 | `DE10_Nano_wpms` (first) | 50 | 30 | 50 MHz, high 6 ns | 1,008 | 1,008 | 1,041 |
 | `DE10_Nano_wpms100` | 100 | 50 | 100 MHz | 2,048 | 2,048 | 2,083 |
 
-**clk_sys's duty cycle (SD-23).** The Core's imem (`ptsg_imem`, EDGE "NEG") reads on clk_sys's falling edge, and the Core's registers take the word at the next rising edge. At 50 % that is 10 ns, which the second fit missed by 2.0 ns. From the third fit on, the 50 MHz revision runs clk_sys 30 % high: the read side gets 14 ns, the address side (`state_num`, a register straight into the M10K) 6 ns. The Core and its wrapper are untouched, and TimeQuest analyzes the real waveform. `make_quartus_project.py --sys-duty 50` builds the 50 MHz revision as the first two fits had it. The architect's ruling is requested (`reports/discrepancies.md`, SD-23).
+**clk_sys's duty cycle (SD-23).** The Core's imem (`ptsg_imem`, EDGE "NEG") reads on clk_sys's falling edge, and the Core's registers take the word at the next rising edge. At 50 % that is 10 ns, which the second fit missed by 2.0 ns. From the third fit on, the 50 MHz revision runs clk_sys 30 % high: the read side gets 14 ns, the address side (`state_num`, a register straight into the M10K) 6 ns. The Core and its wrapper are untouched, and TimeQuest analyzes the real waveform. `make_quartus_project.py --sys-duty 50` builds the 50 MHz revision as the first two fits had it. Adopted by the architect's ruling of 2026-10-04 (`reports/discrepancies.md`, SD-23); the third fit closed with it.
 
 Command line: `quartus_sh --flow compile DE10_Nano_wpms -c DE10_Nano_wpms` (or `-c DE10_Nano_wpms100`).
 
@@ -94,7 +95,9 @@ From `quartus_stp -s` in `build/quartus`, `source host/wpms_issp_host.tcl; wpms_
 | Storage qualifier | type **Input port**, port `tap_ctl[100]` (= packet_start or bank_we); **Disable storage qualifier** (a run-time switch) for the continuous captures C1, C2, C4, C5 |
 | Trigger | basic AND, per capture below |
 
-Save as `wpms_tap.stp`, enable it for the revision (Assignments ▸ Settings ▸ SignalTap Logic Analyzer), recompile. Each capture: run the analysis once, do the capture's action, then **File ▸ Export ▸ VCD** into the evidence folder.
+The architect's `wpms_tap.stp` is committed (2026-10-04). `make_quartus_project.py` copies it into `build/quartus/` when none is there and enables it in the 50 MHz revision. A `.stp` already there, with your edits and acquisitions, is kept. `--no-signaltap` leaves SignalTap out. A SignalTap build is a new fit: read its timing again. Each capture: run the analysis once, do the capture's action, then **File ▸ Export ▸ VCD** into the evidence folder.
+
+**If the export fails**, save the `.stp` (**File ▸ Save**) right after the acquisition and send it instead: the acquisition is stored in it. `python3 hw/tools/stp_log_to_vcd.py FILE.stp C5_ew5.vcd.gz` writes the same VCD (`--list` shows the stored acquisitions, `--log N` picks one). It checks each one against its own trigger.
 
 The tap layout (one clock late, all alike; decoded by `phase6_evidence.py`):
 - `tap_ctl[7:0]`: strobe, packet_start, bin_valid, inbox_taken, error_flag, Core halted, seq_idle, bank_we;
@@ -104,6 +107,8 @@ The tap layout (one clock late, all alike; decoded by `phase6_evidence.py`):
 - `tap_dat`: `[255:0]` the bundle, `[279:256]` bank L, `[303:280]` bank R.
 
 SignalTap は 1 インスタンスを一度だけ設定する。クロックは clk_sys、深さは 4 K、トリガ位置は全取得で「pre」（トリガ前 12 %）。`tap_dat` はデータ専用でトリガ不要。ストレージ・クオリファイアは入力ポート `tap_ctl[100]` とし、連続取得（C1・C2・C4・C5）では実行時に「無効化」する。
+
+VCD のエクスポートが失敗したときは、取得の直後に `.stp` を保存（File ▸ Save）し、VCD の代わりに送ってほしい。取得データは `.stp` の中に保存されており、`stp_log_to_vcd.py` で同じ VCD に変換できる。
 
 ## 4. The captures / 取得
 
@@ -118,6 +123,10 @@ Expected values: `04_Verification_Evidence/rtl_sim/2026-10-01_phase6_board/expec
 | **C5** EW2–EW5 | 6 | BRD source[0] → 1; ISMCE: instance **PTSG** ▸ load `inject/wpms_r1d_ew<k>.mif` (EW5: `_ew5_<NMAX>.mif`) ▸ write; **arm**; source[0] → 0 | `tap_ctl[4]` rising | disabled |
 
 **Arm** = Run Analysis once in SignalTap. **Reset** = BRD source[0] 1 → 0 (or SW[2] up → down): the switch starts again from the ROM's test origin (P = 1), so no trigger of C2–C4 can fire before its script runs. For C1 and C5 the sound is held in reset while SignalTap is armed — the origin plays packets all the time, and an injection image written while the Core runs may raise its error at once — and released only then. After C5, restore the score: ISMCE ▸ PTSG ▸ `wpms_r1d.mif` ▸ write (or program the `.sof` again).
+
+**If a script stops in `wpms_open` with "There is already an active In-System Sources and Probes session started"**, that was the host script's own defect, fixed on 2026-10-04 (`wpms_issp_host.tcl` RH002). Update `build/quartus/host/`: rerun `make_quartus_project.py`, or copy `hw/tools/host/wpms_issp_host.tcl` there. If the message still appears, another program holds the session. Close the In-System Sources and Probes Editor, and use SW[2] for the reset.
+
+スクリプトが `wpms_open` で「There is already an active In-System Sources and Probes session started」と止まる場合、これはホストスクリプト自身の不具合で、2026-10-04 に修正した（RH002）。`build/quartus/host/` を更新してほしい（`make_quartus_project.py` の再実行か、`hw/tools/host/wpms_issp_host.tcl` の複写）。それでも出る場合は、ほかのプログラムがセッションを持っている。In-System Sources and Probes Editor を閉じ、リセットには SW[2] を使ってほしい。
 
 **Listening (item 8, C3):**
 - **First:** the test origin, near 996 Hz.
@@ -147,3 +156,5 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 - 2026-10-03 — `report_setup_paths.tcl` and how to run it (§1; SD-22). / 失敗経路の集計スクリプトと実行方法（§1、SD-22）。
 - 2026-10-03 — clk_sys's duty cycle per revision, `SYS_DUTY` and `--sys-duty` (§1; SD-23). / リビジョンごとの clk_sys デューティ比（§1、SD-23）。
 - 2026-10-04 — §2: SW[1:0] = 11 (G = 12). The first version said 00, which is wrong: every expected value assumes G = 12. / §2：SW[1:0] は 11（G = 12）。初版の 00 は誤りで、期待値はすべて G = 12 を前提とする。
+- 2026-10-04 — `wpms_tap.stp` committed and enabled by the generator (§3); SD-23 adopted (§1); the host script's session defect and its fix (§4). / `wpms_tap.stp` を収め、生成器で有効化（§3）。SD-23 正式採用（§1）。ホストスクリプトのセッションの不具合と修正（§4）。
+- 2026-10-04 — `wpms_tap.stp`: the stored acquisition (a C5 trial) removed at the architect's word; the setup is unchanged. §3: if the VCD export fails, send the saved `.stp` (`stp_log_to_vcd.py`). / `wpms_tap.stp` から取得データ（C5 の試行）を削除。設定は不変。§3：VCD エクスポートが失敗したら、保存した `.stp` を送る。
