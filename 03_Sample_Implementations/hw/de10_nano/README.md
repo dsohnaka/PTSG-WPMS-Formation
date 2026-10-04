@@ -92,12 +92,12 @@ From `quartus_stp -s` in `build/quartus`, `source host/wpms_issp_host.tcl; wpms_
 | Nodes | `tap_ctl[100:0]` (trigger + data); `tap_dat[303:0]` (data only: clear *Trigger Enable*) |
 | Sample depth | 4 K (4,096): 405 bits × 4 K ≈ 1.66 Mbit — about 203 M10K in the 4 K × 2 mode, of the device's roughly 500 (the design itself needs about ten; the Fitter states both) |
 | Trigger position | **Pre trigger position** (12 % before the trigger) for every capture |
-| Storage qualifier | type **Input port**, port `tap_ctl[100]` (= packet_start or bank_we); **Disable storage qualifier** (a run-time switch) for the continuous captures C1, C2, C4, C5 |
+| Storage qualifier | type **Input port**; the port is the **node** `tap_ctl[100]` (= packet_start or bank_we), chosen with the Node Finder (*…*), not typed in. After the compile, the Fitter's input pins must not include one named `tap_ctl[100]`. On 2026-10-04 the `.stp` held the port as a pin (`storage_qualifier_port_is_pin="true"`), and C3's qualifier did not follow `tap_ctl[100]`. **Disable storage qualifier** (a run-time switch) for the continuous captures C1, C2, C4, C5 |
 | Trigger | basic AND, per capture below |
 
 The architect's `wpms_tap.stp` is committed (2026-10-04). `make_quartus_project.py` copies it into `build/quartus/` when none is there and enables it in the 50 MHz revision. A `.stp` already there, with your edits and acquisitions, is kept. `--no-signaltap` leaves SignalTap out. A SignalTap build is a new fit: read its timing again. Each capture: run the analysis once, do the capture's action, then **File ▸ Export ▸ VCD** into the evidence folder.
 
-**If the export fails**, save the `.stp` (**File ▸ Save**) right after the acquisition and send it instead: the acquisition is stored in it. `python3 hw/tools/stp_log_to_vcd.py FILE.stp C5_ew5.vcd.gz` writes the same VCD (`--list` shows the stored acquisitions, `--log N` picks one). It checks each one against its own trigger.
+**If the export fails**, save the `.stp` (**File ▸ Save**) right after the acquisition and send it instead: the acquisition is stored in it. `python3 hw/tools/stp_log_to_vcd.py FILE.stp C5_ew5.vcd.gz` writes the same VCD (`--list` shows the stored acquisitions, `--log N` picks one). It checks each one against its own trigger. The saved `.stp` also keeps what the export drops: the marks where a storage-qualified record skipped clocks.
 
 The tap layout (one clock late, all alike; decoded by `phase6_evidence.py`):
 - `tap_ctl[7:0]`: strobe, packet_start, bin_valid, inbox_taken, error_flag, Core halted, seq_idle, bank_we;
@@ -106,7 +106,7 @@ The tap layout (one clock late, all alike; decoded by `phase6_evidence.py`):
 - `[100]`: the qualifier.
 - `tap_dat`: `[255:0]` the bundle, `[279:256]` bank L, `[303:280]` bank R.
 
-SignalTap は 1 インスタンスを一度だけ設定する。クロックは clk_sys、深さは 4 K、トリガ位置は全取得で「pre」（トリガ前 12 %）。`tap_dat` はデータ専用でトリガ不要。ストレージ・クオリファイアは入力ポート `tap_ctl[100]` とし、連続取得（C1・C2・C4・C5）では実行時に「無効化」する。
+SignalTap は 1 インスタンスを一度だけ設定する。クロックは clk_sys、深さは 4 K、トリガ位置は全取得で「pre」（トリガ前 12 %）。`tap_dat` はデータ専用でトリガ不要。ストレージ・クオリファイアは入力ポート `tap_ctl[100]` とし、連続取得（C1・C2・C4・C5）では実行時に「無効化」する。ポートはノード `tap_ctl[100]` を Node Finder で選ぶ（名前を打ち込むとピン扱いになりうる。2026-10-04 の C3 はこれで期待どおりに絞られなかった）。
 
 VCD のエクスポートが失敗したときは、取得の直後に `.stp` を保存（File ▸ Save）し、VCD の代わりに送ってほしい。取得データは `.stp` の中に保存されており、`stp_log_to_vcd.py` で同じ VCD に変換できる。
 
@@ -160,3 +160,4 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 - 2026-10-04 — `wpms_tap.stp` committed and enabled by the generator (§3); SD-23 adopted (§1); the host script's session defect and its fix (§4). / `wpms_tap.stp` を収め、生成器で有効化（§3）。SD-23 正式採用（§1）。ホストスクリプトのセッションの不具合と修正（§4）。
 - 2026-10-04 — `wpms_tap.stp`: the stored acquisition (a C5 trial) removed at the architect's word; the setup is unchanged. §3: if the VCD export fails, send the saved `.stp` (`stp_log_to_vcd.py`). / `wpms_tap.stp` から取得データ（C5 の試行）を削除。設定は不変。§3：VCD エクスポートが失敗したら、保存した `.stp` を送る。
 - 2026-10-04 — §4: `reset.log` for C1 and C5; a log name per run; PowerShell's UTF-16 logs (after the first captures). / §4：C1・C5 の `reset.log`、実行ごとのログ名、PowerShell の UTF-16 ログ。
+- 2026-10-04 — §3: the storage qualifier's port is the node `tap_ctl[100]`, chosen with the Node Finder; C3's `.stp` held it as a pin. / §3：ストレージ・クオリファイアのポートは Node Finder で選ぶノード `tap_ctl[100]`（C3 ではピン扱いだった）。

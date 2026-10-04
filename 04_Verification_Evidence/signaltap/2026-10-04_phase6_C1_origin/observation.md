@@ -8,7 +8,7 @@
 |---|---|
 | Board, revision | DE10-nano 5CSEBA6U23I7; revision `DE10_Nano_wpms` (50 MHz: the strobe intervals are 1,041 and 1,042 clocks) |
 | Date and time | 2026-10-04; exported 17:06:37, shortly after the acquisition |
-| Bitstream | the SignalTap build on the board at 17:06, before the 20:56 compile that C2 ran on. Which commit is to be confirmed by the architect |
+| Bitstream | the SignalTap build of the architect's previous session (the architect: C1 is that session's capture), before the 20:56 compile that C2–C5 ran on. The RTL is the third fit's, unchanged since fe38260. Its timing summary has not been sent |
 | Switches | SW[1:0] = 11 (G = 12): the four banks equal the model at G = 12 |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, trigger at sample 512 (12.5 %); trigger `tap_ctl[1]` = 1 (the first packet_start); storage qualifier disabled |
 | Action | BRD source[0] → 1 (the sound held in reset); arm; source[0] → 0. The strobe count is 1 at the start of the record and 2 at the trigger |
@@ -33,10 +33,10 @@
    - The template's command had no `--log`, and without one the tool does not compare with the model. The generator now adds it (`phase6_templates.py` RH004).
 2. **Every item equals the RTL-SIM value at 50 MHz.** The bundles and banks are 4 / 4 each.
 3. **Level.** The banks' peak, −24.2 dBFS, is the first four samples of the test origin after the ROM's GO.
-4. **Bitstream.** C1 was taken at 17:06, on the build then on the board. C2–C5 ran on the build compiled at 20:56. Which commit the 17:06 build came from is asked of the architect.
+4. **Bitstream.** C1 was taken at 17:06, in the architect's previous session, on the build of that session. C2–C5 ran on the build compiled at 20:56, which closes timing with SignalTap in. The RTL of both is the third fit's.
 
 **和文.**
 - リセット解除の直後から記録が始まるので、モデルはリセットから動かす（`reset.log` は `RESET` の 1 行）。
   - 雛形のコマンドには `--log` が無く、それではモデルと比べない。生成器を直した（RH004）。
 - 全項目が 50 MHz の RTL-SIM 値と一致した。バンドルとバンクはそれぞれ 4 / 4。
-- 17:06 の取得で、C2〜C5 とは別のビルドである。そのコミットをアーキテクトに確認する。
+- 17:06、アーキテクトの前回のセッションで取ったもので、C2〜C5 とは別のビルドである（RTL は同じ）。

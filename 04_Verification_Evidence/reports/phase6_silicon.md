@@ -771,7 +771,7 @@ The architect took every planned capture on 2026-10-04: C1, C2, C3, C4, and C5 a
 |---|---|---|---|
 | C1 origin | 2, 3, 4, 5, 7, 7/8 | T_wake 2; window 28 → floor 30; BCP 2; full-load sweep 1,023; bundles 4 / 4; banks 4 / 4; no error | as expected, every item |
 | C2 full8 | 1, 2, 3, 4, 5, 7, 7/8 | g 0; T_wake 2; window 28 → 30; BCP of the full take-set 10; full-load sweep 1,023 (3 sweeps); bundles 28 / 28; banks 3 / 3; no error | as expected. 3 of the capture's 4 banks are compared: the first closes the sweep before the take |
-| C3 first_go | 7, 7/8, 8 | bundles 11 / 11; banks 3 / 3; no error; by ear "a very tasteful sound"; spectrum not measured (3 banks) | equal where captured. The record is not contiguous (§15.3) |
+| C3 first_go | 7, 7/8, 8 | bundles 11 / 11; banks 3 / 3; no error; by ear, after the GO, a C-major chord (left C5 + E5, right E5 + G5); spectrum not measured (3 banks) | equal where captured; the chord as expected. The storage qualifier did not follow `tap_ctl[100]` (§15.3) |
 | C4 EW6 | 6 | EW6; after it 0, 0, 0; the Core halts after 1,000 clocks | as expected |
 | C5 EW2 | 6 | EW2; 0, 0, 0; halt after 9 clocks | as expected |
 | C5 EW3 | 6 | EW3; 0, 0, 0; halt after 1,005 clocks | as expected |
@@ -801,21 +801,29 @@ The architect took every planned capture on 2026-10-04: C1, C2, C3, C4, and C5 a
 - **C4: no reset before it**, because the order was C2 → C4. Item 6 is measured from the record alone. The packet before the error cannot be compared with the model without the history; that is not an item.
 - **Host logs written by PowerShell's `>` are UTF-16.** `phase6_evidence.py` RH002 reads them; before, it took them as empty. The copies kept here are UTF-8, with local paths masked.
 
-### 15.3 C3: the record is not contiguous / C3 の記録の欠け
+### 15.3 C3: the storage qualifier did not follow `tap_ctl[100]` / C3 のストレージ・クオリファイア
 
 - **What the record shows.**
   - Three times, the strobe count steps without a stored strobe (samples 517, 1,559 and 1,799).
   - One sweep holds 560 samples instead of about 1,042.
   - Between these points the samples run clock by clock, in the RTL's sequence.
   - The record's six strobes need about 6,250 clocks; it holds 4,096 samples.
-  - Nor is it the template's qualified record: only 14 samples carry `tap_ctl[100]`.
-- **The design is not in question.**
-  - The banks at strobes 781,960 and 781,961 come after the gaps, and they equal the model.
-  - The phases build up sweep by sweep, so a skipped or shortened sweep would show.
-  - The gaps are in the record. The tool's per-clock figures for C3 (strobe intervals 560 and 2,003, g 241) are artefacts of the gaps, and are not used.
-- **The cause is open.** It is either a storage-qualifier setting other than the template's, or a fault in the acquisition. The architect's C3 setting is asked.
-- **A retake, if wanted.** The planned coverage, 128 bundles and 47 banks, needs the template's setting: storage qualifier *Input port* `tap_ctl[100]`, enabled. With the `.stp` saved after the acquisition, the setting is on record.
+- **The architect's setting.** The architect enabled the storage qualifier, unchecking *Disable storage qualifier* and changing nothing else. The `.stp` saved after the capture (`C3_first_go.stp.gz`) records the same.
+- **SignalTap marked the gaps itself.** In the saved log, samples 517, 1,559, 1,799 and 3,081 carry the mark `B`: the first sample after clocks that were not stored.
+  - The log equals the export bit for bit. The export drops the marks; `stp_log_to_vcd.py` RH003 keeps them.
+  - The gaps are the qualifier's work, not a fault of the acquisition.
+- **But the qualifier was not the node `tap_ctl[100]`.** 4,082 of the 4,096 stored samples have `tap_ctl[100]` = 0.
+  - The `.stp` names the port `tap_ctl[100]` with `storage_qualifier_port_is_pin="true"`, that is, as a pin.
+  - The likely reading: the compiled instance took its qualifier from an extra, unassigned input pin of that name, which stayed high most of the time.
+  - The Fitter's input-pin list of that build would show such a pin. That check is asked of the architect.
+  - The board README §3 had said only "port `tap_ctl[100]`". It now says to select the node with the Node Finder, and to check the Fitter's pins.
+- **What is not affected.**
+  - The other captures had the qualifier disabled and stored every clock.
+  - The design is not in question. The banks after the gaps equal the model, and the phases build up sweep by sweep, so a skipped or shortened sweep would show.
+  - The tool's per-clock figures for C3 (strobe intervals 560 and 2,003, g 241) are artefacts of the gaps, and are not used.
+- **A retake, if wanted.** The planned coverage of 128 bundles and 47 banks needs the qualifier on the node, which means a recompile.
   - Even then, the spectral peaks of item 8 need the banks of many sweeps. A recording of the HDMI audio would serve them better.
+  - The chord itself has been heard as expected.
 
 ### 15.4 The order of the captures / 取得の順序
 
@@ -827,11 +835,19 @@ The architect asked whether the order C2 → C4 → C5 → restart → C3 is a p
 - C4 alone missed the reset its action begins with. Its items are measured from the record alone, and all equal RTL-SIM.
 - The restart before C3 was in fact needed: C5's injected images must give way to the normal score, and C3's bundles equal the normal score's model.
 
-### 15.5 Open / 未了
+### 15.5 The SignalTap build's timing / SignalTap 入りビルドのタイミング
 
-- **The SignalTap build's timing.** C2–C5 ran on the build compiled at 20:56, and C1 on the one before. Their Multicorner summaries would confirm that the board ran timing-closed builds, since the SignalTap instance makes each a new fit. C1's commit is also to be confirmed.
-- **C3:** the storage-qualifier setting, and whether the chord after the GO was C major (left C5 + E5, right E5 + G5).
-- **100 MHz:** when the architect decides. The 50 MHz revision's Phase 6 items are now observed on silicon.
+The architect sent the build's Multicorner summary later the same day (`quartus/2026-10-04_DE10_Nano_wpms_signaltap/`).
+- **Every clock meets with the SignalTap instance in, and TNS is 0.**
+  - clk_sys: setup +0.557 ns, 0.421 ns less than without SignalTap. Hold +0.076 ns.
+  - The JTAG clock: +3.084 ns.
+- **C2–C5 were taken on a timing-closed build.**
+- **C1** was taken in the architect's previous session, on that session's build. The RTL is the same; its timing summary has not been sent.
+
+### 15.6 Open / 未了
+
+- **C3's qualifier.** Does the build's Fitter list an input pin named `tap_ctl[100]`? A retake of C3 is optional (§15.3).
+- **100 MHz:** when the architect decides. The 50 MHz revision's Phase 6 items are now observed on silicon, on a timing-closed build.
 
 **和文.**
 - 2026-10-04、アーキテクトが C1〜C5（C5 は EW2〜EW5 の 4 件）をすべて取得した。順序は C1、C2、C4、C5、再起動、C3。
@@ -840,9 +856,10 @@ The architect asked whether the order C2 → C4 → C5 → restart → C3 is a p
   - エラー経路は、5 種のコードすべてでクロック単位まで RTL-SIM と同じだった。
   - 比べたバンドル 45 個とバンク 12 個は、すべてモデルと一致した。
 - C2 のアーキテクト報告（別の AI 支援で作成）の数値は、ここでの解析と全項目で一致した。保存された `.stp` を変換すると、エクスポートとビット単位で一致した。
-- C3 は、記録された実行のログが 2 回目の実行で上書きされていた。2 回目の読み戻し値から解析入力を作り、記録されたバンドルとバンクはすべてモデルと一致した。
-  - ただし記録はクロックごとではなく、途中に欠けがある。欠けの後のバンクもモデルと一致するので、ハードウェアは正しく演奏しており、欠けは記録側にある。
-  - 原因は未解決で、アーキテクトに設定を伺う。
+- C3 は、記録された実行のログが 2 回目の実行で上書きされていた。2 回目の読み戻し値から解析入力を作り、記録されたバンドルとバンクはすべてモデルと一致した。GO の後の音は C メジャー（左 C5+E5、右 E5+G5）と確認された。
+  - 記録の欠けは、SignalTap 自身が `.stp` に「途切れ」の印 `B` で記録していた。ストレージ・クオリファイアによるもので、取得の不具合ではない。
+  - ただしクオリファイアの入力はノード `tap_ctl[100]` ではなかった。`.stp` がポートを「ピン」として持っていたため。README §3 を、Node Finder でノードを選ぶよう直した。
 - 取得の順序は問題ない。C4 だけは事前のリセットがなかったが、その項目は記録だけで測れる。C3 の前の再起動は、注入像を通常の譜に戻すためにも必要だった。
 - PowerShell の `>` が書く UTF-16 のログを、`phase6_evidence.py` が読めるようにした（RH002）。
-- 未了：SignalTap 版ビルドのタイミング報告、C3 の設定と聴感。100 MHz はアーキテクトの判断を待つ。
+- SignalTap 入りビルドは全クロックでタイミングを満たす（clk_sys +0.557 ns、TNS 0）。C2〜C5 はタイミングの閉じたビルドで取られた。
+- 未了：Fitter のピン一覧で C3 のクオリファイア用ピンの有無を確認すること。C3 の取り直しは任意。100 MHz はアーキテクトの判断を待つ。

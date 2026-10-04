@@ -8,7 +8,7 @@
 |---|---|
 | Board, revision | DE10-nano 5CSEBA6U23I7; revision `DE10_Nano_wpms` (50 MHz: the strobe intervals are 1,041 and 1,042 clocks); NMAX = 1,008; clk_sys 30 % high |
 | Date and time | 2026-10-04 21:15:28: the trigger (the log's name in the architect's `.stp`) |
-| Bitstream | `output_files/DE10_Nano_wpms.sof`, Quartus Prime Lite 23.1std.1, compiled by the architect (Fitter 20:56:46) from the repository at 8040238 (main after PR #9). The architect's report notes that working files may differ, and gives the file's SHA-256, 14703DBB…2D27. The timing of this SignalTap build has not been received yet |
+| Bitstream | `output_files/DE10_Nano_wpms.sof`, Quartus Prime Lite 23.1std.1, compiled by the architect (Fitter 20:56:46) from the repository at 8040238 (main after PR #9). The architect's report notes that working files may differ, and gives the file's SHA-256, 14703DBB…2D27. Timing closed with SignalTap in: clk_sys +0.557 ns, TNS 0 (`quartus/2026-10-04_DE10_Nano_wpms_signaltap/`) |
 | Switches | SW = 3 read back by the BRD probe before the run (SW[1:0] = 11, G = 12; SW[2] = 0; SW[3] = 0); all three PLLs locked (`reset.log`) |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, trigger at sample 512 (12.5 %); trigger `tap_ctl[43:40]` = 1000 (P becomes 8); storage qualifier disabled (the architect's `.stp`) |
 | Action | reset at 21:14:55 (BRD source[0] 1 → 0, read back: `reset.log`); arm; `quartus_stp -t host/wpms_phase6_full8_1008.tcl` at 21:15:28 → GO 2 at sweep 1,541,413 (`full8.log`) |
@@ -43,7 +43,7 @@
    - a later run of the same script (21:28:47, GO 4 at sweep 39,954,571);
    - a second export of this acquisition (21:41:27, equal in every sample).
 6. **By ear (the architect):** 「C2、C3は非常に味な音が出ています」 ("C2 and C3 give a very tasteful sound").
-7. **The SignalTap build's timing** has not been received yet; it is asked.
+7. **The SignalTap build's timing**, sent later the same day: every clock meets, with clk_sys at +0.557 ns and TNS 0 (`quartus/2026-10-04_DE10_Nano_wpms_signaltap/`).
 
 **和文.**
 - リセット（21:14:55）のあと 21:15:28 にスクリプトを実行し、GO 2 がスイープ 1,541,413 に入った。

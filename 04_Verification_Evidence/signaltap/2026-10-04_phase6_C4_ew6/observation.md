@@ -8,7 +8,7 @@
 |---|---|
 | Board, revision | DE10-nano 5CSEBA6U23I7; revision `DE10_Nano_wpms` (50 MHz: the strobe intervals are 1,041 and 1,042 clocks) |
 | Date and time | 2026-10-04 21:43:29 (the script); exported 21:44:23 |
-| Bitstream | as C2's, the same session (to be confirmed by the architect) |
+| Bitstream | as C2's, the same session |
 | Switches | per the template (the expected values here do not depend on G) |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, trigger at sample 512 (12.5 %); trigger `tap_ctl[4]` rising (error_flag); storage qualifier disabled |
 | Action | arm; `quartus_stp -t host/wpms_phase6_ew6_1008.tcl` → GO 6 at sweep 82,243,832 (`ew6.log`). No reset before it: GO_SEQ read 5 (note 1) |
