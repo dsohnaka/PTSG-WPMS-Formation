@@ -49,7 +49,7 @@ Quartus がないため、ここでは `--check` で代役（tclsh と Icarus）
 ## 2. Board settings and first light / ボード設定と初点灯
 
 **Switches before power-up:**
-- SW[1:0] = 00 (G: the models assume it);
+- SW[1:0] = 11, both up: G = 12, which the models and the expected captures assume. With 00, G = 0: 72 dB louder, and the test origin clips at full scale;
 - SW[2] = 0 (run; 1 holds the sound in reset, Ch.5 §5.8);
 - SW[3] = 0 (no soft mute).
 
@@ -81,7 +81,7 @@ An HDMI monitor with speakers on the HDMI connector.
 
 From `quartus_stp -s` in `build/quartus`, `source host/wpms_issp_host.tcl; wpms_open; wpms_status; wpms_close` prints eleven words: GO_SEQ, APPLIED_SEQ/SAMPLE, MG, G_EFF, CLIP, STROBE_INTERVAL (1,041/1,042 at 50 MHz), REJECT, SWEEP_ACTIVE, SWEEP_CLOCKS.
 
-電源投入前：SW[1:0]=00、SW[2]=0（1 で音系をリセット保持）、SW[3]=0。HDMI はスピーカー付きモニタへ。初点灯では LED[0] が 1 Hz で点滅し、LED[1]・[2]・[3]・[6] が点灯、LED[4]・[5]・[7] は消灯。画面は 720p60 のカラーバー、音は試験原点（約 996 Hz の定常音）。ISSP エディタには HOST・STAT・INSP・BRD の 4 インスタンスが見える。BRD の source[0] を 1 にすると音系全体がリセット保持される。
+電源投入前：SW[1:0]=11（両方上、G = 12。モデルと期待値の前提。00 は G = 0 で 72 dB 大きく、クリップする）、SW[2]=0（1 で音系をリセット保持）、SW[3]=0。HDMI はスピーカー付きモニタへ。初点灯では LED[0] が 1 Hz で点滅し、LED[1]・[2]・[3]・[6] が点灯、LED[4]・[5]・[7] は消灯。画面は 720p60 のカラーバー、音は試験原点（約 996 Hz の定常音）。ISSP エディタには HOST・STAT・INSP・BRD の 4 インスタンスが見える。BRD の source[0] を 1 にすると音系全体がリセット保持される。
 
 ## 3. SignalTap (one instance, set up once) / SignalTap（1 インスタンス、一度だけ設定）
 
@@ -146,3 +146,4 @@ It prints the Core's ledger row (ALMs needed, entity-only, Comb. ALUTs) and the 
 - 2026-10-01 — first version (Phase 6). / 初版。
 - 2026-10-03 — `report_setup_paths.tcl` and how to run it (§1; SD-22). / 失敗経路の集計スクリプトと実行方法（§1、SD-22）。
 - 2026-10-03 — clk_sys's duty cycle per revision, `SYS_DUTY` and `--sys-duty` (§1; SD-23). / リビジョンごとの clk_sys デューティ比（§1、SD-23）。
+- 2026-10-04 — §2: SW[1:0] = 11 (G = 12). The first version said 00, which is wrong: every expected value assumes G = 12. / §2：SW[1:0] は 11（G = 12）。初版の 00 は誤りで、期待値はすべて G = 12 を前提とする。

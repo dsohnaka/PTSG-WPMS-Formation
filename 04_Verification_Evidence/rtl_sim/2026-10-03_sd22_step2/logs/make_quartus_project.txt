@@ -1,0 +1,14 @@
+make_quartus_project: <build>/quartus: DE10_Nano_wpms.qpf, revisions DE10_Nano_wpms (50 MHz, 30 % high), DE10_Nano_wpms100 (100 MHz, 50 % high); 22 Verilog, 2 include, 4 MIF, SDC
+  DE10_Nano_wpms: 52 pins; 29 files; SDC: 12 clocks in 5 groups, hdmi_tx_clk from the 180-degree counter, pixel bus -max 2.0 / -min -1.5 ns; 7 false-path commands
+  DE10_Nano_wpms100: 52 pins; 29 files; SDC: 12 clocks in 5 groups, hdmi_tx_clk from the 180-degree counter, pixel bus -max 2.0 / -min -1.5 ns; 7 false-path commands
+  DE10_Nano_wpms: elaborated with the INTEL branches (Icarus, stand-in primitives): 9 primitives, each with the parameters expected (clk_sys 50.0000000 MHz, 30 % high)
+  DE10_Nano_wpms100: elaborated with the INTEL branches (Icarus, stand-in primitives): 9 primitives, each with the parameters expected (clk_sys 100.000000 MHz, 50 % high)
+  KILLED   a pin moved (LED[3] V15 -> V14)  ->  DE10_Nano_wpms: pins differ from the Terasic golden top (Core .qsf): ['LED[3]']
+  KILLED   the pixel PLL not found by the SDC  ->  DE10_Nano_wpms: SDC warnings: [['MSG', '-type', 'critical_warning', 'DE10_Nano_wpms.sdc: no forwarde
+  KILLED   a source missing from the directory  ->  DE10_Nano_wpms: wpms_formation.v named but not in the project directory
+  KILLED   HDMI_TX_CLK taken from the 0-degree output  ->  DE10_Nano_wpms: hdmi_tx_clk not generated from the 180-degree counter: [['C', 'create_generated_cloc
+  KILLED   the hold allowance with the wrong sign  ->  DE10_Nano_wpms: pixel-bus output delays [('hdmi_tx_clk', '-max', '2.0'), ('hdmi_tx_clk', '-min', '1.
+  KILLED   the audio clocks left out of their group  ->  DE10_Nano_wpms: clock groups 5; clocks not in exactly one group: ['u_pll_aud|g_intel.g_one.u_pll|gen
+  KILLED   an I/O standard missing (SW[1], 100 MHz revision)  ->  DE10_Nano_wpms100: port SW[1] has no single IO_STANDARD
+  mutants 7/7 broken copies of the project caught
+make_quartus_project --check: PASS (stand-ins, not Quartus)

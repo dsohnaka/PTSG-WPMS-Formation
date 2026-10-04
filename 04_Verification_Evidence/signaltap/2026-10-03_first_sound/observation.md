@@ -18,7 +18,7 @@ These values were derived after the observation was reported. They come from the
 | The partials | 1,008 partials from 996.000 to 999.939 Hz, 3.912 mHz apart, with equal amplitude and phase 0 at the GO | OM0 89,120,571, OMD1 350, LP = LPT = log2 0.97, phases 0 |
 | The tone | one carrier at 997.97 Hz, the partials' centre | a sum of equally spaced partials is the centre frequency times an envelope |
 | Amplitude modulation | envelope \|sin(πN·df·t) / sin(π·df·t)\|: nulls every **253.62 ms**, 100 % deep | 1 / (N·df) |
-| Slow change | the beats' height follows 1 / \|sin(π·df·t)\|. Loudest right after the GO, when all partials are in phase (peak −12.44 dBFS in RTL-SIM). Relative to that peak: −22 dB after 1 s, −42 dB after 10 s, −51 dB after 30 s, −60 dB at about 2 min 8 s. Then rising again to a full burst at **4 min 15.7 s** | 1 / df = 255.65 s |
+| Slow change | the beats' height follows 1 / \|sin(π·df·t)\|. Loudest right after the GO, when all partials are in phase (peak −12.44 dBFS in RTL-SIM, at G = 12). Relative to that peak: −22 dB after 1 s, −42 dB after 10 s, −51 dB after 30 s, −60 dB at about 2 min 8 s. Then rising again to a full burst at **4 min 15.7 s** | 1 / df = 255.65 s |
 | Stability | the same waveform after every reset or KEY[1] | the ROM replays the same 21 writes |
 
 ## Observed (2026-10-03, reported by the architect) / 観測値
@@ -36,6 +36,8 @@ In English: a waveform based on a 1 kHz sine, amplitude-modulated with a period 
 - the output is stable.
 
 Not yet measured: the carrier frequency and the null spacing to a few per mille, the return of the burst at 4 min 15.7 s, and the level.
+
+**Later the same day: the SignalTap capture `ptsg_core_debug`** (`signaltap/2026-10-03_core_debug/`). Its 8 audio frames equal the model bit for bit, 13 min 46.8 s after the GO, at G = 0. So DIP[1:0] was 00, as the board README of 2026-10-01 said by mistake (corrected 2026-10-04 to 11): 72 dB above the RTL-SIM figures (G = 12), and the waveform clips at the top of every beat over about 85 % of each cycle. SW[1:0] = 11 gives the designed level.
 
 - **What this shows.** The whole chain plays the test origin from the ROM after reset, on silicon: PTSG-Core RH031p, the Formation, the sequencer, L1, I2S and the ADV7513's HDMI audio. The ADV7513's configuration had been checked only against its data sheet until now.
 - **What this does not show:** timing margin. This bitstream misses clk_sys by 6.976 ns at the slow corner (the slowest silicon at 85 °C). This board at room temperature runs it, but nothing is guaranteed at a higher temperature or on a slower part. Most failing endpoints lie on paths the test origin seldom sensitizes: the error registers, the GO check, EW5. The SILICON captures C1–C5 wait for a timing-closed build (SD-22).
