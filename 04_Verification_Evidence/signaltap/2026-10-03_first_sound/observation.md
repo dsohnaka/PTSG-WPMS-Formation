@@ -37,7 +37,7 @@ In English: a waveform based on a 1 kHz sine, amplitude-modulated with a period 
 
 Not yet measured: the carrier frequency and the null spacing to a few per mille, the return of the burst at 4 min 15.7 s, and the level.
 
-**Later the same day: the SignalTap capture `ptsg_core_debug`** (`signaltap/2026-10-03_core_debug/`). Its 8 audio frames equal the model bit for bit, 13 min 46.8 s after the GO, at G = 0. So DIP[1:0] was 00: 72 dB above the RTL-SIM figures (G = 12), and the waveform clips at the top of every beat over about 85 % of each cycle. SW[1:0] = 11 gives the designed level.
+**Later the same day: the SignalTap capture `ptsg_core_debug`** (`signaltap/2026-10-03_core_debug/`). Its 8 audio frames equal the model bit for bit, 13 min 46.8 s after the GO, at G = 0. So DIP[1:0] was 00, as the board README of 2026-10-01 said by mistake (corrected 2026-10-04 to 11): 72 dB above the RTL-SIM figures (G = 12), and the waveform clips at the top of every beat over about 85 % of each cycle. SW[1:0] = 11 gives the designed level.
 
 - **What this shows.** The whole chain plays the test origin from the ROM after reset, on silicon: PTSG-Core RH031p, the Formation, the sequencer, L1, I2S and the ADV7513's HDMI audio. The ADV7513's configuration had been checked only against its data sheet until now.
 - **What this does not show:** timing margin. This bitstream misses clk_sys by 6.976 ns at the slow corner (the slowest silicon at 85 °C). This board at room temperature runs it, but nothing is guaranteed at a higher temperature or on a slower part. Most failing endpoints lie on paths the test origin seldom sensitizes: the error registers, the GO check, EW5. The SILICON captures C1–C5 wait for a timing-closed build (SD-22).

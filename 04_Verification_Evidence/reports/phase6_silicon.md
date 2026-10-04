@@ -699,7 +699,16 @@ The whole design uses about 27 % of the device's ALMs. SignalTap is not in this 
 3. **Captures:** the architect takes them and sends each VCD export with its host log. The HDMI sink with speakers already works (§12).
 4. **The resource ledger** comes from the Fitter report (§13.2); the Yosys figures are for reference only.
 
-### 13.4 Next / 次に
+### 13.4 A correction: SW[1:0] / 訂正
+
+The board README (§2, 2026-10-01) said to set SW[1:0] = 00. That is wrong. G = DIP[1:0] × 4, so 00 gives G = 0. Every expected value, the board bench (`sw = 4'b0111`) and the capture analysis (`phase6_evidence.py`, G = 12) assume G = 12, which is SW[1:0] = 11.
+- This is why the first sound and the capture `ptsg_core_debug` ran at G = 0 (§12).
+- Corrected on 2026-10-04: the README now says SW[1:0] = 11, and each capture template (`signaltap/phase6_pending/`) gets a row for the switches. Only that row changed (`phase6_templates.py` RH002); the expected values are as written on 2026-10-01.
+- **Before the captures C1–C5, please set SW[1:0] = 11** (both up). With 00, the banks on the I2S pins cannot equal the expected ones.
+
+和文：ボードの README §2（2026-10-01）は SW[1:0] = 00 と書いていたが、これは誤りだった。00 は G = 0 になる。期待値、ベンチ、取得の解析はすべて G = 12、すなわち SW[1:0] = 11 を前提とする。初音と ptsg_core_debug が G = 0 だったのはこのため。README を 11 に直し、取得テンプレートにスイッチの行を加えた（期待値は変えていない）。**C1〜C5 の取得の前に SW[1:0] = 11（両方上）にしてください。**
+
+### 13.5 Next / 次に
 
 - **The captures C1–C5 at 50 MHz**, on a build with `wpms_tap.stp`. That is a new fit, so its timing must be read again: this fit's margin is +0.98 ns.
 - **The SD-23 ruling** (`discrepancies.md`).

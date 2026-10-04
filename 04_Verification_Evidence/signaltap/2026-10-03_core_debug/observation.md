@@ -41,7 +41,7 @@ The two unknowns were found from the closed form. The test origin is a sum of 1,
   - These are the store read and the adder into Accm, of the kind the second fit's timing report lists. The worst path, MUL/MAC @PPM, is not used by the test origin.
 - **The sweeps are locked to the audio frames:** 1,008 clocks of packet, one sweep per frame.
 - **G = 0 on this board.**
-  - DIP[1:0] = 00 is the loudest setting, 72 dB above G = 12, which the RTL-SIM figures assume. At G = 0, a single partial of the test origin is near full scale.
+  - DIP[1:0] = 00 is the loudest setting, 72 dB above G = 12, which the RTL-SIM figures assume. The board README of 2026-10-01 said 00 by mistake; it says 11 since 2026-10-04. At G = 0, a single partial of the test origin is near full scale.
   - The output therefore clips wherever the envelope exceeds about 1.03 partials. That is the top of every beat over about 85 % of each 255.65 s cycle.
   - This capture lies where the envelope was 0.84 partials, 59.8 s into the fourth cycle.
   - SW[1:0] = 11 (both up) gives G = 12, the designed level: −12.44 dBFS at the peak right after the GO, never clipping.

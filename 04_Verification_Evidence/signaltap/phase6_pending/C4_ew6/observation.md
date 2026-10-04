@@ -9,6 +9,7 @@
 | Board, revision | DE10-nano 5CSEBA6U23I7; revision ____ (`DE10_Nano_wpms` 50 MHz / `DE10_Nano_wpms100` 100 MHz) |
 | Date and time | ____ |
 | Bitstream | `output_files/____.sof`, Quartus Prime Lite 23.1std.1, commit ____ |
+| Switches | SW[1:0] = 11, both up (G = 12, which the expected values assume); SW[2] = 0; SW[3] = 0 |
 | SignalTap | `wpms_tap.stp`: clk_sys, depth 4,096, pre trigger position (12 %); trigger `tap_ctl[4]` rising (error_flag); storage qualifier disabled |
 | Action | reset; arm; `quartus_stp -t host/wpms_phase6_ew6_<NMAX>.tcl > ew6.log` |
 | Files here | `C4_ew6.vcd.gz` (the export), the host log if any, `observed.json` |
