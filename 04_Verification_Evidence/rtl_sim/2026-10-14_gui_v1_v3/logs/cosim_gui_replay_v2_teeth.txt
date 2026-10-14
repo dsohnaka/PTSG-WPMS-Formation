@@ -1,0 +1,15 @@
+cosim_gui_replay v2_teeth: the step log of wpms_ctl.py through wpms_system (switch + ISSP bridge + synthesizer), deterministic controller — evidence class RTL-SIM; NMAX 1008 (50 MHz budget)
+  log: 93 steps; 70 writes, 23 reads (0 of them added checks), 0 APPLY, 0 pauses > 50.0 ms as sound; session started at the test origin: True
+  switch: 184 transactions (163 port 0, 21 port 3; 1 refused), 9 apply steps, 10 strobes: answers equal to switch_model's: 184/184
+  inbox port: 85 writes presented (clock, address, data) equal to the model's: True; hand-overs 5
+  apply step: 2..2 clocks after inbox_taken rose; its write lands 24 clocks or more before the next strobe
+  host path: 70 writes, 23 reads, 0 KEY[0] presses -> 163 port-0 transactions, all as commanded; probe answers equal: True
+  ROM (port 3): 1 complete plays of its 21 writes (resets 1, KEY[1] 0, TEST_ORIGIN 0); refused: 0
+  sound: 8 bundles in closed sweeps and 10 output samples compared with sweep_sim.Reference -> l1_model (customer's oracle): True / 10 of 10 samples equal
+  takes with items: 3; heard (a block of the take plays in the next sweep, or the sweep word changes): 2
+  GO -> first sweep playing it: 1219 .. 2059 clocks = 1.1702 .. 1.9766 periods, from strobe 2 .. 2 after the GO, over 5 GOs (Ch.5 §5.4.3: <= 2)
+  hand-overs presented at strobe offsets (clocks, -3..+3 seen): []
+  strobe interval 1041..1042 clocks; SWEEP_CLOCKS_MAX 1028 (T_min 1041); overrun 0
+  host writes refused by the RTL: 1 (0 expected); go-now GOs in the log 4, accepted by the RTL 4; APPLY steps with APPLIED_SEQ = GO_SEQ after the bound: 0/0
+  FAIL 1 host writes refused by the RTL, the first 23A 06376D95 at clock 6118
+cosim_gui_replay v2_teeth: FAIL (1 s)

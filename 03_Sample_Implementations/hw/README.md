@@ -66,7 +66,7 @@
 | `de10_nano/inject/`, `tools/gen_inject_scores.py` | The EW2–EW5 injection images for the In-System Memory Content Editor (instance PTSG). |
 | `de10_nano/sim/` | The board-level bench, the behavioural PLL, stand-ins of the Intel primitives (never given to Quartus). |
 | `tools/cosim_board.py`, `tools/phase6_evidence.py`, `tools/phase6_templates.py`, `tools/resource_ledger.py` | The board-level cosimulation and the dry run of each SignalTap capture; the evidence reader (bench VCD or SignalTap export); the observation templates; the resource ledger from the Fitter report. |
-| `tools/host/` | **Outside WPMS** — a stand-in for the Layer 4 controller: the quartus_stp Tcl for the ISSP instance HOST and the Phase 6 music demo (the same steps are checked in RTL-SIM), and `check_host_tcl.py`, which runs both scripts under tclsh against stand-ins of the Quartus ISSP commands. |
+| `tools/host/` | **Outside WPMS** — a stand-in for the Layer 4 controller: the quartus_stp Tcl for the ISSP instance HOST and the Phase 6 music demo (the same steps are checked in RTL-SIM), and `check_host_tcl.py`, which runs both scripts under tclsh against stand-ins of the Quartus ISSP commands. `tools/host/gui/`: a host control GUI (a resident ISSP bridge, a coalescing controller, a Tkinter panel). |
 
 ## Running / 実行
 
