@@ -89,7 +89,7 @@ go-now fires one item alone, so the controller never leaves an item armed, and t
 
 ## The step log / ステップ記録
 
-Every transaction is appended as a step of `wpms_music.py`'s format — `("W", addr, data, note)`, `("Q", addr, note)` — and `("APPLY", note)` when a GO is seen applied; each with its time (µs since the controller started) and its reply. The JSON (`"format": "wpms_ctl step log 1"`) also records what the switch held at connect (`origin`): `cosim_gui_replay.py` starts from a reset, so a log is replayed faithfully when its session started at the test origin (after the image was loaded, or after **Test origin**).
+Every transaction is appended as a step of `wpms_music.py`'s format — `("W", addr, data, note)`, `("Q", addr, note)` — and `("APPLY", note)` when a GO is seen applied; each with its time (µs since the controller started) and its reply. The JSON (`"format": "wpms_ctl step log 1"`) also records what the switch held at connect (`origin`). `cosim_gui_replay.py` starts from a reset, so **a board session counts as evidence only if it started at the test origin**: connect right after the image is loaded (or after SW[2] up → down), or press **Test origin** first (architect's ruling, 2026-10-14).
 
 ## Numbers / 数値
 
@@ -99,6 +99,8 @@ Every transaction is appended as a step of `wpms_music.py`'s format — `("W", a
 | Master gain update rate | 33 … 200 /s | waits for the board |
 | Block level update rate (INBOX + COMMIT + apply polling) | ≈ 6 … 100 /s | waits for the board |
 | REJECT[0] after a minute of fast knob turning on four blocks | unchanged | 0 in RTL-SIM (V3); the board waits |
+
+The board procedure and the expected values, refined for this controller, are in `04_Verification_Evidence/reports/gui_board.md`.
 
 Under the stand-ins (not the board; a plain tclsh, no JTAG) a transaction takes 0.02 … 0.5 ms: that measures this PC and the TCP path only.
 

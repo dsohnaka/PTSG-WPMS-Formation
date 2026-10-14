@@ -31,6 +31,8 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-14       Claude Code   Add : First version (GUI_BRIEF_WPMS_Host_Control_2026-10-14 §2-§4).
+# 002 2026-10-14       Claude Code   Chg : measure sets up four playing blocks itself (brief §7: "four blocks"),
+#                                          prints the histogram and the APPLIED_SEQ polls per GO.
 # ============================================================================
 import argparse, json, math, os, random, socket, sys, threading, time
 
@@ -746,46 +748,77 @@ def main():
         ctl.close(shutdown=a.shutdown)
 
 
+def histogram(t_us, edges_ms=(1, 2, 5, 10, 20, 30, 50, 100)):
+    """[(label, count)] of transaction times in ms."""
+    rows, lo = [], 0
+    for hi in list(edges_ms) + [None]:
+        n = sum(1 for x in t_us if lo * 1000 <= x < (hi * 1000 if hi else float("inf")))
+        rows.append((f"{lo} … {hi} ms" if hi else f">= {lo} ms", n))
+        lo = hi
+    return rows
+
+
 def measure(ctl, a):
     """GUI brief §7: one ISSP transaction (mean/max over n), master-gain and block-level update rates,
-    REJECT[0] before and after a knob storm on four blocks."""
+    REJECT[0] before and after a knob storm on four blocks (set up here: blocks 0-3, N = 240 each, -6 dB)."""
     t = []
     for k in range(a.n):
         x = ctl._ops([("Q", A_ID, "timing: ID")])[0]
         if x[0] == "OK":
             t.append(x[3])
     t.sort()
-    print(f"  ISSP read of ID x{a.n}: mean {sum(t) / len(t) / 1000:.2f} ms, median {t[len(t) // 2] / 1000:.2f}, "
+    print(f"  M1 ISSP read of ID x{len(t)}: mean {sum(t) / len(t) / 1000:.2f} ms, median {t[len(t) // 2] / 1000:.2f}, "
           f"p99 {t[int(len(t) * 0.99)] / 1000:.2f}, max {t[-1] / 1000:.2f} ms (bridge-measured)")
+    for lab, n in histogram(t):
+        print(f"     {lab:>14s}  {n}")
+    # M2: the master gain, as fast as the sender goes (no GO)
     t0 = time.monotonic()
     n0 = ctl.counts["master"]
     while time.monotonic() - t0 < min(10.0, a.seconds):
         ctl.set_master_db(-random.uniform(0, 12))
         ctl.step()
     dt = time.monotonic() - t0
-    print(f"  master gain: {ctl.counts['master'] - n0} updates in {dt:.1f} s = {(ctl.counts['master'] - n0) / dt:.1f} /s")
+    ctl.set_master_db(0)
+    ctl.run_until_idle(10)
+    print(f"  M2 master gain: {ctl.counts['master'] - n0} updates in {dt:.1f} s = {(ctl.counts['master'] - n0) / dt:.1f} /s")
+    # four blocks playing: block 0 shrinks first, then 1-3 join (the controller finds the order)
+    blocks = [0, 1, 2, 3]
+    for b in blocks:
+        why = ctl.set_block(b, N=240, level=-6.0)
+        if why:
+            print(f"  setup block {b}: {why}")
+    for b in blocks:
+        why = ctl.set_play(b, True)
+        if why:
+            print(f"  setup play {b}: {why}")
+    ctl.run_until_idle(60)
+    print(f"  four blocks: play {ctl.play}, switch {ctl.sent_play}")
+    # M3: block levels on four blocks for a.seconds
     rej0 = ctl._status()["REJECT0"]
-    g0 = ctl.counts["gos"]
+    g0, l0, p0 = ctl.counts["gos"], len(ctl.go_lat), sum(1 for e in ctl.log if e["step"][-1] == "APPLIED_SEQ poll")
     rng = random.Random(a.seed)
-    blocks = [b for b in range(8) if b in ctl.play][:4] or [0]
     t0 = time.monotonic()
     while time.monotonic() - t0 < a.seconds:
-        b = rng.choice(blocks)
-        ctl.set_block(b, level=rng.uniform(-30, -3))
+        ctl.set_block(rng.choice(blocks), level=rng.uniform(-30, -6))
         ctl.step()
     ctl.run_until_idle(30)
     dt = time.monotonic() - t0
     rej1 = ctl._status()["REJECT0"]
-    lat = sorted(ctl.go_lat) or [0]
-    print(f"  block level on {blocks}: {ctl.counts['gos'] - g0} GOs in {dt:.1f} s = {(ctl.counts['gos'] - g0) / dt:.1f} /s; "
-          f"GO -> apply seen: median {lat[len(lat) // 2] * 1000:.1f} ms, max {lat[-1] * 1000:.1f} ms")
-    print(f"  REJECT0 {rej0} -> {rej1} (unchanged expected); refused {ctl.counts['refused']}")
+    ng = ctl.counts["gos"] - g0
+    polls = sum(1 for e in ctl.log if e["step"][-1] == "APPLIED_SEQ poll") - p0
+    lat = sorted(ctl.go_lat[l0:]) or [0]
+    print(f"  M3 block level on {blocks}: {ng} GOs in {dt:.1f} s = {ng / dt:.1f} /s; APPLIED_SEQ polls per GO "
+          f"{polls / max(1, ng):.2f}; GO -> apply seen: median {lat[len(lat) // 2] * 1000:.1f} ms, "
+          f"max {lat[-1] * 1000:.1f} ms")
+    print(f"  M4 REJECT0 {rej0} -> {rej1} (unchanged expected); refused {ctl.counts['refused']}, "
+          f"errors {ctl.counts['errors']}")
     st = ctl.time_stats()
     print(f"  all transactions: n {st['n']}, mean {st['mean'] / 1000:.2f} ms, max {st['max'] / 1000:.2f} ms")
+    for lab, n in histogram(ctl.times):
+        print(f"     {lab:>14s}  {n}")
     if a.csv:
         ctl.save_times_csv(a.csv)
         print(f"  times -> {a.csv}")
-
 
 if __name__ == "__main__":
     main()
