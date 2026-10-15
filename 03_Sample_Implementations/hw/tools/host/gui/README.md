@@ -95,12 +95,12 @@ Every transaction is appended as a step of `wpms_music.py`'s format — `("W", a
 
 | Item | Expected (ESTIMATE, GUI brief §7) | Measured |
 |---|---|---|
-| One ISSP transaction (`<us>`), mean and max over ≥ 1,000 | 5 … 30 ms | waits for the board |
-| Master gain update rate | 33 … 200 /s | waits for the board |
-| Block level update rate (INBOX + COMMIT + apply polling) | ≈ 6 … 100 /s | waits for the board |
-| REJECT[0] after a minute of fast knob turning on four blocks | unchanged | 0 in RTL-SIM (V3); the board waits |
+| One ISSP transaction (`<us>`), mean and max over ≥ 1,000 | 5 … 30 ms | **0.41 ms mean, 3.5 ms max** (1,000 reads; 0.43 / 4.2 ms over 132,831) — SILICON, 2026-10-15 |
+| Master gain update rate | 33 … 200 /s | **1,826 /s** — SILICON |
+| Block level update rate (INBOX + COMMIT + apply polling) | ≈ 6 … 100 /s | **374 GOs/s** on four blocks, 0.99 APPLIED_SEQ polls per GO — SILICON |
+| REJECT[0] after a minute of fast knob turning on four blocks | unchanged | **0 → 0** (22,445 GOs in 60 s) — SILICON; 0 in RTL-SIM (V3) |
 
-The board procedure and the expected values, refined for this controller, are in `04_Verification_Evidence/reports/gui_board.md`.
+The board procedure, the expected values and the measured ones are in `04_Verification_Evidence/reports/gui_board.md`; the logs in `04_Verification_Evidence/host_gui/2026-10-15_board/`.
 
 Under the stand-ins (not the board; a plain tclsh, no JTAG) a transaction takes 0.02 … 0.5 ms: that measures this PC and the TCP path only.
 
