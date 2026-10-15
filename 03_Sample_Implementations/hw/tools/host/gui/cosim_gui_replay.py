@@ -18,8 +18,11 @@
 #     SWEEP_COMMITs of the log, one each.
 # Pauses of the session longer than --gap ms become a few strobes of sound
 # (to_stim's SOUND, at most --sound-strobes) so that the music is heard too.
-# The replay starts from a reset (the ROM's test origin): a log whose session
-# did not start there (its "origin" record) is reported as such.
+# The replay starts from a reset (the ROM's test origin). A session counts as
+# starting there (architect's ruling, 2026-10-14) if the switch held the
+# origin at connect (its "origin" record), or if its first write is
+# TEST_ORIGIN (the GUI's Test origin pressed before any knob); otherwise the
+# log is reported as not starting at the origin, and fails.
 #
 #   python3 cosim_gui_replay.py LOG.json[.gz] [LOG2.json ...] [--out DIR] [--report FILE]
 #                               [--gap 50] [--sound-strobes 2] [--max-steps N]
@@ -27,6 +30,8 @@
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
 # 001 2026-10-14       Claude Code   Add : First version (GUI_BRIEF_WPMS_Host_Control_2026-10-14 §5 V3).
+# 002 2026-10-15       Claude Code   Chg : a session whose first write is TEST_ORIGIN starts at the origin
+#                                          (ruling 2026-10-14); a session that does not is a failure.
 # ============================================================================
 import argparse, gzip, json, os, sys, time
 
@@ -89,7 +94,11 @@ def replay(path, a):
 
     # the session's start against the ROM's test origin
     org = doc.get("origin") or {}
-    at_origin = org.get("sweep") == 1 and org.get("N", {}).get("0") == nmax
+    first_w = next((s for s in doc["steps"] if s[0] == "W"), None)
+    origin_first = bool(first_w is not None and first_w[1] == 0x01C and first_w[2] & 1)
+    at_origin = (org.get("sweep") == 1 and org.get("N", {}).get("0") == nmax) or origin_first
+    if not at_origin:
+        probs.append("the session did not start at the test origin (ruling 2026-10-14): not evidence")
     # every write of the log accepted by the RTL (port 0, a write: its EXEC)
     X = [e for e in ev if e[0] == "X"]
     ref0 = [e for e in X if e[2] == 0 and e[3] == 1 and e[7]]
@@ -124,7 +133,8 @@ def replay(path, a):
              f"  log: {len(doc['steps'])} steps{f' (first {a.max_steps} replayed)' if a.max_steps else ''}; "
              f"{nw} writes, {nq} reads ({2 * len(pairs)} of them added checks), {len(pairs)} APPLY, "
              f"{sum(1 for s in S if s[0] == 'SOUND')} pauses > {a.gap} ms as sound; session started at the test "
-             f"origin: {at_origin}{'' if at_origin else ' (origin record ' + json.dumps(org) + ')'}"]
+             f"origin: {at_origin}{' (Test origin pressed first)' if origin_first else ''}"
+             f"{'' if at_origin else ' (origin record ' + json.dumps(org) + ')'}"]
     lines += rep
     lines.append(f"  host writes refused by the RTL: {len(ref0)} (0 expected); go-now GOs in the log {gos_log}, "
                  f"accepted by the RTL {gos_rtl}; APPLY steps with APPLIED_SEQ = GO_SEQ after the bound: "

@@ -2,9 +2,9 @@
 
 *CC0 · prepared 2026-10-14 by Claude Code for the architect, per `GUI_BRIEF_WPMS_Host_Control_2026-10-14` §7. **OUTSIDE WPMS** (Layer 3 tooling, a stand-in for the Layer 4 controller). Before the board: `gui_v1_v3.md`.*
 
-*State: **prepared — the expected values are written; the measured column waits for the board run.** Every expected value below was written before any board number exists (Silicon Brief §5: expected before observed). Evidence class of the measured column: **SILICON**.*
+*State: **measured on 2026-10-15.** The architect ran P2 and P3 on the board. Every scripted number is far better than expected, REJECT[0] stayed 0 throughout, and by ear: no clicks, no zipper noise, PANIC as expected. The GUI session replays clean in RTL-SIM; the replay of the scripted session (155,283 steps) is running and its row is filled when it ends. The expected values below were written on 2026-10-14, before any board number existed (Silicon Brief §5); they are left as written. Evidence class of the measured column: **SILICON**, except the R rows (**RTL-SIM**).*
 
-*状態：**準備完了。期待値は記入済みで、実測欄は実機の実行を待つ。** 下の期待値は、実機の数値が一つもない時点で書いた。実測欄の証拠区分は SILICON。*
+*状態：**2026-10-15 実測。** アーキテクトが実機で P2・P3 を実行した。スクリプトの数値はすべて期待を大きく上回り、REJECT[0] は全期間 0。耳ではクリックもジッパーもなく、PANIC も期待どおり。期待値は 2026-10-14、実機の数値がない時点で書いたまま残す。実測欄の証拠区分は SILICON（R 行は RTL-SIM）。*
 
 ---
 
@@ -96,53 +96,89 @@ python cosim_gui_replay.py board_measure.json board_gui.json
 
 | # | Item | Expected | From | Measured |
 |---|---|---|---|---|
-| M0 | `wpms_ctl.py` first line | `ID 57504D53, CONFIG 0003F081 (NMAX 1008); sweep [0], N [1008]` | Phase 6 image, the ROM's test origin | — |
-| M1 | One ISSP transaction (`<us>` of the bridge), mean and max over 1,000 reads | mean 5 … 30 ms; max < 100 ms | brief §7 (ESTIMATE) | — |
-| M1h | Its histogram (`board_times.csv`; table in the output) | most reads within one 5 ms bin; few above 2 × median | — | — |
-| M2 | Master-gain update rate | 19 … 179 /s, i.e. (1 / *t*) × 250 / (250 + 6 *t* [ms]) for *t* = 30 … 5 ms; the brief's 33 … 200 /s leaves out the status poll | this controller | — |
-| M3 | Block-level GO rate, four blocks | 4 … 36 /s: one GO = 5 *t*, plus one status poll per 250 ms; the brief's ≈ 6 … 100 /s | this controller | — |
-| M3p | APPLIED_SEQ polls per GO | **1.00**: the apply (≤ 42 µs) lands before the first poll | Ch.5 §5.4.3; V3 | — |
-| M3l | GO sent → apply seen | ≈ 2 *t*: 10 … 60 ms median | the above | — |
-| M4 | REJECT[0] before → after M3 | **unchanged**; refused 0, errors 0 | brief §4 | — |
-| R1 | `cosim_gui_replay.py board_measure.json` | **PASS**: host writes refused by the RTL 0; APPLY with APPLIED_SEQ = GO_SEQ: all; samples equal the models; started at the test origin: True | V3 | — |
+| M0 | `wpms_ctl.py` first line | `ID 57504D53, CONFIG 0003F081 (NMAX 1008); sweep [0], N [1008]` | Phase 6 image, the ROM's test origin | ID 57504D53, CONFIG 0003F081, NMAX 1,008; sweep [0], N [1008] (the log's connect record; `board_measure.txt` arrived empty, so every M value here is recomputed from `board_measure.json`) ✓ |
+| M1 | One ISSP transaction (`<us>` of the bridge), mean and max over 1,000 reads | mean 5 … 30 ms; max < 100 ms | brief §7 (ESTIMATE) | **mean 0.409 ms, median 0.369, p99 1.47, max 3.49 ms** (1,000 reads of ID, all = 57504D53): **12 × faster** than the lower bound — deviation D1 |
+| M1h | Its histogram (`board_times.csv`; table in the output) | most reads within one 5 ms bin; few above 2 × median | — | 94.3 % within 0 … 0.5 ms; 99.4 % below 2 ms (table in §4) ✓ |
+| M2 | Master-gain update rate | 19 … 179 /s, i.e. (1 / *t*) × 250 / (250 + 6 *t* [ms]) for *t* = 30 … 5 ms; the brief's 33 … 200 /s leaves out the status poll | this controller | **1,826 /s** (18,263 writes in 10.0 s): above the range, because *t* is (D1). With the measured *t* = 0.41 ms the formula gives 2,415 /s; the rest is one TCP round trip and Python per write, ≈ 0.13 ms |
+| M3 | Block-level GO rate, four blocks | 4 … 36 /s: one GO = 5 *t*, plus one status poll per 250 ms; the brief's ≈ 6 … 100 /s | this controller | **374 /s** (22,445 level GOs in 60.0 s on blocks 0–3; interval median 2.38 ms, p99 6.7, max 18.1 ms): above the range, because *t* is (D1); 5 *t* + 2 round trips ≈ 2.3 ms predicts the median |
+| M3p | APPLIED_SEQ polls per GO | **1.00**: the apply (≤ 42 µs) lands before the first poll | Ch.5 §5.4.3; V3 | **0.992** (22,266 polls for 22,445 GOs: 179 applies were seen first by a status poll, which also reads APPLIED_SEQ) ✓ |
+| M3l | GO sent → apply seen | ≈ 2 *t*: 10 … 60 ms median | the above | median **0.57 ms**, p99 2.5, max 7.9 ms (from the batch's reply to the APPLY): one poll after the batch; the range was written for the estimated *t* (D1) |
+| M4 | REJECT[0] before → after M3 | **unchanged**; refused 0, errors 0 | brief §4 | **0 → 0** (240 status reads over 70.6 s, every one 0); refused 0, ISSP errors 0; CLIP 0 in all 240 reads; GO_SEQ 1 → 22,451 ✓ |
+| R1 | `cosim_gui_replay.py board_measure.json` | **PASS**: host writes refused by the RTL 0; APPLY with APPLIED_SEQ = GO_SEQ: all; samples equal the models; started at the test origin: True | V3 | running (155,283 steps, 22,450 GOs; about two hours of simulation): filled when it ends |
 
 ### By hand and by ear (P3) / 手と耳
 
 | # | Action | Expected | Measured |
 |---|---|---|---|
-| S1 | **Test origin** | Its GO is applied; the panel follows the switch: play [0], Σ N = 1,008 / 1,008, MG_TARGET 0 dB. The tone (≈ 996 Hz) sounds as at power-on | — |
-| S2 | Block 0: **N** 1,008 → 240; tick **Play** on blocks 1, 2, 3 (ticking before shrinking N is refused, with the reason in red) | block 0 re-seeded with the panel's note (C4); then C4, E4, G4, C5; Σ N = 960 / 1,008; REJECT[0] +0. Quieter than the origin: about −26 dBFS peak for the four at −6 dB (ESTIMATE: 4 × 0.5 × √(π / γ) ≈ 205 bin amplitudes, × 2⁻¹² at G = 12), against the origin's −12.4 dBFS | — |
-| S3 | **Level** of one block swept fast, end to end, many times | the level follows with the glide (60 dB/s); **no clicks** | — |
-| S4 | **Centre** and **Spacing** of one block swept | the pitch moves without zipper noise (PITCH: phase-continuous) | — |
-| S5 | **Width γ** swept | the timbre and loudness change smoothly (phases continue) | — |
-| S6 | **PANIC**, then MG_TARGET slider back to 0 dB | silence within MG_RATE's slew: −72 dB after 1.2 s, the floor after 3.2 s at 60 dB/s; then back up at 60 dB/s | — |
-| S7 | SignalTap open or closed during P2 / P3 | no expectation; recorded. If open: M1 with it, and once with it closed, if possible | — |
-| S8 | Status panel after S1–S6 | REJECT[0] "+0 since connect"; errors 0; pending "no GO" at rest | — |
-| R2 | `cosim_gui_replay.py board_gui.json` | **PASS**, as R1 | — |
+| S1 | **Test origin** | Its GO is applied; the panel follows the switch: play [0], Σ N = 1,008 / 1,008, MG_TARGET 0 dB. The tone (≈ 996 Hz) sounds as at power-on | As expected: the sliders went back to their initial values (the architect). In the log: TEST_ORIGIN was the first write, at 11.3 s; its GO (22,453) applied at once; the resync read sweep [0], N0 = 1,008 ✓ |
+| S2 | Block 0: **N** 1,008 → 240; tick **Play** on blocks 1, 2, 3 (ticking before shrinking N is refused, with the reason in red) | block 0 re-seeded with the panel's note (C4); then C4, E4, G4, C5; Σ N = 960 / 1,008; REJECT[0] +0. Quieter than the origin: about −26 dBFS peak for the four at −6 dB (ESTIMATE: 4 × 0.5 × √(π / γ) ≈ 205 bin amplitudes, × 2⁻¹² at G = 12), against the origin's −12.4 dBFS | As expected: ticking blocks 1–3 in turn, "the Dirichlet kernels sounded one after another like a scale" (the architect). In the log: blocks 0–3 seeded, 3 SWEEP_COMMITs; REJECT[0] 0 ✓ |
+| S3 | **Level** of one block swept fast, end to end, many times | the level follows with the glide (60 dB/s); **no clicks** | **No clicks at all** (the architect). In the log: 782 level GOs on block 3 ✓ |
+| S4 | **Centre** and **Spacing** of one block swept | the pitch moves without zipper noise (PITCH: phase-continuous) | **No zipper noise at all**; while the centre was moved fast across the main lobe, "a very tasteful sound" (the architect). In the log: 1,429 PITCH GOs on block 0, up to 80 GOs in one second ✓ |
+| S5 | **Width γ** swept | the timbre and loudness change smoothly (phases continue) | Smooth (the architect, with S3–S4). In the log: 590 envelope GOs on block 0 ✓ |
+| S6 | **PANIC**, then MG_TARGET slider back to 0 dB | silence within MG_RATE's slew: −72 dB after 1.2 s, the floor after 3.2 s at 60 dB/s; then back up at 60 dB/s | "PANIC works perfectly and beautifully" (the architect). MG read back by the status poll after PANIC: −9.8 dB at 0.17 s, −41.5 at 0.69 s, **−72.5 at 1.22 s**, −135.0 at 2.25 s, **the floor −192.7 dB at 3.28 s**, then held; exactly 60 dB/s ✓. The slider back to 0 dB is not in the saved log (it ends 21 s after PANIC) — question Q1 |
+| S7 | SignalTap open or closed during P2 / P3 | no expectation; recorded. If open: M1 with it, and once with it closed, if possible | not recorded — question Q2 |
+| S8 | Status panel after S1–S6 | REJECT[0] "+0 since connect"; errors 0; pending "no GO" at rest | screenshot to follow (the architect). In the log: REJECT[0] 0 in all 655 status reads; refused 0; errors 0 ✓ |
+| R2 | `cosim_gui_replay.py board_gui.json` | **PASS**, as R1 | **PASS**: started at the test origin (Test origin pressed first); 2,808 GOs, all accepted by the RTL (0 host writes refused of 10,494); APPLY with APPLIED_SEQ = GO_SEQ 2,809 / 2,809; GO → play from strobe 2; 36,178 transactions = switch_model's; 9,571 / 9,571 samples equal the models ✓ |
 
-## 4. To be filled after the run / 実行後に記入
+## 4. Results / 結果
 
-- **Transaction-time histogram:** from `board_times.csv`, as a table.
-- **Deviations from §3, if any:** each with its cause, or with "unexplained".
-- **Discrepancies filed:** none expected. Anything that needs the switch to change goes to `discrepancies.md`, not into the tools.
-- **Layer 4 README row:** the measured transaction time and update rates, with the class SILICON.
+Files: `04_Verification_Evidence/host_gui/2026-10-15_board/`:
+
+- `step_logs/`: `board_measure.json.gz`, `wpms_gui_20261015_195411.json.gz` (the two sessions);
+- `times/`: `board_times.csv.gz`, `wpms_times_20261015_195429.csv.gz` (every transaction time);
+- `logs/`: the two replays and `board_stats.txt` (the numbers below, recomputed from the logs).
+
+### 4.1 Transaction-time histogram (SILICON) / トランザクション時間の分布
+
+`<us>` of the bridge: the time of one `wpms_write` or `wpms_read` inside quartus_stp, JTAG only.
+
+| Bin | M1: 1,000 ID reads | P2 all: 132,831 | P3 (GUI) all: 20,250 |
+|---|---|---|---|
+| 0 … 0.5 ms | 943 (94.3 %) | 123,233 (92.8 %) | 13,962 (69.0 %) |
+| 0.5 … 1 ms | 44 (4.4 %) | 6,580 (5.0 %) | 4,759 (23.5 %) |
+| 1 … 2 ms | 7 (0.7 %) | 1,744 (1.3 %) | 1,217 (6.0 %) |
+| 2 … 5 ms | 6 (0.6 %) | 1,274 (1.0 %) | 307 (1.5 %) |
+| 5 … 10 ms | 0 | 0 | 5 (0.02 %) |
+| ≥ 10 ms | 0 | 0 | 0 |
+| mean / median / max | 0.409 / 0.369 / 3.49 ms | 0.433 / 0.380 / 4.15 ms | 0.562 / 0.427 / 7.12 ms |
+
+Writes and reads cost the same: 0.432 and 0.434 ms mean over P2. P3's slightly longer times come while the GUI and Tk run on the same PC.
+
+### 4.2 Deviations / 逸脱
+
+- **D1 — one ISSP transaction is 0.41 ms, not 5 … 30 ms.** The 5 … 30 ms was the brief's ESTIMATE, written before anything ran on this path. The other expected numbers (M2, M3, M3l) were derived from it, so they are low by the same factor. The formulas themselves hold with the measured *t*:
+  - M2: 1 / (*t* + one TCP round trip) ≈ 1 / 0.55 ms ≈ 1,830 /s; measured 1,826 /s.
+  - M3: 5 *t* + 2 round trips ≈ 2.3 ms per GO; measured median interval 2.38 ms.
+  - M3p: one APPLIED_SEQ poll per GO; measured 0.992.
+
+  Cause: each transaction is one `write_source_data` and, mostly, one `read_probe_data` (the switch acknowledges within microseconds). quartus_stp and the USB-Blaster II do each of these in about 0.2 ms, which nothing here had measured before. It is a finding about the JTAG path, not a defect.
+- **D2 — `board_measure.txt` arrived empty** (0 bytes; most likely the redirect). Nothing is lost: every M value is recomputed from `board_measure.json`, which holds every transaction with its time and reply (`logs/board_stats.txt`).
+- **D3 — the GUI session did not connect at the origin.** It connected after P2, with four blocks playing. **Test origin was its first write**, as the ruling allows. `cosim_gui_replay.py` RH002 now accepts exactly that, and still fails any other start.
+
+### 4.3 What this means for the knobs / つまみにとっての意味
+
+- **Master gain:** one transaction per update, about 1,800 updates/s.
+- **Block knob (LEVEL, PITCH, envelope):** about 400 GOs/s with the apply confirmed before the next GO.
+- **Fast hand:** the GUI session's fastest second carried 80 GOs. The sender kept up with the hand, and the coalescing law never had to drop more than the intermediate values of a drag.
+- **Limits:** the JTAG path is not the limit for knobs. A MIDI input (the next step in the brief §8) at a few hundred events per second fits.
+
+### 4.4 Discrepancies filed / 記録した食い違い
+
+None. Nothing needed the switch to change.
+
+### 4.5 Questions for the architect / 質問
+
+- **Q1:** After PANIC, was the MG_TARGET slider moved back up? The saved log ends 21 s after PANIC with MG at the floor, so a return to 0 dB is not in it. If it was moved after **Save log**, that is fine; if it did not respond, please tell me.
+- **Q2:** Was SignalTap open during P2 / P3 (row S7)?
+- **Q3:** The screenshot (S8) and the recording: when convenient. They will be added to the evidence folder as they are.
 
 ---
 
-**和文要約。** 実機の前に期待値を書いた。
+**和文要約。** 2026-10-15 に実機で測定した。
 
-手順：
-1. ISSP エディタを閉じる。
-2. `quartus_stp -t wpms_bridge.tcl` で橋を起動する。
-3. `python wpms_ctl.py measure --n 1000 --seconds 60 --csv board_times.csv --log board_measure.json` で数値を測る（約 1.5 分）。
-4. `python wpms_gui.py --connect` で、Test origin を押してから S1〜S6 を手と耳で確かめ、ログと時間を保存する。
+- **1 トランザクション：** 平均 0.41 ms、中央値 0.37 ms、最大 4.2 ms。見積もり 5〜30 ms の十数分の一で、92.8 % が 0.5 ms 未満だった。
+- **更新速度：** マスター利得は 1,826 回/秒。4 ブロックのレベル GO は 374 回/秒で、APPLIED_SEQ 読出しは GO 1 回あたり 0.992 回。
+- **REJECT[0]：** 70 秒間、全期間 0。拒否・ISSP 誤り・CLIP もすべて 0。
+- **耳での確認：** クリックもジッパーもなかった。PANIC は −72 dB に 1.22 秒、床（−192.7 dB）に 3.28 秒で到達し、60 dB/s の理論どおり。
 
-期待値：
-- 1 トランザクション：平均 5〜30 ms。
-- マスター利得の更新：19〜179 回/秒。指示書の 33〜200 回/秒には、250 ms ごとの状態読出し 6 回が含まれていない。
-- 4 ブロックのレベル GO：4〜36 回/秒。
-- GO 1 回あたりの APPLIED_SEQ 読出し：1.00 回。
-- REJECT[0] は不変。
-- 二つのセッション記録は RTL 再生で PASS する。
-
-ボードを使った記録の再生は、テスト原点から始めたものに限る（2026-10-14 裁定）。
+期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録の再生は実行中。 食い違いの登録はない。質問は三つで、PANIC 後のスライダー、SignalTap、スクリーンショット・録音について。

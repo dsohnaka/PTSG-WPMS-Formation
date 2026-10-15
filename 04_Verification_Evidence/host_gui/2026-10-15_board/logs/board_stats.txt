@@ -1,0 +1,91 @@
+=== board_measure ===
+M1 ID reads: n 1000, mean 0.409 ms, median 0.369, p90 0.438, p99 1.473, max 3.490 ms, min 0.339
+     0 … 0.5 ms     943  94.30 %
+     0.5 … 1 ms      44   4.40 %
+       1 … 2 ms       7   0.70 %
+       2 … 5 ms       6   0.60 %
+      5 … 10 ms       0   0.00 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+M2 master writes 18263: t 0.553 .. 10.553 s -> 1826.2 /s
+   their write times: n 18263, mean 0.414 ms, median 0.380, p90 0.441, p99 1.167, max 3.574 ms, min 0.314
+     0 … 0.5 ms   17309  94.78 %
+     0.5 … 1 ms     745   4.08 %
+       1 … 2 ms     115   0.63 %
+       2 … 5 ms      94   0.51 %
+      5 … 10 ms       0   0.00 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+SWEEP writes: [(19358, 10.587952, 'SWEEP [0, 1, 2, 3]')]
+M3 level GOs after setup 22445: 10.594 .. 70.595 s -> 374.1 /s; blocks [0, 1, 2, 3]
+   APPLIED_SEQ polls 22266 -> per GO 0.992; status polls in window 236
+   GO recorded -> APPLY recorded (one round trip + poll): n 22445, mean 0.646 ms, median 0.572, p90 0.739, p99 2.503, max 7.942 ms, min 0.453
+     0 … 0.5 ms      65   0.29 %
+     0.5 … 1 ms   21463  95.62 %
+       1 … 2 ms     500   2.23 %
+       2 … 5 ms     410   1.83 %
+      5 … 10 ms       7   0.03 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+   interval between level GOs: n 22444, mean 2.673 ms, median 2.384, p90 3.382, p99 6.699, max 18.078 ms, min 2.071
+     0 … 0.5 ms       0   0.00 %
+     0.5 … 1 ms       0   0.00 %
+       1 … 2 ms       0   0.00 %
+       2 … 5 ms   21743  96.88 %
+      5 … 10 ms     698   3.11 %
+     10 … 20 ms       3   0.01 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+M4 REJECT0: 240 reads, first 0 at 0.01 s, last 0 at 70.60 s, max 0
+refused 0 errors 0
+CLIP nonzero 0
+GO_SEQ first/last 1 22451
+ALL transactions (board_times.csv): n 132831, mean 0.433 ms, median 0.380, p90 0.457, p99 1.971, max 4.151 ms, min 0.278
+     0 … 0.5 ms  123233  92.77 %
+     0.5 … 1 ms    6580   4.95 %
+       1 … 2 ms    1744   1.31 %
+       2 … 5 ms    1274   0.96 %
+      5 … 10 ms       0   0.00 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+   writes: n 85664, mean 0.432 ms, median 0.380, p90 0.456, p99 1.969, max 4.151 ms, min 0.278
+     0 … 0.5 ms   79512  92.82 %
+     0.5 … 1 ms    4241   4.95 %
+       1 … 2 ms    1094   1.28 %
+       2 … 5 ms     817   0.95 %
+      5 … 10 ms       0   0.00 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+   reads: n 47169, mean 0.434 ms, median 0.380, p90 0.459, p99 1.980, max 3.805 ms, min 0.000
+     0 … 0.5 ms   43723  92.69 %
+     0.5 … 1 ms    2339   4.96 %
+       1 … 2 ms     650   1.38 %
+       2 … 5 ms     457   0.97 %
+      5 … 10 ms       0   0.00 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
+duration 70.592598
+
+=== GUI session ===
+GOs 2808 Counter({'block 0 pitch': 1429, 'block 3 level': 782, 'block 0 env': 590, 'SWEEP_COMMIT go-now': 3, 'block 0 seed': 1, 'block 1 seed': 1, 'block 2 seed': 1, 'block 3 seed': 1})
+duration 167.218999 s; GOs span 36.953 136.187
+busiest seconds [(114, 80), (126, 80), (86, 79), (87, 79), (81, 77)]
+REJECT0 max 0 reads 655
+refused 0 errors 0
+CLIP nonzero 0
+PANIC at 146.0 MG after: [(0.17199999999999704, -9.8), (0.6870000000000118, -41.5), (1.2189989999999966, -72.5), (1.75, -105.0), (2.25, -135.0), (2.75, -164.5), (3.281000000000006, -192.7), (3.781000000000006, -192.7), (4.281000000000006, -192.7), (4.812000000000012, -192.7), (5.312000000000012, -192.7), (5.812000000000012, -192.7), (6.343998999999997, -192.7), (6.875, -192.7), (7.390999999999991, -192.7)] ... last (21.218998999999997, -192.7)
+ALL transactions (GUI times csv): n 20250, mean 0.562 ms, median 0.427, p90 0.874, p99 2.450, max 7.123 ms, min 0.282
+     0 … 0.5 ms   13962  68.95 %
+     0.5 … 1 ms    4759  23.50 %
+       1 … 2 ms    1217   6.01 %
+       2 … 5 ms     307   1.52 %
+      5 … 10 ms       5   0.02 %
+     10 … 20 ms       0   0.00 %
+     20 … 30 ms       0   0.00 %
+        ≥ 30 ms       0   0.00 %
