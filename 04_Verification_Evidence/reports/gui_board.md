@@ -2,7 +2,7 @@
 
 *CC0 · prepared 2026-10-14 by Claude Code for the architect, per `GUI_BRIEF_WPMS_Host_Control_2026-10-14` §7. **OUTSIDE WPMS** (Layer 3 tooling, a stand-in for the Layer 4 controller). Before the board: `gui_v1_v3.md`.*
 
-*State: **measured on 2026-10-15.** The architect ran P2 and P3 on the board. Every scripted number is far better than expected, REJECT[0] stayed 0 throughout, and by ear: no clicks, no zipper noise, PANIC as expected. The GUI session replays clean in RTL-SIM; the replay of the scripted session (155,283 steps) is running and its row is filled when it ends. The expected values below were written on 2026-10-14, before any board number existed (Silicon Brief §5); they are left as written. Evidence class of the measured column: **SILICON**, except the R rows (**RTL-SIM**).*
+*State: **measured on 2026-10-15.** The architect ran P2 and P3 on the board. Every scripted number is far better than expected, REJECT[0] stayed 0 throughout, and by ear: no clicks, no zipper noise, PANIC as expected. Both sessions replay clean in RTL-SIM. The expected values below were written on 2026-10-14, before any board number existed (Silicon Brief §5); they are left as written. Evidence class of the measured column: **SILICON**, except the R rows (**RTL-SIM**).*
 
 *状態：**2026-10-15 実測。** アーキテクトが実機で P2・P3 を実行した。スクリプトの数値はすべて期待を大きく上回り、REJECT[0] は全期間 0。耳ではクリックもジッパーもなく、PANIC も期待どおり。期待値は 2026-10-14、実機の数値がない時点で書いたまま残す。実測欄の証拠区分は SILICON（R 行は RTL-SIM）。*
 
@@ -104,7 +104,7 @@ python cosim_gui_replay.py board_measure.json board_gui.json
 | M3p | APPLIED_SEQ polls per GO | **1.00**: the apply (≤ 42 µs) lands before the first poll | Ch.5 §5.4.3; V3 | **0.992** (22,266 polls for 22,445 GOs: 179 applies were seen first by a status poll, which also reads APPLIED_SEQ) ✓ |
 | M3l | GO sent → apply seen | ≈ 2 *t*: 10 … 60 ms median | the above | median **0.57 ms**, p99 2.5, max 7.9 ms (from the batch's reply to the APPLY): one poll after the batch; the range was written for the estimated *t* (D1) |
 | M4 | REJECT[0] before → after M3 | **unchanged**; refused 0, errors 0 | brief §4 | **0 → 0** (240 status reads over 70.6 s, every one 0); refused 0, ISSP errors 0; CLIP 0 in all 240 reads; GO_SEQ 1 → 22,451 ✓ |
-| R1 | `cosim_gui_replay.py board_measure.json` | **PASS**: host writes refused by the RTL 0; APPLY with APPLIED_SEQ = GO_SEQ: all; samples equal the models; started at the test origin: True | V3 | running (155,283 steps, 22,450 GOs; about two hours of simulation): filled when it ends |
+| R1 | `cosim_gui_replay.py board_measure.json` | **PASS**: host writes refused by the RTL 0; APPLY with APPLIED_SEQ = GO_SEQ: all; samples equal the models; started at the test origin: True | V3 | **PASS** (3 h 15 min of simulation): started at the test origin; 22,450 GOs, all accepted by the RTL (0 host writes refused of 85,664); APPLY with APPLIED_SEQ = GO_SEQ 22,450 / 22,450; GO → play from strobe 2 (1.59 … 1.93 periods); 263,418 transactions = switch_model's; **67,816 / 67,816 samples** and 269,834 bundles equal the models; overrun 0 ✓ |
 
 ### By hand and by ear (P3) / 手と耳
 
@@ -181,4 +181,4 @@ None. Nothing needed the switch to change.
 - **REJECT[0]：** 70 秒間、全期間 0。拒否・ISSP 誤り・CLIP もすべて 0。
 - **耳での確認：** クリックもジッパーもなかった。PANIC は −72 dB に 1.22 秒、床（−192.7 dB）に 3.28 秒で到達し、60 dB/s の理論どおり。
 
-期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録の再生は実行中。 食い違いの登録はない。質問は三つで、PANIC 後のスライダー、SignalTap、スクリーンショット・録音について。
+期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録も PASS（GO 22,450 回、拒否 0、67,816 サンプル全一致）。 食い違いの登録はない。質問は三つで、PANIC 後のスライダー、SignalTap、スクリーンショット・録音について。
