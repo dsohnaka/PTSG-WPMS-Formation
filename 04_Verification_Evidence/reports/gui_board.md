@@ -180,11 +180,17 @@ None. Nothing needed the switch to change.
   - Its level does not change with the music: 750 Hz stays at −57 … −58 dBFS inside the bursts and between them.
   - Its fundamental reads 750.015 Hz on the recorder's clock (+20 ppm), so it is not made by the recorder's own clock.
   - Apart from these lines the floor is very low: −148 dBFS per bin.
-- **Where it comes from — not the WPMS samples, by the evidence so far.**
+- **Where it comes from — the recording chain's HDMI audio splitter (settled 2026-10-18, §4.6 Q4).** The reasoning before the test:
   - The digital output of this design equals the models sample for sample: RTL-SIM, the 77,387 samples of R1 and R2, and the Phase 6 SignalTap captures C1–C5, which agreed with RTL-SIM.
   - The models put energy only on the blocks' bins. The sine core's error budget is ≈ 1.3 × 10⁻⁷ (Ch.2 §2.8.2; SD-16), and rounding to 24 bits adds nothing near −57 dBFS.
   - A 250 Hz comb, the same in both channels and indifferent to the music, therefore enters after the samples: in the ADV7513 / HDMI link, the monitor's DAC, or the recording path. A 1 kHz line is also present; for 720p60 the HDMI audio clock regeneration runs at 74.25 MHz / 74,250 = 1 kHz, which would fit a sink-side origin. **This is an inference, not yet a measurement.**
 - **The test that settles it** (question Q4): record the same chain once with **SW[3] = 1**. Soft mute drives MG to the floor, and a sweep played there while muted outputs exact zeros (Ch.4 §4.4, C4-D6; `l1_model.py`). If the comb is still there, it is outside WPMS. A second short recording with HDMI audio unplugged gives the recorder's own floor.
+- **The test, made by the architect (2026-10-18).** The recording chain is HDMI → an inexpensive HDMI audio splitter → Zoom H4n Pro analog input → USB → Cubase.
+  - The noise stays at the same level and with the same waveform with soft mute (SW[3] = 1), through a reset, and with HDMI unplugged. It is therefore not in WPMS's output, nor in the HDMI link.
+  - On an oscilloscope the splitter's output carries the noise in a band far above the sampling rate, around 1 MHz.
+  - Its level halves when the splitter's USB-C power comes from a separate AC adapter instead of the PC's USB.
+  - Conclusion: the analog limits of the splitter, fed by noisy USB power. The comb in the recording is that interference after the H4n's sampling.
+  - **Outside WPMS; nothing in the design or the tools changes.** For future recordings a cleaner analog path is needed (a better splitter or DAC, a clean supply); the measurements of §3–§4.1 do not depend on it.
 
 ### 4.6 Questions for the architect / 質問
 
@@ -194,9 +200,9 @@ Q1–Q3 are answered (2026-10-18):
 - **Q2 (SignalTap):** it was closed throughout.
 - **Q3 (screenshot and recording):** both received; filed in `media/`.
 
-One question is new:
+- **Q4 (the noise in the recording, §4.5) — answered the same day:** it comes from the HDMI audio splitter of the recording chain, not from WPMS. With soft mute, after a reset and with HDMI unplugged the noise is unchanged; it lies around 1 MHz on the oscilloscope and halves on a separate AC adapter. Nothing to change in the design or the tools.
 
-- **Q4 — the noise in the recording (§4.5).** How was it recorded: the monitor's audio output into the PC, or another path? And could you make the two short recordings of §4.5, about 10 s each? One with SW[3] = 1 (soft mute, exact digital zeros), one with HDMI audio unplugged. If the 250 Hz comb remains with soft mute, it is outside WPMS, and nothing in the design or the tools needs to change. If it disappears, I will look for it inside, starting with a SignalTap capture of the I2S data during a quiet stretch.
+No question is open.
 
 ---
 
@@ -207,4 +213,4 @@ One question is new:
 - **REJECT[0]：** 70 秒間、全期間 0。拒否・ISSP 誤り・CLIP もすべて 0。
 - **耳での確認：** クリックもジッパーもなかった。PANIC は −72 dB に 1.22 秒、床（−192.7 dB）に 3.28 秒で到達し、60 dB/s の理論どおり。
 
-期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録も PASS（GO 22,450 回、拒否 0、67,816 サンプル全一致）。 食い違いの登録はない。2026-10-18：SignalTap は閉じていた。PANIC 後のスライダーは戻していない。スクリーンショットと録音を受け取った。録音では各ブロックのメインローブが 16.00 秒（= 1/(1/16 Hz)）ごとに巡ることを確認した。気になるノイズは 250 Hz 間隔の線スペクトル（750 Hz が −57 dBFS）で、左右同一・音楽と無関係。WPMS のデジタル出力はモデルとサンプル単位で一致しているので、HDMI 以降または録音経路で入ったと推定している（未測定）。SW[3] = 1（ソフトミュートで出力は厳密に 0）で同じ経路を録音すれば切り分けられる（Q4）。
+期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録も PASS（GO 22,450 回、拒否 0、67,816 サンプル全一致）。 食い違いの登録はない。2026-10-18：SignalTap は閉じていた。PANIC 後のスライダーは戻していない。スクリーンショットと録音を受け取った。録音では各ブロックのメインローブが 16.00 秒（= 1/(1/16 Hz)）ごとに巡ることを確認した。気になるノイズは 250 Hz 間隔の線スペクトル（750 Hz が −57 dBFS）で、左右同一・音楽と無関係。WPMS のデジタル出力はモデルとサンプル単位で一致しているので、HDMI 以降または録音経路で入ったと推定している（未測定）。アーキテクトの切り分け（Q4）で原因が判明した。録音経路の安価な HDMI 音声分離器のアナログ性能の限界である。ソフトミュートでも、リセット中でも、HDMI を外しても、ノイズは同じレベル・同じ波形で残る。オシロでは 1 MHz 付近にあり、分離器の USB-C 電源を独立 AC アダプタにすると約半分になる。WPMS の外であり、設計にもツールにも変更はない。未解決の質問はない。
