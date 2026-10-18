@@ -115,9 +115,9 @@ python cosim_gui_replay.py board_measure.json board_gui.json
 | S3 | **Level** of one block swept fast, end to end, many times | the level follows with the glide (60 dB/s); **no clicks** | **No clicks at all** (the architect). In the log: 782 level GOs on block 3 ✓ |
 | S4 | **Centre** and **Spacing** of one block swept | the pitch moves without zipper noise (PITCH: phase-continuous) | **No zipper noise at all**; while the centre was moved fast across the main lobe, "a very tasteful sound" (the architect). In the log: 1,429 PITCH GOs on block 0, up to 80 GOs in one second ✓ |
 | S5 | **Width γ** swept | the timbre and loudness change smoothly (phases continue) | Smooth (the architect, with S3–S4). In the log: 590 envelope GOs on block 0 ✓ |
-| S6 | **PANIC**, then MG_TARGET slider back to 0 dB | silence within MG_RATE's slew: −72 dB after 1.2 s, the floor after 3.2 s at 60 dB/s; then back up at 60 dB/s | "PANIC works perfectly and beautifully" (the architect). MG read back by the status poll after PANIC: −9.8 dB at 0.17 s, −41.5 at 0.69 s, **−72.5 at 1.22 s**, −135.0 at 2.25 s, **the floor −192.7 dB at 3.28 s**, then held; exactly 60 dB/s ✓. The slider back to 0 dB is not in the saved log (it ends 21 s after PANIC) — question Q1 |
-| S7 | SignalTap open or closed during P2 / P3 | no expectation; recorded. If open: M1 with it, and once with it closed, if possible | not recorded — question Q2 |
-| S8 | Status panel after S1–S6 | REJECT[0] "+0 since connect"; errors 0; pending "no GO" at rest | screenshot to follow (the architect). In the log: REJECT[0] 0 in all 655 status reads; refused 0; errors 0 ✓ |
+| S6 | **PANIC**, then MG_TARGET slider back to 0 dB | silence within MG_RATE's slew: −72 dB after 1.2 s, the floor after 3.2 s at 60 dB/s; then back up at 60 dB/s | "PANIC works perfectly and beautifully" (the architect). MG read back by the status poll after PANIC: −9.8 dB at 0.17 s, −41.5 at 0.69 s, **−72.5 at 1.22 s**, −135.0 at 2.25 s, **the floor −192.7 dB at 3.28 s**, then held; exactly 60 dB/s ✓. The slider was not moved back after PANIC (the architect, 2026-10-18): the log is complete |
+| S7 | SignalTap open or closed during P2 / P3 | no expectation; recorded. If open: M1 with it, and once with it closed, if possible | **closed** (the architect, 2026-10-18): every time in §4.1 is without SignalTap |
+| S8 | Status panel after S1–S6 | REJECT[0] "+0 since connect"; errors 0; pending "no GO" at rest | In the log: REJECT[0] 0 in all 655 status reads; refused 0; errors 0 ✓. Screenshot of a later session, 2026-10-18 (`media/wpms_gui_2026-10-18_screenshot.png`): all eight blocks playing, Σ N = 1,008 / 1,008, G override 8; REJECT[0] 0 "(+0 since connect)", errors 0, pending "no GO"; ISSP 0.49 ms last, 0.80 / 4.18 ms mean / max over 7,300 ✓ |
 | R2 | `cosim_gui_replay.py board_gui.json` | **PASS**, as R1 | **PASS**: started at the test origin (Test origin pressed first); 2,808 GOs, all accepted by the RTL (0 host writes refused of 10,494); APPLY with APPLIED_SEQ = GO_SEQ 2,809 / 2,809; GO → play from strobe 2; 36,178 transactions = switch_model's; 9,571 / 9,571 samples equal the models ✓ |
 
 ## 4. Results / 結果
@@ -166,11 +166,37 @@ Writes and reads cost the same: 0.432 and 0.434 ms mean over P2. P3's slightly l
 
 None. Nothing needed the switch to change.
 
-### 4.5 Questions for the architect / 質問
+### 4.5 The recording of 2026-10-18 / 2026-10-18 の録音
 
-- **Q1:** After PANIC, was the MG_TARGET slider moved back up? The saved log ends 21 s after PANIC with MG at the floor, so a return to 0 dB is not in it. If it was moved after **Save log**, that is fine; if it did not respond, please tell me.
-- **Q2:** Was SignalTap open during P2 / P3 (row S7)?
-- **Q3:** The screenshot (S8) and the recording: when convenient. They will be added to the evidence folder as they are.
+`media/wpms_test001_2026-10-18.flac`: 26.2 s, 48 kHz, 24 bit, stereo. It is lossless from the WAV the architect sent (the decoded PCM has the same MD5). It was recorded in a later session than the logs, the one in the screenshot, with the eight blocks playing. The analysis is `logs/recording_analysis.py` → `.txt`, and its class is SILICON (an analog recording).
+
+- **Level.** Peak −21.3 dBFS, no sample at full scale.
+- **The notes.** The spectrum's strongest lines are 131.4, 261.7, 329.6, 391.9, 523.2, 659.3, 784.1 and 1,046.5 Hz: the eight panel defaults C3 … C6.
+- **The bursts.** Each block is heard as one burst, its Dirichlet kernel's main lobe in time (about 180 ms at −6 dB, for N = 48 at 1/16 Hz).
+  - Every burst comes back after **16.00 s** = 1 / (1/16 Hz): C5 at 2.68 → 18.68 s, E5 at 5.90 → 21.90 s, G5 at 9.22 → 25.24 s.
+  - This is the architect's "Dirichlet kernels like a scale", measured.
+- **The noise the architect hears.** Between the bursts (85 % of the time below −50 dBFS) there is a comb of lines at multiples of 250 Hz: 500, 750, 1,000, … 7,000 Hz. 750 Hz is the strongest, at **−57 dBFS**; the others lie at −72 … −100 dBFS.
+  - The comb is identical in L and R (correlation 0.995 in the 750 Hz band).
+  - Its level does not change with the music: 750 Hz stays at −57 … −58 dBFS inside the bursts and between them.
+  - Its fundamental reads 750.015 Hz on the recorder's clock (+20 ppm), so it is not made by the recorder's own clock.
+  - Apart from these lines the floor is very low: −148 dBFS per bin.
+- **Where it comes from — not the WPMS samples, by the evidence so far.**
+  - The digital output of this design equals the models sample for sample: RTL-SIM, the 77,387 samples of R1 and R2, and the Phase 6 SignalTap captures C1–C5, which agreed with RTL-SIM.
+  - The models put energy only on the blocks' bins. The sine core's error budget is ≈ 1.3 × 10⁻⁷ (Ch.2 §2.8.2; SD-16), and rounding to 24 bits adds nothing near −57 dBFS.
+  - A 250 Hz comb, the same in both channels and indifferent to the music, therefore enters after the samples: in the ADV7513 / HDMI link, the monitor's DAC, or the recording path. A 1 kHz line is also present; for 720p60 the HDMI audio clock regeneration runs at 74.25 MHz / 74,250 = 1 kHz, which would fit a sink-side origin. **This is an inference, not yet a measurement.**
+- **The test that settles it** (question Q4): record the same chain once with **SW[3] = 1**. Soft mute drives MG to the floor, and a sweep played there while muted outputs exact zeros (Ch.4 §4.4, C4-D6; `l1_model.py`). If the comb is still there, it is outside WPMS. A second short recording with HDMI audio unplugged gives the recorder's own floor.
+
+### 4.6 Questions for the architect / 質問
+
+Q1–Q3 are answered (2026-10-18):
+
+- **Q1 (PANIC):** the slider was not moved back after PANIC.
+- **Q2 (SignalTap):** it was closed throughout.
+- **Q3 (screenshot and recording):** both received; filed in `media/`.
+
+One question is new:
+
+- **Q4 — the noise in the recording (§4.5).** How was it recorded: the monitor's audio output into the PC, or another path? And could you make the two short recordings of §4.5, about 10 s each? One with SW[3] = 1 (soft mute, exact digital zeros), one with HDMI audio unplugged. If the 250 Hz comb remains with soft mute, it is outside WPMS, and nothing in the design or the tools needs to change. If it disappears, I will look for it inside, starting with a SignalTap capture of the I2S data during a quiet stretch.
 
 ---
 
@@ -181,4 +207,4 @@ None. Nothing needed the switch to change.
 - **REJECT[0]：** 70 秒間、全期間 0。拒否・ISSP 誤り・CLIP もすべて 0。
 - **耳での確認：** クリックもジッパーもなかった。PANIC は −72 dB に 1.22 秒、床（−192.7 dB）に 3.28 秒で到達し、60 dB/s の理論どおり。
 
-期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録も PASS（GO 22,450 回、拒否 0、67,816 サンプル全一致）。 食い違いの登録はない。質問は三つで、PANIC 後のスライダー、SignalTap、スクリーンショット・録音について。
+期待値の数字が外れたのは、指示書の見積もり *t* が大きすぎたためで、式は実測の *t* でそのまま成り立つ（D1）。`board_measure.txt` は空で届いたが、数値はすべて JSON から再計算した（D2）。GUI のセッションは、Test origin を最初に押したので原点から始まった扱いになる。再生ツールをそのように直した（D3）。GUI のセッション記録は RTL 再生で PASS（GO 2,808 回、拒否 0、全サンプル一致）。measure の記録も PASS（GO 22,450 回、拒否 0、67,816 サンプル全一致）。 食い違いの登録はない。2026-10-18：SignalTap は閉じていた。PANIC 後のスライダーは戻していない。スクリーンショットと録音を受け取った。録音では各ブロックのメインローブが 16.00 秒（= 1/(1/16 Hz)）ごとに巡ることを確認した。気になるノイズは 250 Hz 間隔の線スペクトル（750 Hz が −57 dBFS）で、左右同一・音楽と無関係。WPMS のデジタル出力はモデルとサンプル単位で一致しているので、HDMI 以降または録音経路で入ったと推定している（未測定）。SW[3] = 1（ソフトミュートで出力は厳密に 0）で同じ経路を録音すれば切り分けられる（Q4）。
