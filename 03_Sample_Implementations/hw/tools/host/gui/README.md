@@ -21,6 +21,7 @@
 | `wpms_gui.py` | The Tkinter panel. Every action goes through `wpms_ctl.py`. |
 | `test_gui_bridge.py` | V1 (the bridge under tclsh against the stand-ins, with 9 broken copies) and V2 (the controller headless, with a freeze model in the test's own copy of the stand-in). |
 | `cosim_gui_replay.py` | V3: a recorded step log replayed through the switch RTL with `cosim_switch.py`'s build, simulate and check functions. |
+| `start_wpms.bat` | The architect's one-click launcher for Windows (Launcher v2): finds Python 3.8+ with Tkinter and `quartus_stp.exe`, starts the bridge (or reuses a running one after a PING), then opens the GUI connected. |
 
 ## How to run / 走らせ方
 
@@ -30,6 +31,17 @@
 quartus_stp -t wpms_bridge.tcl            # terminal 1 (the bridge; prints "listening on 127.0.0.1:50707")
 python wpms_gui.py --connect              # terminal 2 (Python 3 with Tkinter)
 ```
+
+**One click on Windows: `start_wpms.bat`.** Double-click it in this folder, or keep a copy on the Desktop or beside the repository: it finds the folder itself. It can also take the repository root as its first argument, or read `WPMS_GUI_DIR`.
+
+1. It finds a Python 3.8+ with Tkinter (`py -3`, `python`, `python3`).
+2. It finds `quartus_stp.exe`: `QUARTUS_STP` (full path), the PATH, `QUARTUS_ROOTDIR`, or the newest `C:\intelFPGA*\<version>\quartus\bin64`.
+3. If a bridge already answers on 127.0.0.1:50707 (PING), it reuses it; otherwise it starts one, without a window, and waits until it answers (60 s).
+4. It opens `wpms_gui.py --connect`. When the GUI closes, the bridge stays open for the next launch; **Shut bridge down** in the GUI ends it.
+
+Logs go to `wpms_logs\` beside the BAT (`launcher.log`, `bridge.log`, `gui.log`), or to `%LOCALAPPDATA%\WPMS\logs` if that folder cannot be written. `wpms_logs/` is ignored by git. Close the In-System Sources and Probes Editor first, as always.
+
+ワンクリック起動（Windows）：`start_wpms.bat` をダブルクリックすると、Python と quartus_stp を探し、橋を起動（動いている橋があれば PING して再利用）してから、GUI を接続した状態で開く。GUI を閉じても橋は残り、GUI の Shut bridge down で終わる。ログは BAT の隣の `wpms_logs\` に出る。
 
 **Without the board (the stand-ins):**
 
