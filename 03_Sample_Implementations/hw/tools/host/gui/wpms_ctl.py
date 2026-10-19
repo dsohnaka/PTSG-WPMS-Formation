@@ -33,6 +33,8 @@
 # 001 2026-10-14       Claude Code   Add : First version (GUI_BRIEF_WPMS_Host_Control_2026-10-14 §2-§4).
 # 002 2026-10-14       Claude Code   Chg : measure sets up four playing blocks itself (brief §7: "four blocks"),
 #                                          prints the histogram and the APPLIED_SEQ polls per GO.
+# 003 2026-10-19       Claude Code   Chg : slots_of(b), the one seam the Lab needs (ruling 2026-10-19); the GUI's
+#                                          behaviour unchanged.
 # ============================================================================
 import argparse, json, math, os, random, socket, sys, threading, time
 
@@ -456,10 +458,15 @@ class Controller:
             self.oneshots.append(("origin",))
 
     # ---- the difference of one item ------------------------------------------------------------------
+    def slots_of(self, b):
+        """The 16 slots block b is sent with: the GUI's block_slots(). A subclass may compute them
+        otherwise (hw/tools/host/lab/: the seam of LAB_BRIEF_WPMS_Sound_Design_2026-10-19 §2)."""
+        return block_slots(self.params[b])
+
     def _block_mask(self, b):
         if not self.touched[b] and self.sent_slots[b] is None:
             return 0
-        v = block_slots(self.params[b])
+        v = self.slots_of(b)
         rt = int(self.params[b]["route"]) & 3
         if self.sent_slots[b] is None or self.force_seed[b] or v[0] != self.sent_slots[b][0]:
             return FULL
@@ -604,7 +611,7 @@ class Controller:
                          ("W", A_SWEEP_COMMIT, MU.GONOW, "SWEEP_COMMIT go-now")]
                 note = f"sweep {play}"
             else:
-                v = block_slots(self.params[it])
+                v = self.slots_of(it)
                 rt = int(self.params[it]["route"]) & 3
                 kind = ("seed" if m == FULL else
                         "+".join(n for n, g in GROUPS if m & g) + ("+route" if m & MU.RT_BIT else ""))
