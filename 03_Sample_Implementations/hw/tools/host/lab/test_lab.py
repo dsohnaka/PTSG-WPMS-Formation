@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 # ============================================================================
 # test_lab.py — OUTSIDE WPMS: checks of WPMS Lab (LAB_BRIEF_WPMS_Sound_Design_2026-10-19 §6).
+#   V-L2  (--v2) the Lab controller headless against the bridge, the stand-ins and the
+#         GUI test's freeze model: a preset load from the origin, a phase knob
+#         pending until Seed, 500 random Lab moves; 0 refusals; the step log
+#         (--logs) is what V-L3 replays with ../gui/cosim_gui_replay.py.
 #   V-L1  lab_shapes.py against the customer's oracle (wpms_layer1_oracle.py) and
 #         the GUI's gaussian(): the Schroeder identity, phases, lobe offset,
 #         crest factors, the window at the centre bit for bit, the window
 #         against l1_amplitude, Lab defaults = the GUI's slots, round trips,
 #         the band indicator, the headroom estimate. Evidence class ORACLE.
 #
-#   python3 test_lab.py [--report FILE]
+#   python3 test_lab.py [--v2] [--logs DIR] [--report FILE]
 #   exit 0: every case passes · 1: a case fails
 # License: MIT (Layer 3 tooling; not part of the WPMS design).
 # ----------------------------------------------------------------------------
 # REVISION HISTORY(RH)
-# 001 2026-10-19       Claude Code   Add : V-L1 (LAB_BRIEF_WPMS_Sound_Design_2026-10-19 §6).
+# 001 2026-10-19       Claude Code   Add : V-L1 and V-L2 (LAB_BRIEF_WPMS_Sound_Design_2026-10-19 §6).
 # ============================================================================
-import argparse, math, os, random, sys
+import argparse, json, math, os, random, sys
 from fractions import Fraction
 
 sys.dont_write_bytecode = True
@@ -26,6 +30,7 @@ import lab_shapes as LS                  # noqa: E402
 import wpms_music as MU                  # noqa: E402  (the GUI's gaussian(), unchanged)
 import l1_model                          # noqa: E402  (loads the customer's oracle)
 O = l1_model.O
+C_FULL = LS.C.FULL
 
 M32 = 1 << 32
 
@@ -182,9 +187,128 @@ def v_l1():
     return R
 
 
+# ---- V-L2: the Lab controller headless, against the bridge + stand-ins + the GUI test's freeze model -----
+def v_l2(log_dir=None):
+    import shutil, time
+    sys.path.insert(0, os.path.normpath(os.path.join(HERE, "..", "gui")))
+    import test_gui_bridge as TG          # the GUI's test harness (read and import only)
+    import wpms_lab_ctl as LC
+    R = []
+    tclsh = shutil.which("tclsh8.6") or shutil.which("tclsh")
+    if not tclsh:
+        return [("L2", False, "no tclsh")]
+    r = TG.Run(tclsh, TG.HOST, extra=TG.FREEZE)
+    ctl = None
+    try:
+        ctl = LC.LabController(port=r.port).connect()
+        presets = {n: json.load(open(os.path.join(HERE, "presets", n + ".json")))
+                   for n in ("dirichlet_scale", "schroeder_pad", "chirp_bloom")}
+
+        def gos(item=None, mask=None):
+            out = []
+            for e in ctl.log:
+                s = e["step"]
+                if s[0] == "W" and (0x288 <= s[1] <= 0x28F or s[1] == 0x291) and s[2] >> 31:
+                    it = 8 if s[1] == 0x291 else s[1] & 7
+                    if (item is None or it == item) and (mask is None or (s[2] & 0x1FFFF) == mask):
+                        out.append(it)
+            return out
+
+        def converged():
+            bad = []
+            for b in range(8):
+                sent = ctl.sent_slots[b]
+                if sent is None:
+                    continue
+                v = ctl.slots_of(b)
+                idx = [i for i in range(16) if i not in (1, 2, 13, 14)
+                       and (i not in LS.PHASE_SLOTS or not ctl.phase_pending(b))]
+                bad += [(b, i) for i in idx if (v[i] - sent[i]) & 0xFFFFFFFF]
+            if ctl.play != ctl.sent_play:
+                bad.append("play")
+            return bad
+
+        # L2.3 first: a preset load from the test origin (block 0, N = 1008)
+        pr, notes = ctl.load_preset(presets["dirichlet_scale"])
+        ctl.run_until_idle(60)
+        full = gos(mask=C_FULL)
+        ok3 = (pr is None and not notes and sorted(full) == list(range(8)) and gos(item=8) == [8]
+               and ctl.sent_play == list(range(8))
+               and all([x & 0xFFFFFFFF for x in ctl.sent_slots[b]] ==
+                       [x & 0xFFFFFFFF for x in presets["dirichlet_scale"]["blocks"][b]["slots"]] for b in range(8)))
+        R.append(("L2.3", ok3, f"Dirichlet scale from the origin: {len(full)} full re-seeds (blocks {sorted(full)}), "
+                  f"{len(gos(item=8))} sweep GO; sent slots = the preset's stored slots: {ok3}; notes {notes}"))
+
+        # L2.2 a phase knob without Seed sends nothing; Seed sends one full re-seed with the phase words
+        n0 = len(ctl.log)
+        ctl.set_block(5, phase_preset="Schroeder")
+        ctl.run_until_idle(10)
+        quiet = not any(e["step"][0] == "W" and e["step"][1] in range(0x250, 0x260) or
+                        (e["step"][0] == "W" and e["step"][1] == 0x28D) for e in ctl.log[n0:])
+        pend = ctl.phase_pending(5)
+        g0 = len(gos(item=5, mask=C_FULL))
+        ctl.seed(5)
+        ctl.run_until_idle(10)
+        seeded = len(gos(item=5, mask=C_FULL)) - g0
+        d1, d2 = LS.phase_preset("Schroeder", 126)
+        carried = (ctl.sent_slots[5][7] & 0xFFFFFFFF, ctl.sent_slots[5][8] & 0xFFFFFFFF) == \
+            (LS.cycles_word(float(d1)), LS.cycles_word(float(d2)))
+        R.append(("L2.2", quiet and pend and seeded == 1 and carried and not ctl.phase_pending(5),
+                  f"phase preset on block 5: no transaction for it, pending seed {pend}; Seed: {seeded} full re-seed, "
+                  f"PHD1/PHD2 = Schroeder words {carried}, pending after {ctl.phase_pending(5)}"))
+
+        # L2.1 random Lab traffic, presets in between
+        rng = random.Random(21)
+        moves = 0
+        for k in range(500):
+            b = rng.randrange(8)
+            r_ = rng.random()
+            if r_ < 0.15: ctl.set_block(b, chirp=rng.uniform(-0.002, 0.002))
+            elif r_ < 0.30: ctl.set_block(b, win_pos=rng.random(), gamma=10 ** rng.uniform(-6, -2.5))
+            elif r_ < 0.38: ctl.set_block(b, win_mode="raw", win_start_db=rng.uniform(-40, 0),
+                                          win_slope_db=rng.uniform(-0.5, 0.5), win_curv_db=rng.uniform(-0.01, 0.01))
+            elif r_ < 0.42: ctl.set_block(b, win_mode="gauss", win_peak_db=rng.uniform(-12, 3))
+            elif r_ < 0.50: ctl.set_block(b, phase_preset=rng.choice(["Zero", "Schroeder", "Half-Schroeder"]))
+            elif r_ < 0.55: ctl.set_tau(b, rng.uniform(0, 16))
+            elif r_ < 0.60: ctl.seed(b)
+            elif r_ < 0.75: ctl.set_block(b, level=rng.uniform(-40, -6))
+            elif r_ < 0.85: ctl.set_block(b, f=rng.uniform(150, 2000), df=2 ** rng.uniform(-5, 0))
+            elif r_ < 0.90: ctl.set_block(b, N=rng.randrange(32, 200), glide=rng.choice([0, 60, 600]))
+            elif r_ < 0.94: ctl.set_play(b, b not in ctl.play)
+            elif r_ < 0.96: ctl.load_preset(presets[rng.choice(list(presets))])
+            else: ctl.set_master_db(rng.uniform(-24, 0))
+            moves += 1
+            ctl.step()
+        for b in range(8):
+            if ctl.phase_pending(b) and ctl.sent_slots[b] is not None:
+                ctl.seed(b)
+        idle = ctl.run_until_idle(120)
+        bad = converged()
+        st = ctl._status()
+        ok1 = (idle and not bad and st["REJECT0"] == 0 and ctl.counts["refused"] == 0 and ctl.counts["errors"] == 0
+               and TG.law_kept(ctl))
+        R.append(("L2.1", ok1, f"{moves} random Lab moves (chirp, window gauss/raw, phases, tau, Seed, level, pitch, N, "
+                  f"play, presets): {ctl.counts['gos']} GOs; REJECT0 {st['REJECT0']}, refused {ctl.counts['refused']}, "
+                  f"errors {ctl.counts['errors']}; sent = desired: {not bad}; each GO applied before the next: "
+                  f"{TG.law_kept(ctl)}"))
+        if log_dir:
+            os.makedirs(log_dir, exist_ok=True)
+            n = ctl.save_log(os.path.join(log_dir, "v_l2_lab.json"))
+            R.append(("log", True, f"step log {n} steps -> v_l2_lab.json"))
+    except Exception as e:                                    # noqa: BLE001
+        R.append(("L2", False, f"{type(e).__name__}: {e}"))
+    finally:
+        if ctl:
+            ctl.close(shutdown=True)
+        r.finish()
+    return R
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", default=None)
+    ap.add_argument("--v2", action="store_true", help="also V-L2 (needs tclsh)")
+    ap.add_argument("--logs", default=None, help="directory for the V-L2 step log (V-L3 replays it)")
     a = ap.parse_args()
     lines = ["test_lab: WPMS Lab against the customer's oracle (wpms_layer1_oracle.py) and the GUI's gaussian() — "
              "evidence class ORACLE", " V-L1 — lab_shapes.py"]
@@ -192,6 +316,11 @@ def main():
     for name, ok, text in v_l1():
         lines.append(f"  {name:6s} {'PASS' if ok else 'FAIL'}: {text}")
         ok_all &= ok
+    if a.v2:
+        lines.append(" V-L2 — the Lab controller headless (bridge under tclsh, stand-ins, the GUI test's freeze model)")
+        for name, ok, text in v_l2(a.logs):
+            lines.append(f"  {name:6s} {'PASS' if ok else 'FAIL'}: {text}")
+            ok_all &= ok
     lines.append(f"test_lab: {'PASS' if ok_all else 'FAIL'}")
     print("\n".join(lines))
     if a.report:

@@ -2,9 +2,9 @@
 
 *CC0 · opened 2026-10-19 by Claude Code for the architect, per `LAB_BRIEF_WPMS_Sound_Design_2026-10-19` §5. **OUTSIDE WPMS** (Layer 3 tooling, a stand-in for the Layer 4 controller). Before it: `gui_v1_v3.md`, `gui_board.md`.*
 
-*State (2026-10-19): **V-L1 PASS (11 / 11); stopped for the architect** (brief §7) on three questions (§5): the seam in `gui/wpms_ctl.py`, the window's centre, and the reading of "no safety measures". The expected column below was written before any Lab code ran (brief §5) and is left as written; deviations are in §4.*
+*State (2026-10-19): **Phase A built; V-L1 … V-L4 PASS; the board session (B-L) waits for the architect.** The expected column of §1 was written before any Lab code ran (brief §5) and is left as written; deviations are in §5. The architect's rulings of the same day are in §0.*
 
-*状態（2026-10-19）：**V-L1 合格（11/11）。指示書 §7 に従い、三つの質問（§5）でアーキテクトの判断を待つ。** 期待値は Lab のコードを走らせる前に書いたまま残し、逸脱は §4 に記す。*
+*状態（2026-10-19）：**Phase A 完成。V-L1〜V-L4 合格。実機（B-L）はアーキテクト待ち。** §1 の期待値は Lab のコードを走らせる前に書いたまま残し、逸脱は §5 に、同日の裁定は §0 に記す。*
 
 ---
 
@@ -14,13 +14,14 @@
    - the headroom guard of brief §3.4 and the range check of §3.1 **show** their values (red above −1 dBFS, red outside 0 … Fs/2) but **never refuse**;
    - the window has no γ limit; every slot takes any 32-bit value the knobs produce;
    - kept, because they are not safety but the switch's own rules: the coalescing law and the switch's GO check (P ≤ 8, no block twice, N in [32, NMAX], Σ N ≤ NMAX). A GO that breaks them is refused by the switch, counted in REJECT[0], and blocks the sender. Brief §4: "REJECT[0] must stay 0 in every Lab session".
-   - **This reading is put to the architect** (§5, Q3).
+   - **Confirmed by the architect** (2026-10-19, Q3), with one change: **LE0 < 0 (EW6) is refused**, because the Formation would silence the sound until a reset; glide 0 (LE0 = 0, a held level) is allowed.
 2. **Verified before any code** (the customer's oracle `wpms_layer1_oracle.py`, read 2026-10-19):
    - bin k's frequency word is OM0 + k·OMD1 + C(k,2)·OMD2, and its phase is PH0 + k·PHD1 + C(k,2)·PHD2 (`l1_phase`, check at its line 249);
    - its log₂ window is LS0 + k·LAD1 + C(k,2)·LAD2 by forward differences (`l1_amplitude`), in Q12.20, Q8.24 and Q2.30;
    - the brief's window formulas (LAD2 = −2a, LAD1 = a(2k_c − 1), LS0 = S_p − a·k_c²) follow from that recurrence;
-   - **but** `gaussian_slots(consistent=True)` keeps "the apex at N/2" (its docstring). The brief's acceptance "k_c = (N − 1)/2 equals `gaussian()` bit for bit" is therefore expected to **fail**, and k_c = N/2 to pass. Put to the architect (§5, Q2).
-3. **A seam in `gui/wpms_ctl.py` is needed** (brief §2.2). The sender computes a block's slots with the module function `block_slots()` in `_block_mask` and `_send_item`. A subclass cannot change that without copying those two methods (a fork) or patching the module, and the brief forbids both. Proposed seam and its regression: §3.2; ruling asked (§5, Q1).
+   - **but** `gaussian_slots(consistent=True)` keeps "the apex at N/2" (its docstring). The brief's acceptance "k_c = (N − 1)/2 equals `gaussian()` bit for bit" is therefore expected to **fail**, and k_c = N/2 to pass. **Ruling (Q2): the peak position p maps to k_c = p·N, so p = 0.5 is the GUI's window.**
+3. **A seam in `gui/wpms_ctl.py` is needed** (brief §2.2). The sender computes a block's slots with the module function `block_slots()` in `_block_mask` and `_send_item`. A subclass cannot change that without copying those two methods (a fork) or patching the module, and the brief forbids both. **Ruling (Q1): the seam goes into the Lab's PR** — `slots_of(b)`, `gui/wpms_ctl.py` RH003 (§4.2).
+4. **Ruling (Q4): the *Dirichlet scale* preset** has N = 126 in each of its eight blocks; every N is then free, and Σ N > 1,008 is shown in red and refused, as in the GUI (the switch's GO check).
 
 ## 1. Expected / 期待値
 
@@ -73,31 +74,64 @@
 | B-L5 | Headroom indicator vs CLIP (0x016) | CLIP stays 0 while the indicator stays below 0 dBFS; it may set above (own risk) |
 | B-L6 | REJECT[0] after the session; Save log → `cosim_gui_replay.py` | 0; PASS |
 
-## 2. Commands and results / コマンドと結果
+## 2. The board session (B-L): procedure / 実機の手順
 
-Run 2026-10-19 (Python 3.13, tclsh 8.6.14, Icarus Verilog 12.0). Logs: `04_Verification_Evidence/host_lab/2026-10-19_v_l1/`.
+*Expected (SILICON) as in §1 B-L; the measured column is filled after the run.*
+
+**P0.**
+- The Phase 6 image is loaded; SW[1:0] = 11, SW[2] = 0, SW[3] = 0.
+- **The GUI is closed**: the bridge serves one client.
+- The In-System Sources and Probes Editor is closed.
+
+**P1.** Double-click `hw/tools/host/lab/start_lab.bat`. It starts the bridge or reuses one, then opens WPMS Lab connected. By hand instead:
 
 ```
-python3 hw/tools/host/lab/test_lab.py --report .../test_lab_v_l1.txt
+quartus_stp -t ../gui/wpms_bridge.tcl
+python wpms_lab.py --connect
+```
+
+**P2.** Press **Test origin** first: the log must start at the origin to be replayed (ruling 2026-10-14).
+
+**P3.** Load each starter in turn: **Load preset…** → `presets/dirichlet_scale.json`, `schroeder_pad.json`, `chirp_bloom.json`. Listen for about 20 s each; record a short take of each, if convenient.
+
+**P4.** On one block, by hand:
+
+| # | Action | Measured |
+|---|---|---|
+| B-L1 | **Chirp c**: 0 → ±0.0005 … ±0.002 Hz per bin (slider or entry) | — |
+| B-L2 | **Phases**: Preset Zero → Schroeder; note "pending seed" and that nothing changes; then **Seed phases** | — |
+| B-L3 | **Lobe offset τ**: e.g. 4 s, then **Seed phases**; the block's pulse moves by τ within its 16 s period | — |
+| B-L4 | **Window**: peak position p 0 → 1; peak offset; Raw mode with a slope and a positive curvature (an inverted window) | — |
+| B-L5 | The headroom line (top of the tabs) against CLIP (Status) | — |
+| B-L6 | At the end: REJECT[0] "+0 since connect"; **Save log** → `python ../gui/cosim_gui_replay.py <log>.json` here | — |
+
+**P5. Send back:**
+- the saved log and its times (CSV);
+- a screenshot;
+- one line per B-L row;
+- the recordings, if any.
+
+## 3. Commands and their last lines / コマンドと最後の行
+
+Run 2026-10-19 (Python 3.13, tclsh 8.6.14, Icarus Verilog 12.0), with `gui/wpms_ctl.py` RH003 committed. Logs: `04_Verification_Evidence/rtl_sim/2026-10-19_lab_phase_a/`.
+
+```
+python3 hw/tools/host/lab/test_lab.py --v2 --logs ... --report .../test_lab.txt
 test_lab: PASS
-```
-
-With the proposed seam applied **locally only** (not committed; `proposed_seam_wpms_ctl.patch`):
-
-```
-python3 hw/tools/host/gui/test_gui_bridge.py --logs ...        (gui_test_with_seam.txt)
+python3 hw/tools/host/gui/cosim_gui_replay.py .../v_l2_lab.json --report .../cosim_gui_replay_v_l2_lab.txt
+cosim_gui_replay v_l2_lab: PASS (47 s)
+python3 hw/tools/host/gui/test_gui_bridge.py --report .../gui_test_with_seam.txt
   mutants 9/9 broken copies of wpms_bridge.tcl caught
 test_gui_bridge: PASS
-python3 hw/tools/host/check_host_tcl.py
+python3 hw/tools/host/check_host_tcl.py --report .../check_host_tcl.txt
 check_host_tcl: PASS
-python3 hw/tools/host/gui/cosim_gui_replay.py .../wpms_gui_20261015_195411.json.gz
-cosim_gui_replay wpms_gui_20261015_195411: PASS (824 s)      (board_gui_replay_l4_3.txt: 2,808 GOs, 0 refused,
-                                                              2,809/2,809 APPLY, 9,571/9,571 samples — as on 2026-10-15)
+python3 hw/tools/host/gui/cosim_gui_replay.py .../wpms_gui_20261015_195411.json.gz      (board_gui_replay_l4_3.txt)
+cosim_gui_replay wpms_gui_20261015_195411: PASS (824 s)
 ```
 
-## 3. Results / 結果
+## 4. Results / 結果
 
-### 3.1 V-L1 — `lab_shapes.py` (ORACLE): 11 / 11 PASS
+### 4.1 V-L1 — `lab_shapes.py` (ORACLE): 11 / 11 PASS
 
 | # | Result |
 |---|---|
@@ -106,57 +140,97 @@ cosim_gui_replay wpms_gui_20261015_195411: PASS (824 s)      (board_gui_replay_l
 | L1.3 | Bin phase, closed form = `l1_phase`: 300 / 300 |
 | L1.4 | Lobe offset: the packet peaks **at** τ (0 samples off), 4 cases |
 | L1.5 | Crest, N = 240: zero phase 26.81 dB (= 10·log₁₀ 2N), Half-Schroeder 7.53 dB, **Schroeder 5.60 dB** |
-| L1.6 | Window vs `gaussian()`: **k_c = N/2 equal 228 / 228; k_c = (N − 1)/2 equal 0 / 228** (LAD2 equal in all; LAD1 and LS0 off by half a bin) — deviation D1 |
+| L1.6 | Window vs `gaussian()`: **k_c = N/2 equal 228 / 228; k_c = (N − 1)/2 equal 0 / 228** (LAD2 equal in all; LAD1 and LS0 off by half a bin) — D1 |
 | L1.7 | Window closed form vs `l1_amplitude`: worst 2^−24.0 relative (bound 2^−23.9) |
 | L1.8 | Lab defaults = the GUI's `block_slots()`: 300 / 300 blocks, all 16 slots |
 | L1.9 | OMD2 ↔ c within 5.6 × 10⁻⁶ Hz (half an LSB); PHD1 ↔ τ within 1.2 × 10⁻¹⁰ cycle (half an LSB) |
 | L1.10 | Band indicator flags both ends, quiet inside |
 | L1.11 | Worst-case peak estimate vs the oracle's `l1_amplitude` sum × 2^−G: worst 9.6 × 10⁻⁶ dB over 60 cases |
 
-### 3.2 The seam the Lab needs (proposed, not committed) / 継ぎ目の提案（未コミット）
+### 4.2 The seam, `gui/wpms_ctl.py` RH003 (ruling Q1) / 継ぎ目
 
-`gui/wpms_ctl.py`'s sender calls the module function `block_slots(self.params[b])` in two places (`_block_mask`, `_send_item`). The smallest seam is one method, `slots_of(self, b)`, which returns `block_slots(self.params[b])`, and those two calls go through it. That is 8 lines added and 2 changed, plus RH003 (`proposed_seam_wpms_ctl.patch`). The Lab's subclass overrides `slots_of` and nothing else in the sender.
+`slots_of(self, b)` returns `block_slots(self.params[b])`, and the sender's two calls (`_block_mask`, `_send_item`) go through it: 9 lines added, 2 changed (`seam_wpms_ctl_rh003.patch`). The Lab overrides `slots_of` and nothing else in the sender.
 
-Evidence that the GUI is unchanged with it:
+### 4.3 V-L2 — the Lab controller headless (ORACLE): 3 / 3 PASS
 
-- **V1:** PASS with 9 / 9 mutants killed.
-- **V2:** all cases PASS.
-- **`check_host_tcl.py`:** PASS.
-- **The deterministic V2 storm (seed 1):** its step log is **identical** before and after the seam: 1,460 steps, the same transactions in the same order, the same replies (rdata, rej).
-- **The board session `board_gui.json` replayed:** see §2. A replay plays the recorded steps and does not import `wpms_ctl.py`, so it shows the RTL path unchanged; the identical storm is the evidence about the controller.
+Bridge under tclsh, the stand-ins, the GUI test's freeze model, starting at the test origin (block 0, N = 1,008):
 
-## 4. Deviations / 逸脱
+| # | Result |
+|---|---|
+| L2.3 | *Dirichlet scale* from the origin: 8 full re-seeds (blocks 0–7) and 1 sweep GO, through the sender. The sender found the order itself: block 0 shrank first, then the sweep. The sent slots equal the preset's stored slots; the recomputed slots equal them too (no note) |
+| L2.2 | Schroeder phases on block 5: no transaction, "pending seed"; **Seed phases**: exactly 1 full re-seed carrying PHD1 / PHD2 = the Schroeder words; no longer pending |
+| L2.1 | 500 random Lab moves (chirp, window Gaussian and raw, phase presets, τ, Seed, level, pitch, N, glide 0, play, preset loads, master) → 175 GOs: **REJECT[0] 0, refused 0, errors 0**; sent = desired; each GO applied before the next |
 
-- **D1 — the window's centre.** The brief's acceptance "with k_c = (N − 1)/2 and the GUI's γ, the three words equal `gaussian()`'s bit for bit" does not hold: 0 / 228.
-  - `gaussian()` (the oracle's `gaussian_slots`, consistent form) puts the apex at **N/2**, as its docstring says, and k_c = N/2 matches 228 / 228.
-  - The brief's derivation itself is right (L1.6 uses it).
-  - The Lab maps its peak position p to k_c = p·N, so p = 0.5 is the GUI's window bit for bit. Asked (Q2).
+### 4.4 V-L3 — the Lab's log through the switch RTL (RTL-SIM): PASS
 
-## 5. Questions for the architect / 質問
+`v_l2_lab.json` (2,440 steps) replayed with `gui/cosim_gui_replay.py`, unchanged:
+- started at the test origin;
+- 4,351 transactions equal to `switch_model.py`'s;
+- **0 host writes refused** of 1,715;
+- APPLY with APPLIED_SEQ = GO_SEQ: 175 / 175, each GO playing from strobe 2;
+- **533 / 533 samples** and 2,608 bundles equal to `sweep_sim.Reference` → `l1_model` over the customer's oracle.
 
-- **Q1 — the seam (brief §2.2).** May `gui/wpms_ctl.py` take the seam of §3.2 (RH003), committed in the Lab's PR? Without it, the Lab would have to copy `_block_mask` and `_send_item` (a fork) or patch the module, and the brief forbids both. Until the ruling nothing in `gui/` is changed; the patch was applied only locally for the regression.
-- **Q2 — the window's centre (D1).** p = 0.5 ↔ k_c = N/2 (equal to the GUI's window, recommended), or k_c = p·(N − 1) (symmetric over the bins 0 … N − 1, half a bin from the GUI's)?
-- **Q3 — "no safety measures".** Reading of §0.1:
-  - the headroom and band indicators show but never refuse; no γ limit; 32-bit slots are clamped with a note;
-  - kept: the coalescing law and the switch's GO check (the switch would refuse otherwise, and the sender would stall);
-  - LE0 = 0 (glide 0, a frozen level) is allowed;
-  - LE0 < 0 is the Formation's EW6: the sound stops until a reset. Allow it with a red note, or keep it out?
-- **Q4 — the *Dirichlet scale* preset** ("the 2026-10-18 screenshot state"). The screenshot shows eight blocks, Σ N = 1,008, block 7 with N = 48, Δf = 1/16 Hz, −6 dB, γ = 3 × 10⁻⁴, G override 8, but not N of blocks 0–6. Their values, or 126 each (8 × 126 = 1,008)?
+The replay covers chirped, Schroeder-phased and raw or inverted windows.
+
+### 4.5 V-L4 — the GUI unchanged (RTL-SIM): 3 / 3 PASS
+
+| # | Result |
+|---|---|
+| L4.1 | `test_gui_bridge.py` with RH003 committed: PASS, 9 / 9 mutants killed. Before the commit the deterministic V2 storm log was identical with and without the seam (1,460 steps, same replies) |
+| L4.2 | `check_host_tcl.py`: PASS, 9 / 9 |
+| L4.3 | `board_gui.json` (2026-10-15) replayed: PASS with the numbers of 2026-10-15 — 2,808 GOs, 0 refused, 2,809 / 2,809 APPLY, 9,571 / 9,571 samples. A replay does not import `wpms_ctl.py`; it shows the RTL path unchanged |
+
+### 4.6 The panel / 画面
+
+`wpms_lab_standin.png`: WPMS Lab connected to the stand-ins (Xvfb), after loading *Dirichlet scale*. On block 3:
+- chirp 0.0008 Hz per bin;
+- Schroeder phases selected and "pending seed" shown;
+- window peak at p = 0.3 with a +3 dB offset;
+- the slot view marks PHD1 / PHD2 as differing from the sent words.
+
+The headroom line reads +3.3 dBFS in red for all eight blocks in phase at G = 8, an upper bound the separate lobes never reach. In that session: REJECT[0] 0, and Seed cleared "pending seed" with one GO.
+
+## 5. Deviations / 逸脱
+
+- **D1 — the window's centre.**
+  - The brief's acceptance at k_c = (N − 1)/2 does not hold (0 / 228). `gaussian()` puts its apex at N/2 (228 / 228).
+  - Ruled (Q2): p = 0.5 ↔ k_c = N/2.
+- **D2 — the headroom and band guards are indicators** (ruling 2026-10-19, own risk). The brief's §3.4 refusal above +6 dBFS and §3.1 refusal outside 0 … Fs/2 are not built. The estimate itself is built and checked (L1.11).
+- **D3 — the worst-case peak is conservative.** It assumes every bin of every playing block in phase at once.
+  - Dirichlet blocks reach it only when their lobes coincide; Schroeder phases never come close (crest 5.6 dB, not 26.8).
+  - *Dirichlet scale* and *Schroeder pad* therefore read +3.0 and +2.0 dBFS in red at G = 8, yet play without clipping as long as the lobes stay apart.
+  - Recorded so the red line is read correctly at the board (B-L5).
+
+## 6. Questions — answered 2026-10-19 / 質問（2026-10-19 回答済み）
+
+- **Q1:** the seam goes into the Lab's PR.
+- **Q2:** p = 0.5 ↔ k_c = N/2.
+- **Q3:** indicators only; the switch's rules are kept; LE0 < 0 (EW6) is refused.
+- **Q4:** *Dirichlet scale* with N = 126 per block; N free; Σ N > 1,008 in red.
+
+No question is open.
 
 ---
 
 **和文要約。**
 
-Lab は自己責任で自由に設定する道具（2026-10-19、アーキテクト）である。そこで、ヘッドルームと周波数範囲は**表示するだけで拒否しない**。スイッチ自身の規則（凍結・GO 検査）だけは、REJECT 0 を保つために残す。
+WPMS Lab の Phase A ができた。置き場所は `hw/tools/host/lab/` で、中身は次のとおり。
+- `lab_shapes.py`：変換関数
+- `wpms_lab_ctl.py`：GUI の制御器を継承した Lab の制御器
+- `wpms_lab.py`：GUI の画面を継承した Tk の画面
+- プリセット三種と `start_lab.bat`
 
-oracle を読んだ時点（何も走らせる前）で、二つの見込みを持っている。
-- 窓の中心は N/2 なら `gaussian()` とビット一致する。指示書の (N−1)/2 では一致しない見込み。
-- `gui/wpms_ctl.py` には小さな継ぎ目が必要。
+GUI 側への変更は、裁定どおり `gui/wpms_ctl.py` の継ぎ目（`slots_of`）だけである。
 
-期待値は V-L1〜V-L4 と、実機手順 B-L の表に記した。
+裁定（2026-10-19）：
+- 窓の中心は p = 0.5 ↔ k_c = N/2 とした（GUI の窓とビット一致）。
+- 安全策は表示だけにした。ただし LE0 < 0（EW6）は禁止し、スイッチの規則（凍結・GO 検査）は残した。
+- Dirichlet scale は各 N = 126 で、合計が 1,008 を超えると赤字で示す。
 
-2026-10-19：
-- V-L1 は 11/11 合格。
-- 窓の中心は、N/2 で `gaussian()` と 228/228 一致し、指示書の (N−1)/2 では 0/228（D1）だった。
-- `gui/wpms_ctl.py` に入れる継ぎ目（`slots_of`、8 行追加・2 行変更）は手元でだけ当てた。GUI の V1・V2・host 検査はすべて合格し、決定的ストームの記録は前後で完全に一致した。
-- 質問は四つ（継ぎ目の可否、窓の中心、安全策の読み方、Dirichlet scale の各 N）で、判断を待つ。
+検証結果：
+- V-L1（oracle との照合）11/11。
+- V-L2（代役上の Lab 制御器）3/3。プリセット読込み・位相の Seed 待ち・500 手の random 操作で、拒否 0。
+- V-L3（Lab の記録の RTL 再生）PASS。拒否 0、533/533 サンプル一致。
+- V-L4（GUI の回帰）3/3。
+
+実機（B-L）の手順は §2 にある。

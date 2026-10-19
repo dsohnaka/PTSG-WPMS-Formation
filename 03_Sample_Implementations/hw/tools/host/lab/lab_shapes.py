@@ -207,7 +207,11 @@ def lab_slots(p):
     Returns (slots, notes): notes lists the slots clamped to 32 bits."""
     q = dict(LAB_DEFAULTS)
     q.update(p)
-    v = C.block_slots(q)
+    if q.get("raw_slots"):                      # a preset's stored slots (brief §3.5), taken as they are
+        return [s32(int(x)) for x in q["raw_slots"]], ["slots as stored in the preset"]
+    v = C.block_slots(dict(q, glide=max(q["glide"], 1e-9)))
+    if q["glide"] <= 0:
+        v[0x5] = 0                              # glide 0: LE0 = 0, the level stays (LE0 < 0 is refused upstream)
     N = int(q["N"])
     notes = []
     v[0xC] = omd2_word(q["chirp"])
