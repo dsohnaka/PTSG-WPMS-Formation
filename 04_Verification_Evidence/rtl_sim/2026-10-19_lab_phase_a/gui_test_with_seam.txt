@@ -1,0 +1,28 @@
+test_gui_bridge: wpms_bridge.tcl under tclsh 8.6.14 against issp_standin.tcl, driven by wpms_ctl.py (a check of the bridge and the controller: not Quartus, not the RTL)
+ V1 — the bridge
+  ping     PASS: PING -> OK WPMS <ID> <CONFIG>
+  wr       PASS: W -> OK <read-back> 0 <us>; R -> OK <word> <us> (also hex without leading zeros)
+  refuse   PASS: a refused write answers rej 1; the next write goes on
+  batch    PASS: B 4 stopped at the refusal (2 SKIP), END; B 3 executes every line
+  errors   PASS: unknown command, bad W, bad R, bad batch header -> ERR; the bridge serves on
+  issp     PASS: no acknowledge -> ERR; then R 000 answers the ID and a write goes on
+  clients  PASS: a lost client and a QUIT: the next client is served; a second client gets ERR busy; the session opened once
+  bind     PASS: listening on 127.0.0.1; a connection to 192.0.2.2 refused
+  shutdown PASS: SHUTDOWN -> BYE, wpms_close, exit 0; the stand-in saw 21 transactions, none of the skipped ones
+ V2 — the controller headless, with the test's freeze model
+  storm    PASS: 400 moves on blocks [0, 1, 2, 3]: 133 GOs (15 sweep), blocks served [0, 1, 2, 3], final play [1]; sent = desired: True; each GO applied before the next: True; REJECT0 0, refused 0, errors 0
+  thread   PASS: 4180 moves in 3 s on blocks [0, 1, 2, 3, 4, 5] with the sender thread: 2727 GOs, blocks served [0, 1, 2, 3, 4, 5]; sent = desired: True; law kept: True; REJECT0 0, refused 0, errors 0
+  fair     PASS: block 1 moved at every step; block 2 changed once: served as GO #0 after its change (<= #1); REJECT0 0, refused 0, errors 0
+  origin   PASS: sweep [0, 1] -> test origin applied: True; after it the controller holds sweep [0], N0 = 1008; REJECT0 0, refused 0, errors 0
+  teeth    PASS: a controller that does not wait for APPLIED_SEQ: 1 refusals (the freeze model refuses it)
+  B1      KILLED  reply before the transaction (the previous answer)  ->  wr, refuse, errors, issp
+  B2      KILLED  batch not stopped at a refusal  ->  batch, shutdown
+  B3      KILLED  session re-opened per client  ->  clients
+  B4      KILLED  port bound to 0.0.0.0  ->  bind
+  B5      KILLED  no resync after an ISSP error  ->  issp
+  B6      KILLED  SHUTDOWN without wpms_close  ->  shutdown
+  B7      KILLED  QUIT closes the session  ->  clients
+  B8      KILLED  a lost client not forgotten  ->  clients, bind, shutdown
+  B9      KILLED  an ISSP error not caught  ->  issp, clients, bind, shutdown
+  mutants 9/9 broken copies of wpms_bridge.tcl caught
+test_gui_bridge: PASS

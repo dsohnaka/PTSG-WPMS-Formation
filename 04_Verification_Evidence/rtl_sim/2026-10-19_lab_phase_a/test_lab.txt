@@ -1,0 +1,19 @@
+test_lab: WPMS Lab against the customer's oracle (wpms_layer1_oracle.py) and the GUI's gaussian() — evidence class ORACLE
+ V-L1 — lab_shapes.py
+  L1.1   PASS: Schroeder: k PHD1 + C(k,2) PHD2 = k^2/(2N) exactly, N in 32 ... 2048: 0 exceptions
+  L1.2   PASS: N = 2048: PHD1 = 0x100000, PHD2 = 0x200000 (oracle: 2^20, 2^21)
+  L1.3   PASS: bin phase closed form = oracle l1_phase on 300 random words: 300/300
+  L1.4   PASS: lobe offset tau: the packet peaks within 0 sample(s) of tau (4 cases)
+  L1.5   PASS: crest N = 240: zero 26.81 dB (10 log10 2N = 26.81), Half-Schroeder 7.53, Schroeder 5.60 dB
+  L1.6   PASS: window vs gaussian() on 228 (N, gamma): k_c = N/2 equal 228/228; k_c = (N-1)/2 (brief) equal 0/228 (LAD2 equal 228/228; LAD1 and LS0 differ by half a bin)
+  L1.7   PASS: window closed form vs oracle l1_amplitude (40 windows, bins >= 2^-7): worst relative error 2^-24.0 (exp2 unit bound 2^-23.9)
+  L1.8   PASS: Lab defaults vs GUI block_slots(): 300/300 blocks equal in all 16 slots
+  L1.9   PASS: OMD2 <-> c within 5.58e-06 Hz (LSB 1.12e-05); PHD1 <-> tau within 1.2e-10 cycle (LSB 2.3e-10)
+  L1.10  PASS: band indicator: 0 ... Fs/2 flagged at both ends, quiet inside (shown, never a refusal)
+  L1.11  PASS: worst-case peak estimate vs oracle (60 cases, per-bin clamp included): worst difference 9.60e-06 dB
+ V-L2 — the Lab controller headless (bridge under tclsh, stand-ins, the GUI test's freeze model)
+  L2.3   PASS: Dirichlet scale from the origin: 8 full re-seeds (blocks [0, 1, 2, 3, 4, 5, 6, 7]), 1 sweep GO; sent slots = the preset's stored slots: True; notes []
+  L2.2   PASS: phase preset on block 5: no transaction for it, pending seed True; Seed: 1 full re-seed, PHD1/PHD2 = Schroeder words True, pending after False
+  L2.1   PASS: 500 random Lab moves (chirp, window gauss/raw, phases, tau, Seed, level, pitch, N, play, presets): 175 GOs; REJECT0 0, refused 0, errors 0; sent = desired: True; each GO applied before the next: True
+  log    PASS: step log 2440 steps -> v_l2_lab.json
+test_lab: PASS
