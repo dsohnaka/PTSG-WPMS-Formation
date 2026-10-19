@@ -91,7 +91,8 @@ test_gui_bridge: PASS
 python3 hw/tools/host/check_host_tcl.py
 check_host_tcl: PASS
 python3 hw/tools/host/gui/cosim_gui_replay.py .../wpms_gui_20261015_195411.json.gz
-(running when this was committed; the result is added below when it ends)
+cosim_gui_replay wpms_gui_20261015_195411: PASS (824 s)      (board_gui_replay_l4_3.txt: 2,808 GOs, 0 refused,
+                                                              2,809/2,809 APPLY, 9,571/9,571 samples — as on 2026-10-15)
 ```
 
 ## 3. Results / 結果
